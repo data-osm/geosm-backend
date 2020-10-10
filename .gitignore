@@ -1,3 +1,4 @@
 /.vscode
 /dataosmenv
 __pycache__
+.DS_Store
