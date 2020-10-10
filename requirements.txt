@@ -4,3 +4,4 @@ Pillow~=7.2.0
 djangorestframework~=3.12.1
 djoser~=2.0.5
 djangorestframework-simplejwt~=4.4.0
+django-cors-headers~=3.5.0
