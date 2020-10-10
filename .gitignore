@@ -1,2 +1,3 @@
 /.vscode
-/dataosm-env
+/dataosmenv
+__pycache__
