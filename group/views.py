@@ -8,35 +8,34 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from django.db.models import Count
 
 from .serializers import IconSerializer
+from collections import defaultdict
 
 
-class IconViewSet(viewsets.ModelViewSet):
+class listIconByCategory(APIView):
     """
-    API endpoint that allows icons to be viewed or edited.
+        View to list icons by group
     """
-    queryset = Icon.objects.all()
-    serializer_class = IconSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class categoryViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows list of all category icons
-    """
-    queryset = Icon.objects.values('category').distinct()
-    serializer_class = IconSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        groups = defaultdict(list)
+        for icon in Icon.objects.all():
+            groups[icon.category].append(IconSerializer(icon).data)
 
+        return Response(groups)
 
-class IconUploadView(APIView):
+class iconUploadView(APIView):
+    """
+        View to upload icons
+    """
     parser_class = (FileUploadParser,)
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-
       file_serializer = IconSerializer(data=request.data)
-    #   file_serializer.is_valid()
-    #   return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
       if file_serializer.is_valid():
           file_serializer.save()
           return Response(file_serializer.data, status=status.HTTP_201_CREATED)
