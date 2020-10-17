@@ -25,7 +25,7 @@ class listIconByCategory(APIView):
         for icon in Icon.objects.all():
             groups[icon.category].append(IconSerializer(icon).data)
 
-        return Response(groups)
+        return Response(groups,status=status.HTTP_200_OK)
 
 class iconUploadView(APIView):
     """
@@ -41,3 +41,19 @@ class iconUploadView(APIView):
           return Response(file_serializer.data, status=status.HTTP_201_CREATED)
       else:
           return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class searchIcon(APIView):
+    """
+        View to search icon
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        searchWord = request.data['search_word']
+        responseQuerry = []
+        for icon in Icon.objects.raw("SELECT * FROM group_icon WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 "):
+            responseQuerry.append(IconSerializer(icon).data)
+
+        return Response(responseQuerry,status=status.HTTP_200_OK)
+
+        

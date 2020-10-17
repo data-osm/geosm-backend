@@ -6,6 +6,14 @@ $ python -m pip install --upgrade pip
 $ pip install -r requirements.txt
 ```
 #### Migrate the databse 
+First create the database and install extention
+```sh
+$ psql postgres
+$ create database ...
+$ CREATE EXTENSION unaccent
+$ CREATE EXTENSION hstore
+```
+
 ```sh
 $ python manage.py makemigrations
 $ python manage.py migrate
