@@ -13,7 +13,6 @@ class UserProfileListCreateView(ListCreateAPIView):
     permission_classes=[IsAuthenticated]
 
     def perform_create(self, serializer):
-        print(self.request.user,self.request)
         user=self.request.user
         serializer.save(user=user)
 
