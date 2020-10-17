@@ -1,4 +1,7 @@
+import os
+import re
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 from provider.models import Vector, External, Style
 # Create your models here.
 
@@ -13,13 +16,29 @@ class protocolCartoChoice (models.TextChoices):
     wfs='wfs'
 
 
+
+def get_upload_path(instance, filename):
+    category = re.sub('[^A-Za-z0-9]+', '', instance.category)
+    return os.path.join(category, filename)
+
 class Icon (models.Model):
     """ an Icon in svg """
+    
+    icon_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=200)
+    tags = ArrayField(
+            models.CharField(max_length=50, blank=True),
+            size=10,
+            blank=True,
+            null=True
+    )
+    category = models.TextField(null=False,default='Custom')
+    attribution = models.TextField(null=True)
+    path = models.FileField(blank=False, null=False,default=None,upload_to=get_upload_path)
+
     class meta :
         db_table = "icon"
-    icon_id = models.IntegerField(primary_key=True)
-    name = models.CharField(max_length=200,unique=True)
-    tags = models.TextField(null=True)
+        unique_together = ('name', 'category',)
 
 class Type (models.Model):
     """ A group type, like thematiques, base maps etc... """
