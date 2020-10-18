@@ -6,6 +6,7 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
+from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
 from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Count
@@ -51,3 +52,10 @@ class searchVectorProvider(APIView):
             responseQuerry.append(VectorProviderSerializer(vector).data)
 
         return Response(responseQuerry,status=status.HTTP_200_OK)
+
+
+class vectorProviderDetailView(RetrieveUpdateDestroyAPIView):
+    """ View get a vector provider, update or delete it """
+    queryset=Vector.objects.all()
+    serializer_class=VectorProviderSerializer
+    permission_classes=[permissions.IsAuthenticated]
