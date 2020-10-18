@@ -36,3 +36,18 @@ class vectorProviderView(APIView):
             return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class searchVectorProvider(APIView):
+    """
+        View to search a vector provider
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        searchWord = request.data['search_word']
+        responseQuerry = []
+        for vector in Vector.objects.raw("SELECT * FROM provider_vector WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 "):
+            responseQuerry.append(VectorProviderSerializer(vector).data)
+
+        return Response(responseQuerry,status=status.HTTP_200_OK)
