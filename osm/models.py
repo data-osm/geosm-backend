@@ -10,6 +10,8 @@ class Querry(models.Model):
     """ the select clause of the querry """
     where = models.TextField(null=False)
     """ the where clause of the querry """
+    sql = models.TextField(blank=True)
+    """ the full querry """
     provider_vector_id = models.OneToOneField(Vector,on_delete=models.CASCADE,primary_key=True)
 
 class Id_layer(models.Model):

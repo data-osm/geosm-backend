@@ -30,7 +30,8 @@ def isOsmQuerryValidate(osmQuerry:Querry) ->dict:
         osmValidation = validateOsmQuerry(osmQuerry.where, osmQuerry.select, vector_provider.geometry_type)
         if osmValidation.isValid():
             return  {
-                'error':False
+                'error':False,
+                'querry':osmValidation.query
             }
         else:
           
@@ -69,6 +70,7 @@ class osmQuerryView(APIView):
         if op_serializer.is_valid(raise_exception=True):
             validation = isOsmQuerryValidate(Struct(**request.data))
             if validation['error'] == False:
+                op_serializer.validated_data['sql'] = validation['querry']
                 article_saved = op_serializer.save()
                 return Response(op_serializer.data, status=status.HTTP_200_OK)
             else:
@@ -87,6 +89,7 @@ class osmQuerryView(APIView):
         if op_serializer.is_valid():
             validation = isOsmQuerryValidate(Struct(**request.data))
             if validation['error'] == False:
+                op_serializer.validated_data['sql'] = validation['querry']
                 op_serializer.save()
                 return Response(op_serializer.data, status=status.HTTP_201_CREATED)
             else:

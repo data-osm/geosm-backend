@@ -21,8 +21,7 @@ class validateOsmQuerry():
         self.geometryType = geometryType
         self.error = None
 
-    def isValid(self) -> bool:
-        """ is this instance valid ? """
+    def getQuerry(self) -> str:
         parameters = {'where':AsIs(self.where),'select':AsIs(self.select)}
 
         if self.geometryType =='Point':
@@ -31,11 +30,18 @@ class validateOsmQuerry():
             sql = "select %(select)s  from planet_osm_polygon as A where %(where)s limit 1" 
         elif self.geometryType == "LineString":
             sql = "select %(select)s  from planet_osm_line as A where %(where)s limit 1" 
+        
+        with connection.cursor() as cursor:
+            query = cursor.mogrify(sql,parameters)
+            self.query = query.decode('utf-8')
+            return query
 
+    def isValid(self) -> bool:
+        """ is this instance valid ? """
         try:
             with connection.cursor() as cursor:
-                query = cursor.mogrify(sql,parameters)
-                cursor.execute(query)
+                cursor.execute(self.getQuerry())
+                print(cursor.query)
                 cursor.fetchall()
                 return True
         except Error as errorIdentifier:
