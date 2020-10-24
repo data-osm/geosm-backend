@@ -23,23 +23,17 @@ class Struct:
     def __init__(self, **entries):
         self.__dict__.update(entries)
 
-class isOsmQuerryValidateResponse:
-    error:bool
-    msg:str = None
-    identifier:Exception = None
 
 def isOsmQuerryValidate(osmQuerry:Querry) ->dict:
     try:
         vector_provider = Vector.objects.get(provider_vector_id=osmQuerry.provider_vector_id)
         osmValidation = validateOsmQuerry(osmQuerry.where, osmQuerry.select, vector_provider.geometry_type)
         if osmValidation.isValid():
-            # return isOsmQuerryValidateResponse(False)
             return  {
                 'error':False
             }
         else:
-            # return isOsmQuerryValidateResponse(True,' The osm querry is not correct ', osmValidation.error) 
-            # print(osmValidation.error)
+          
             return {
                 'error':True,
                 'msg':' The osm querry is not correct ',
@@ -47,7 +41,6 @@ def isOsmQuerryValidate(osmQuerry:Querry) ->dict:
             }
 
     except ObjectDoesNotExist as identifier:
-        # return isOsmQuerryValidateResponse(True,'Can not find the vector provider of this osm querry', identifier) 
         return {
             'error':True,
             'msg':' Can not find the vector provider of this osm querry',
