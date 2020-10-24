@@ -1,7 +1,6 @@
 import traceback
 from typing import List, NewType
 from django.db import connection, Error
-# from psycopg2 import sql
 from psycopg2.extensions import AsIs
 
 from enum import Enum
@@ -21,27 +20,32 @@ class validateOsmQuerry():
         self.geometryType = geometryType
         self.error = None
 
-    def getQuerry(self) -> str:
+    def getQuerryValidation(self) -> str:
         parameters = {'where':AsIs(self.where),'select':AsIs(self.select)}
 
         if self.geometryType =='Point':
-            sql = "select %(select)s  from planet_osm_point as A where %(where)s union all select %(select)s from planet_osm_polygon as A where %(where)s limit 1" 
+            sql_validation = "select %(select)s  from planet_osm_point as A where %(where)s union all select %(select)s from planet_osm_polygon as A where %(where)s limit 1" 
+            sql = "select %(select)s  from planet_osm_point as A where %(where)s union all select %(select)s from planet_osm_polygon as A where %(where)s" 
         elif self.geometryType == "Polygon":
-            sql = "select %(select)s  from planet_osm_polygon as A where %(where)s limit 1" 
+            sql_validation = "select %(select)s  from planet_osm_polygon as A where %(where)s limit 1" 
+            sql = "select %(select)s  from planet_osm_polygon as A where %(where)s " 
         elif self.geometryType == "LineString":
-            sql = "select %(select)s  from planet_osm_line as A where %(where)s limit 1" 
+            sql_validation = "select %(select)s  from planet_osm_line as A where %(where)s limit 1" 
+            sql = "select %(select)s  from planet_osm_line as A where %(where)s " 
         
         with connection.cursor() as cursor:
+            query_validation = cursor.mogrify(sql_validation,parameters)
+
             query = cursor.mogrify(sql,parameters)
             self.query = query.decode('utf-8')
-            return query
+
+            return query_validation
 
     def isValid(self) -> bool:
         """ is this instance valid ? """
         try:
             with connection.cursor() as cursor:
-                cursor.execute(self.getQuerry())
-                print(cursor.query)
+                cursor.execute(self.getQuerryValidation())
                 cursor.fetchall()
                 return True
         except Error as errorIdentifier:

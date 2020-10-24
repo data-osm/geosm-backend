@@ -1,8 +1,9 @@
 from django.shortcuts import render
-
+import traceback
 from .validateOsmQuerry import validateOsmQuerry
 from .models import Querry
-from group.models import Vector
+from provider.models import Vector
+from provider.updateOsmDataSource import updateOsmDataSource
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
@@ -72,6 +73,12 @@ class osmQuerryView(APIView):
             if validation['error'] == False:
                 op_serializer.validated_data['sql'] = validation['querry']
                 article_saved = op_serializer.save()
+
+                try:
+                    print(updateOsmDataSource(op_serializer.data['provider_vector_id']).updateDataSource())
+                except Exception:
+                    traceback.print_exc()
+
                 return Response(op_serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(validation, status=status.HTTP_400_BAD_REQUEST)
