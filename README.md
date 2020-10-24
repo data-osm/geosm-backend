@@ -10,8 +10,8 @@ First create the database and install extention
 ```sh
 $ psql postgres
 $ create database ...
-$ CREATE EXTENSION unaccent
-$ CREATE EXTENSION hstore
+$ CREATE EXTENSION unaccent;
+$ CREATE EXTENSION hstore;
 ```
 
 ```sh

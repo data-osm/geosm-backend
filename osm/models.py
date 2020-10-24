@@ -1,24 +1,16 @@
 from django.contrib.gis.db import models
 from .utils import geometryHelper
-from group.models import Layer
+from group.models import Layer, Vector
 # Create your models here.
 
 class Querry(models.Model):
     """ model of osm querry """
-    osm_querry_id = models.IntegerField(primary_key=True)
-    select_clause = models.TextField()
+    # osm_querry_id = models.OneToOneField(primary_key=True)
+    select = models.TextField(blank=True)
     """ the select clause of the querry """
-    where_clause = models.TextField()
+    where = models.TextField(null=False)
     """ the where clause of the querry """
-    geometry_type = models.CharField(
-        max_length=11,
-        choices=geometryHelper.geometryType.choices
-    )
-    """ the geometry_type of the querry, if it is:
-        - Point: we find only in point
-        - Polygon: we find in points and polygons
-        - LineString: we find in only in linestring
-    """
+    provider_vector_id = models.OneToOneField(Vector,on_delete=models.CASCADE,primary_key=True)
 
 class Id_layer(models.Model):
     """ model to make a relation between a osm_id and a layer in the app """
@@ -28,3 +20,5 @@ class Id_layer(models.Model):
         max_length=11,
         choices=geometryHelper.geometryType.choices
     )
+
+    # select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geometry from planet_osm_polygon  as A , instances_gc  as B where  B.id =  1  AND  landuse = 'commercial' OR landuse = 'retail'
