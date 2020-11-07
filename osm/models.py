@@ -6,7 +6,7 @@ from group.models import Layer, Vector
 class Querry(models.Model):
     """ model of osm querry """
     # osm_querry_id = models.OneToOneField(primary_key=True)
-    select = models.TextField(blank=True)
+    select = models.TextField(blank=True,null=True)
     """ the select clause of the querry """
     where = models.TextField(null=False)
     """ the where clause of the querry """

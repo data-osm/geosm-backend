@@ -1,5 +1,7 @@
 /.vscode
 /dataosmenv
 /geosmBackend/DB/working_dir
+/provider/qgis/project
+/docker
 __pycache__
 .DS_Store

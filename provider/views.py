@@ -28,9 +28,9 @@ class vectorProviderView(APIView):
     def post(self, request, *args, **kwargs):
         """ store a new vector providor """
         vp_serializer = VectorProviderSerializer(data=request.data)
-        if 'table' not in  request.data or 'shema' not in  request.data:
-            request._mutable = True
-            request.data.__setitem__('state','action_require')
+        # if 'table' not in  request.data or 'shema' not in  request.data:
+            # request._mutable = True
+            # request.data.__setitem__('state','action_require')
 
         if vp_serializer.is_valid():
             vp_serializer.save()

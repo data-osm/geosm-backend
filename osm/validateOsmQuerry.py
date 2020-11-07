@@ -21,17 +21,24 @@ class validateOsmQuerry():
         self.error = None
 
     def getQuerryValidation(self) -> str:
-        parameters = {'where':AsIs(self.where),'select':AsIs(self.select)}
+        def _formatSelectOfUser(selectClauseOfUser:str)->str:
+            """ if the user have specified and select, we must add a comma behind the select clause """
+            if selectClauseOfUser :
+                return ','+selectClauseOfUser
+            else:
+                return ''
+
+        parameters = {'where':AsIs(self.where),'select':AsIs(_formatSelectOfUser(self.select))}
 
         if self.geometryType =='Point':
-            sql_validation = "select %(select)s  from planet_osm_point as A where %(where)s union all select %(select)s from planet_osm_polygon as A where %(where)s limit 1" 
-            sql = "select %(select)s  from planet_osm_point as A where %(where)s union all select %(select)s from planet_osm_polygon as A where %(where)s" 
+            sql_validation = "select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom %(select)s  from planet_osm_point as A where %(where)s union all select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(st_centroid(A.way),4326) as geom %(select)s from planet_osm_polygon as A where %(where)s limit 1" 
+            sql = "select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom  %(select)s  from planet_osm_point as A where %(where)s union all select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(st_centroid(A.way),4326) as geom %(select)s from planet_osm_polygon as A where %(where)s" 
         elif self.geometryType == "Polygon":
-            sql_validation = "select %(select)s  from planet_osm_polygon as A where %(where)s limit 1" 
-            sql = "select %(select)s  from planet_osm_polygon as A where %(where)s " 
+            sql_validation = "select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom %(select)s  from planet_osm_polygon as A where %(where)s limit 1" 
+            sql = "select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom  %(select)s  from planet_osm_polygon as A where %(where)s " 
         elif self.geometryType == "LineString":
-            sql_validation = "select %(select)s  from planet_osm_line as A where %(where)s limit 1" 
-            sql = "select %(select)s  from planet_osm_line as A where %(where)s " 
+            sql_validation = "select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom %(select)s  from planet_osm_line as A where %(where)s limit 1" 
+            sql = "select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom  %(select)s  from planet_osm_line as A where %(where)s " 
         
         with connection.cursor() as cursor:
             query_validation = cursor.mogrify(sql_validation,parameters)

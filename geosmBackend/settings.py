@@ -111,7 +111,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'country',
-        'HOST': 'localhost',
+        'HOST': 'host.docker.internal',
         'PORT': '5432',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
@@ -164,4 +164,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "icons")
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=180),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=190)
+}
+
+OSMDATA = {
+    'project_qgis_path':os.path.join(BASE_DIR, "provider","qgis","project")
 }

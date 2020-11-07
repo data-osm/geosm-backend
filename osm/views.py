@@ -3,7 +3,7 @@ import traceback
 from .validateOsmQuerry import validateOsmQuerry
 from .models import Querry
 from provider.models import Vector
-from provider.updateOsmDataSource import updateOsmDataSource
+from provider.manageOsmDataSource import manageOsmDataSource
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
@@ -25,7 +25,7 @@ class Struct:
         self.__dict__.update(entries)
 
 
-def isOsmQuerryValidate(osmQuerry:Querry) ->dict:
+def _isOsmQuerryValidate(osmQuerry:Querry) ->dict:
     try:
         vector_provider = Vector.objects.get(provider_vector_id=osmQuerry.provider_vector_id)
         osmValidation = validateOsmQuerry(osmQuerry.where, osmQuerry.select, vector_provider.geometry_type)
@@ -69,13 +69,13 @@ class osmQuerryView(APIView):
         saved_querry = get_object_or_404(Querry.objects.all(), pk=pk)
         op_serializer = osmQuerrySerializer(instance=saved_querry, data=request.data, partial=True)
         if op_serializer.is_valid(raise_exception=True):
-            validation = isOsmQuerryValidate(Struct(**request.data))
+            validation = _isOsmQuerryValidate(Struct(**request.data))
             if validation['error'] == False:
                 op_serializer.validated_data['sql'] = validation['querry']
                 article_saved = op_serializer.save()
 
                 try:
-                    print(updateOsmDataSource(op_serializer.data['provider_vector_id']).updateDataSource())
+                    manageOsmDataSource(op_serializer.data['provider_vector_id']).updateDataSource()
                 except Exception:
                     traceback.print_exc()
 
@@ -89,15 +89,19 @@ class osmQuerryView(APIView):
     def post(self, request, *args, **kwargs):
         """ store a new osm querry"""
         op_serializer = osmQuerrySerializer(data=request.data)
-        if 'select' not in  request.data or request.data['select'] is None:
-            request._mutable = True
-            request.data.__setitem__('select','A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom')
+        # if 'select' not in  request.data or request.data['select'] is None:
+            # request._mutable = True
+            # request.data.__setitem__('select','A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom')
 
         if op_serializer.is_valid():
-            validation = isOsmQuerryValidate(Struct(**request.data))
+            validation = _isOsmQuerryValidate(Struct(**request.data))
             if validation['error'] == False:
                 op_serializer.validated_data['sql'] = validation['querry']
                 op_serializer.save()
+                try:
+                    manageOsmDataSource(op_serializer.data['provider_vector_id']).createDataSource()
+                except Exception:
+                    traceback.print_exc()
                 return Response(op_serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(validation, status=status.HTTP_400_BAD_REQUEST)
