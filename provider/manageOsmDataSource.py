@@ -9,26 +9,53 @@ from psycopg2.extensions import AsIs
 from .qgis.manageVectorLayer import addVectorLayerFomPostgis, AddVectorLayerResponse
 from geosmBackend.settings import DATABASES, OSMDATA
 from os.path import join
-from dataclasses import dataclass
+from geosmBackend.type import OperationResponse
+import traceback
 
 class TableAndSchema(NamedTuple):
     """ represent the table and shema of a provider """
     table:str
     shema:str
 
-@dataclass
-class OperationResponse:
-    """ represent the response returning when you add a vector layer in a QGIS Project"""
-    error:bool
-    msg:str
-    """ message if there is error """
-    description:str
-
 
 class manageOsmDataSource():
     """ create or delete before creating a table with an osm querry """
     def __init__(self, provider_vector_id:int):
         self.provider_vector_id = provider_vector_id
+
+    def deleteDataSource(self, provider_vector:Vector=None)->OperationResponse:
+        """ Delete and osm datasource by droping his table """
+        response=OperationResponse(
+            error=False,
+            msg="",
+            description="",
+        )
+
+        self.provider_vector = provider_vector
+        if self.provider_vector is None:
+            try:
+                self.provider_vector:Vector = Vector.objects.get(provider_vector_id=self.provider_vector_id)
+
+            except ObjectDoesNotExist as identifier:
+                response.error = True
+                response.msg = ' Can not find vector provider'
+                response.description = str(identifier)
+                return response
+
+        self._getTableAndSchema()
+
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("DROP TABLE  "+self.tableAndShema.shema+"."+self.tableAndShema.table)
+                response.error = False
+                return response
+        except Error as errorIdentifier :
+            traceback.print_exc()
+            response.error = True
+            response.msg = ' Can not drop the table '
+            response.description = str(errorIdentifier)
+            return response
+
 
     def updateDataSource(self)->OperationResponse:
         """ update an osm datsource """
@@ -60,8 +87,6 @@ class manageOsmDataSource():
 
         self._getTableAndSchema()
         return self._createOrReplaceTable()
-
-
 
     def createDataSource(self)->AddVectorLayerResponse:
         """ create an osm datsource, after add it to an QGIS project """

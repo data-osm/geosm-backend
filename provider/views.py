@@ -10,9 +10,11 @@ from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIV
 from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Count
+from geosmBackend.type import httpResponse
 
 from .serializers import VectorProviderSerializer
 from collections import defaultdict
+import traceback
 # Create your views here.
 
 class vectorProviderView(APIView):
@@ -38,6 +40,16 @@ class vectorProviderView(APIView):
         else:
             return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def delete(self, request, *args, **kwargs):
+        """ Delete vector providers """
+        try:
+            provider_vector_ids= request.data['provider_vector_ids']
+            vector_providers = Vector.objects.filter(pk__in=provider_vector_ids)
+            vector_providers.delete()
+            return Response(httpResponse(False).__dict__,status=status.HTTP_200_OK)
+        except :
+            traceback.print_exc()
+            return Response(httpResponse(True,'An unexpected error has occurred').__dict__,status=status.HTTP_400_BAD_REQUEST)
 
 class searchVectorProvider(APIView):
     """
