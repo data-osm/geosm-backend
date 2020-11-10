@@ -6,10 +6,10 @@ from django.db.models import Count, Q
 import re
 from django.db import connection, Error
 from psycopg2.extensions import AsIs
-from .qgis.manageVectorLayer import addVectorLayerFomPostgis, AddVectorLayerResponse
+from .qgis.manageVectorLayer import addVectorLayerFomPostgis
 from geosmBackend.settings import DATABASES, OSMDATA
 from os.path import join
-from geosmBackend.type import OperationResponse
+from geosmBackend.type import OperationResponse, AddVectorLayerResponse
 import traceback
 
 class TableAndSchema(NamedTuple):
@@ -20,27 +20,16 @@ class TableAndSchema(NamedTuple):
 
 class manageOsmDataSource():
     """ create or delete before creating a table with an osm querry """
-    def __init__(self, provider_vector_id:int):
-        self.provider_vector_id = provider_vector_id
+    def __init__(self, provider_vector:Vector):
+        self.provider_vector:Vector = provider_vector
 
-    def deleteDataSource(self, provider_vector:Vector=None)->OperationResponse:
+    def deleteDataSource(self)->OperationResponse:
         """ Delete and osm datasource by droping his table """
         response=OperationResponse(
             error=False,
             msg="",
             description="",
         )
-
-        self.provider_vector = provider_vector
-        if self.provider_vector is None:
-            try:
-                self.provider_vector:Vector = Vector.objects.get(provider_vector_id=self.provider_vector_id)
-
-            except ObjectDoesNotExist as identifier:
-                response.error = True
-                response.msg = ' Can not find vector provider'
-                response.description = str(identifier)
-                return response
 
         self._getTableAndSchema()
 
@@ -57,7 +46,7 @@ class manageOsmDataSource():
             return response
 
 
-    def updateDataSource(self)->OperationResponse:
+    def updateDataSource(self, osm_querry:Querry)->OperationResponse:
         """ update an osm datsource """
 
         response=OperationResponse(
@@ -65,30 +54,11 @@ class manageOsmDataSource():
             msg="",
             description="",
         )
-
-        try:
-           self.provider_vector:Vector = Vector.objects.get(provider_vector_id=self.provider_vector_id)
-
-        except ObjectDoesNotExist as identifier:
-            response.error = True
-            response.msg = ' Can not find vector provider'
-            response.description = str(identifier)
-            return response
-
-        try:
-           self.osm_querry:Querry = Querry.objects.get(provider_vector_id=self.provider_vector_id)
-           
-        except ObjectDoesNotExist as identifier:
-            response.error = True
-            response.msg = 'Can not find osm querry'
-            response.description = str(identifier)
-            return response
-           
-
+        self.osm_querry:Querry = osm_querry
         self._getTableAndSchema()
         return self._createOrReplaceTable()
 
-    def createDataSource(self)->AddVectorLayerResponse:
+    def createDataSource(self, osm_querry:Querry)->AddVectorLayerResponse:
         """ create an osm datsource, after add it to an QGIS project """
 
         response=AddVectorLayerResponse(
@@ -99,24 +69,7 @@ class manageOsmDataSource():
             layerName="",
         )
 
-        try:
-           self.provider_vector:Vector = Vector.objects.get(provider_vector_id=self.provider_vector_id)
-
-        except ObjectDoesNotExist as identifier:
-            response.error = True
-            response.msg = ' Can not find vector provider'
-            response.description = identifier
-            return response
-
-        try:
-           self.osm_querry:Querry = Querry.objects.get(provider_vector_id=self.provider_vector_id)
-           
-        except ObjectDoesNotExist as identifier:
-            response.error = True
-            response.msg = ' Can not find osm querry'
-            response.description = identifier
-            return response
-
+        self.osm_querry:Querry = osm_querry
         self._getTableAndSchema()
         
         createOrReplaceTableResponse = self._createOrReplaceTable()
@@ -209,7 +162,7 @@ class manageOsmDataSource():
             
         except Error as errorIdentifier :
             response.error = True
-            response.msg = ' Can not create the table '
+            response.msg = ' Can not create the table '+self.tableAndShema.table
             response.description = str(errorIdentifier)
             return response
 

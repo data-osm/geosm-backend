@@ -1,7 +1,7 @@
 import os
 from qgis.core import QgsVectorLayer, QgsProject, QgsApplication, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings
 import traceback
-from geosmBackend.type import OperationResponse
+from geosmBackend.type import OperationResponse, AddVectorLayerResponse
 from dataclasses import dataclass
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
@@ -9,17 +9,7 @@ QgsApplication.setPrefixPath("/usr/", True)
 qgs = QgsApplication([], False)
 
 
-@dataclass
-class AddVectorLayerResponse:
-    """ represent the response returning when you add a vector layer in a QGIS Project"""
-    error:bool
-    msg:str
-    """ message if there is error """
-    description:str
-    pathProject:str
-    """ path to the qgis project """
-    layerName:str
-    """ layer name in the QGIS project """
+
 
 def _getProjectInstance(pathToQgisProject:str)->QgsProject:
     """ 
@@ -151,14 +141,14 @@ def addVectorLayerFomPostgis(host:str, port:str, database:str, user:str, passwor
             response.msg = "Impossible to load the project"
 
     except :
-        # traceback.print_exc()
+        traceback.print_exc()
         response.error = True
         response.msg = "An unexpected error has occurred"
 
     return response
 
 def removeLayer(pathToQgisProject:str, layerName:str)->OperationResponse:
-    """Delete all layers with have a specific layername in a QGIS project
+    """Remove all layers with have a specific layername in a QGIS project
     Todo:
         remove layer in wfsList
 
