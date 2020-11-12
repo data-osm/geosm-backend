@@ -8,6 +8,7 @@ class OperationResponse:
     msg:str
     """ message if there is error """
     description:str
+    data:Any=None
 
 @dataclass
 class httpResponse:

@@ -7,8 +7,7 @@ from provider.qgis.manageVectorLayer import removeLayer
 
 @receiver(pre_save, sender=Querry)
 def updateStateQuerryProvider(sender, instance:Querry, **kwargs):
-    """Execute just before and Querry provider is add or updated Use to evaluate the state of the Querry provider
-
+    """Add or update the datasource in the vector provider
     Args:
         sender ([type]):
         instance (Querry): Querry provider that will be saved
@@ -24,7 +23,7 @@ def updateStateQuerryProvider(sender, instance:Querry, **kwargs):
 
 @receiver(pre_delete, sender=Querry)
 def deleteStateVectorProvider(sender, instance:Querry, **kwargs):
-    """Execute just after and vector provider is deleted Use delete his table in the DB and remove it in the QGIS projetct
+    """Execute just after and vector provider is deleted Use to delete his table in the DB and remove it in the QGIS projetct
         If we do not succed to remove it in QGIS project, we dont't delete the table. This will make sure our QGIS project don't have invalid layers !
     Args:
         sender ([type]): 

@@ -1,4 +1,4 @@
-from .models import Vector
+from .models import Vector, Style
 from osm.models import Querry
 from django.core.exceptions import ObjectDoesNotExist
 from typing import NamedTuple
@@ -7,6 +7,7 @@ import re
 from django.db import connection, Error
 from psycopg2.extensions import AsIs
 from .qgis.manageVectorLayer import addVectorLayerFomPostgis
+from .qgis.manageStyle import getQMLStyleOfLayer
 from geosmBackend.settings import DATABASES, OSMDATA
 from os.path import join
 from geosmBackend.type import OperationResponse, AddVectorLayerResponse
@@ -91,9 +92,19 @@ class manageOsmDataSource():
             )
 
             if createOSMDataSourceResponse.error == False:
-                self.provider_vector.url_server = createOSMDataSourceResponse.pathProject
-                self.provider_vector.id_server = createOSMDataSourceResponse.layerName
-                self.provider_vector.save()
+                qmlStyle = getQMLStyleOfLayer(createOSMDataSourceResponse.layerName, createOSMDataSourceResponse.pathProject)
+                if qmlStyle.error == False:
+
+                    default_style = Style(
+                        name='default',
+                        qml=qmlStyle.data,
+                        vector_id=self.provider_vector
+                    )
+                    default_style.save()
+                    
+                    self.provider_vector.url_server = createOSMDataSourceResponse.pathProject
+                    self.provider_vector.id_server = createOSMDataSourceResponse.layerName
+                    self.provider_vector.save()
             
             return createOSMDataSourceResponse
 
