@@ -159,7 +159,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
-            'level': 'WARNING',
+            'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, "geosmBackend",'debug.log'),
         },
@@ -184,5 +184,6 @@ SIMPLE_JWT = {
 }
 
 OSMDATA = {
-    'project_qgis_path':os.path.join(BASE_DIR, "provider","qgis","project")
+    'project_qgis_path':os.path.join(BASE_DIR, "provider","qgis","project"),
+    'qml_default_path':os.path.join(BASE_DIR, "provider","qgis","defaultQml"),
 }

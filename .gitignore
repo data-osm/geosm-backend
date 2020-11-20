@@ -4,5 +4,6 @@
 /geosmBackend/debug.log
 /provider/qgis/project
 /docker
+/icons/qml/*
 __pycache__
 .DS_Store

@@ -1,21 +1,60 @@
 from django.shortcuts import render
 
 # Create your views here.
-from .models import Vector
+from .models import Vector, Style
 from rest_framework import viewsets
 from rest_framework import permissions
-from rest_framework.parsers import FileUploadParser
+from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
 from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Count
 from geosmBackend.type import httpResponse
+from django.shortcuts import get_list_or_404, get_object_or_404
 
-from .serializers import VectorProviderSerializer
+from .serializers import VectorProviderSerializer, styleProviderSerializer
 from collections import defaultdict
 import traceback
 # Create your views here.
+
+class styleView(APIView):
+    """View to list style of a provider, delete, add or edit style"""
+    permission_classes = [permissions.IsAuthenticated]
+    parser_class = [MultiPartParser, FormParser]
+    def get(self, request, provider_vector_id):
+        """ get all styles of a provider"""
+        styles = get_list_or_404(Style.objects.all(), provider_vector_id=provider_vector_id)
+        op_serializer = styleProviderSerializer(instance=styles, many=True)
+        return Response(op_serializer.data, status=status.HTTP_200_OK)
+       
+    def put(self, request, pk):
+        """ update a style """
+        style = get_object_or_404(Style.objects.all(), pk=pk)
+        op_serializer = styleProviderSerializer(instance=style, data=request.data, partial=True)
+        if op_serializer.is_valid(raise_exception=False):
+            try:
+                op_serializer.save()
+                return Response(op_serializer.data, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response(httpResponse(error=True,msg=str(e)).toJson(), status=status.HTTP_400_BAD_REQUEST)
+           
+        else:
+            return Response(op_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def post(self, request, *args, **kwargs):
+        """ store a new style"""
+        op_serializer = styleProviderSerializer(data=request.data)
+        if op_serializer.is_valid():
+            try:
+                op_serializer.save()
+                return Response(op_serializer.data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response(httpResponse(error=True,msg=str(e)).toJson(), status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response(op_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class vectorProviderView(APIView):
     """
@@ -30,9 +69,6 @@ class vectorProviderView(APIView):
     def post(self, request, *args, **kwargs):
         """ store a new vector providor """
         vp_serializer = VectorProviderSerializer(data=request.data)
-        # if 'table' not in  request.data or 'shema' not in  request.data:
-            # request._mutable = True
-            # request.data.__setitem__('state','action_require')
 
         if vp_serializer.is_valid():
             vp_serializer.save()

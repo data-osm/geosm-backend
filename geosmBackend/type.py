@@ -32,3 +32,13 @@ class AddVectorLayerResponse:
     """ path to the qgis project """
     layerName:str
     """ layer name in the QGIS project """
+
+@dataclass
+class GetQMLStyleOfLayerResponse:
+    """ represent the response returning when fetch qml content file of a layer"""
+    error:bool
+    msg:str
+    """ message if there is error """
+    description:str
+    qmlPath:str
+    qmlContent:str

@@ -1,4 +1,4 @@
-from .models import Vector
+from .models import Vector, Style
 from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from .manageOsmDataSource import manageOsmDataSource
@@ -19,5 +19,3 @@ def updateStateVectorProvider(sender, instance:Vector, **kwargs):
         instance.state ='action_require'
     else:
         instance.state ='unknow'
-
-    

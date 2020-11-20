@@ -6,11 +6,14 @@ from django.db.models import Count, Q
 import re
 from django.db import connection, Error
 from psycopg2.extensions import AsIs
-from .qgis.manageVectorLayer import addVectorLayerFomPostgis
+from .qgis.manageVectorLayer import addVectorLayerFomPostgis, removeLayer
 from .qgis.manageStyle import getQMLStyleOfLayer
 from geosmBackend.settings import DATABASES, OSMDATA
 from os.path import join
-from geosmBackend.type import OperationResponse, AddVectorLayerResponse
+from geosmBackend.type import OperationResponse, AddVectorLayerResponse, GetQMLStyleOfLayerResponse
+from django.core.files import File
+from django.core.files.base import ContentFile
+
 import traceback
 
 class TableAndSchema(NamedTuple):
@@ -92,20 +95,28 @@ class manageOsmDataSource():
             )
 
             if createOSMDataSourceResponse.error == False:
-                qmlStyle = getQMLStyleOfLayer(createOSMDataSourceResponse.layerName, createOSMDataSourceResponse.pathProject)
-                if qmlStyle.error == False:
+                qmlStyle:GetQMLStyleOfLayerResponse = getQMLStyleOfLayer(createOSMDataSourceResponse.layerName, createOSMDataSourceResponse.pathProject)
 
-                    default_style = Style(
-                        name='default',
-                        qml=qmlStyle.data,
-                        vector_id=self.provider_vector
-                    )
-                    default_style.save()
+                if qmlStyle.error == False:
                     
                     self.provider_vector.url_server = createOSMDataSourceResponse.pathProject
                     self.provider_vector.id_server = createOSMDataSourceResponse.layerName
                     self.provider_vector.save()
-            
+
+                    try:
+                        f = open(join(OSMDATA['qml_default_path'],'default-'+self.provider_vector.geometry_type+'.qml'))
+                        myfile = File(f)
+                        default_style = Style(
+                            name='default',
+                            qml_file=myfile,
+                            provider_vector_id=self.provider_vector
+                        )
+                        default_style.save()
+                    except Exception as e :
+                        print(str(e),'error')
+                        
+                
+
             return createOSMDataSourceResponse
 
         else:
@@ -130,11 +141,11 @@ class manageOsmDataSource():
         if self.provider_vector.table:
             table = self.provider_vector.table
         else:
-            table = re.sub('[^A-Za-z0-9]+', '', self.provider_vector.name)
+            table = re.sub('[^A-Za-z0-9]+', '', self.provider_vector.name).lower()
             i= 0
 
             while Vector.objects.annotate( num_table=Count('table',filter=Q(table=table) ) )[0].num_table != 0:
-                table = re.sub('[^A-Za-z0-9]+', '', self.provider_vector.name)+'_'+str(i)
+                table = re.sub('[^A-Za-z0-9]+', '', self.provider_vector.name).lower()+'_'+str(i)
                 i += 1 
 
         self.tableAndShema:TableAndSchema = TableAndSchema(table, shema)

@@ -1,4 +1,8 @@
 from django.contrib.gis.db import models
+import re
+import os
+from .qgis.manageStyle import addStyleQMLFromStringToLayer
+
 # Create your models here.
 
 class StateOfProvider(models.TextChoices):
@@ -66,8 +70,12 @@ class External (models.Model) :
     epsg = models.IntegerField()
 
 def get_custom_style_icon_path(instance, filename):
-    directory = re.sub('[^A-Za-z0-9]+', '', 'custom_style_id')
+    directory = re.sub('[^A-Za-z0-9]+', '', instance.custom_style_id)
     return os.path.join(directory, filename)
+
+def get_custom_qml_path(instance, filename):
+    directory = re.sub('[^A-Za-z0-9]+', '', 'qml')
+    return os.path.join(directory, instance.name+'_'+str(instance.pk)+'.qml')
 
 class Custom_style (models.Model):
     """ model that store custom and parametrable QGIS styles """
@@ -80,10 +88,24 @@ class Custom_style (models.Model):
 
 class Style (models.Model):
     """ model that store name, qml, ol style of a provider (raster and vector) """
-    provider_style_id = models.BigAutoField(primary_key=True) 
+    provider_style_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
     qml = models.TextField()
     ol = models.TextField(blank=True)
     pictogram = models.ImageField(blank=True)
-    vector_id = models.ForeignKey(Vector,on_delete=models.CASCADE)
+    provider_vector_id = models.ForeignKey(Vector,on_delete=models.CASCADE)
     custom_style_id = models.ForeignKey(Custom_style,on_delete=models.SET_NULL,blank=True,null=True)
+    qml_file = models.FileField(blank=True, null=True,default=None,upload_to=get_custom_qml_path)
+    """ just use in order to write the content of the file in the field qml. ie: the file never exist"""
+
+    def save(self, *args, **kwargs):
+        """ save a style """
+        self.name = re.sub('[^A-Za-z0-9]+', '', self.name)
+        self.qml_file.open(mode="r")
+        qml_content = self.qml_file.read()
+        self.qml= qml_content
+        response = addStyleQMLFromStringToLayer(self.provider_vector_id.id_server, self.provider_vector_id.url_server, self.name, qml_content)
+        if response.error:
+            raise Exception(response.msg+" : "+str(response.description))
+        super(Style,self).save(*args, **kwargs)
+        
