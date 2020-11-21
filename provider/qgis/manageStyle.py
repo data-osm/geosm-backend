@@ -104,7 +104,8 @@ def removeStyle(layerName:str, pathToQgisProject:str, styleName:str )->Operation
                 styleManager = layer.styleManager()
                 if styleName in styleManager.styles():
                     response.error = styleManager.removeStyle(styleName) != True
-
+                    if response.error == False:
+                        QGISProject.write()
             else:
                 response.error = True
                 response.msg = "Impossible to retrieve layer : "+str(layerName)
@@ -113,7 +114,69 @@ def removeStyle(layerName:str, pathToQgisProject:str, styleName:str )->Operation
             response.msg = "Impossible to load the project"
 
         return response
-        
+
+    except Exception as e:
+        traceback.print_exc()
+        response.error = True
+        response.description = str(e)
+        response.msg = "An unexpected error has occurred"
+
+def updateStyle(layerName:str, pathToQgisProject:str, styleName:str, newStyleName:str, QML:str)->OperationResponse:
+    """ Remove a style from a layer in QGIS 
+    Args:
+        layerName (str): name of the layer
+        pathToQgisProject (str): path to the QGIS project
+        styleName (str): name of the  styleb to remove
+        newStyleName (str): new name of the style
+    
+    Returns:
+        OperationResponse
+    """
+
+    response = OperationResponse(error=False,msg='',description='')
+
+    QGISProject = _getProjectInstance(pathToQgisProject)
+
+    try:
+        if QGISProject:
+            if len(QGISProject.mapLayersByName(layerName)) != 0:
+                layer = QGISProject.mapLayersByName(layerName)[0]
+                styleManager = layer.styleManager()
+
+                if styleName != newStyleName :
+                    response.error = styleManager.renameStyle(styleName, newStyleName) != True
+                    if response.error:
+                        response.msg = "Can not rename style name "+str(styleName)+" to "+str(newStyleName)
+
+                if QML is not None and response.error == False:
+                    style = styleManager.style(newStyleName)
+                    if style:
+                        style.clear()
+                        doc = QDomDocument()
+                        elem = doc.createElement("style-data-som")
+                        xmlStyle:QDomDocument = QDomDocument()
+                        xmlStyle.setContent(QML)
+                        elem.appendChild(xmlStyle.childNodes().at(0))
+                        
+                        style.readXml(elem)
+                        response.error = style.isValid() != True
+                        if response.error:
+                            response.error = True
+                            response.msg = "The QML file is not valid !"
+                    else:
+                        response.error = True
+                        response.msg = " Impossible to retrive style name "+str(newStyleName)
+            else:
+                response.error = True
+                response.msg = "Impossible to retrieve layer : "+str(layerName)
+        else:
+            response.error = True
+            response.msg = "Impossible to load the project"
+
+        if response.error == False:
+            QGISProject.write()
+        return response
+
     except Exception as e:
         traceback.print_exc()
         response.error = True

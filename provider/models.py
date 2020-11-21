@@ -1,7 +1,7 @@
 from django.contrib.gis.db import models
 import re
 import os
-from .qgis.manageStyle import addStyleQMLFromStringToLayer, removeStyle
+from .qgis.manageStyle import addStyleQMLFromStringToLayer, removeStyle, updateStyle
 
 # Create your models here.
 
@@ -97,16 +97,36 @@ class Style (models.Model):
     custom_style_id = models.ForeignKey(Custom_style,on_delete=models.SET_NULL,blank=True,null=True)
     qml_file = models.FileField(blank=True, null=True,default=None,upload_to=get_custom_qml_path)
     """ just use in order to write the content of the file in the field qml. ie: the file never exist"""
+    class Meta:
+        unique_together = ('name', 'provider_vector_id',)
 
     def save(self, *args, **kwargs):
-        """ save a style """
+        """ save or update a style """
+
         self.name = re.sub('[^A-Za-z0-9]+', '', self.name)
-        self.qml_file.open(mode="r")
-        qml_content = self.qml_file.read()
-        self.qml= qml_content
-        response = addStyleQMLFromStringToLayer(self.provider_vector_id.id_server, self.provider_vector_id.url_server, self.name, qml_content)
-        if response.error:
-            raise Exception(response.msg+" : "+str(response.description))
+        
+        if self.pk:
+            
+            previousStyle = Style.objects.get(pk=self.pk)
+            qml_content = None
+            if previousStyle.qml_file != self.qml_file:
+                self.qml_file.open(mode="r")
+                qml_content = self.qml_file.read()
+                self.qml= qml_content
+
+            responseUpdateStyle = updateStyle(self.provider_vector_id.id_server, self.provider_vector_id.url_server, previousStyle.name, self.name, qml_content)
+
+            if responseUpdateStyle.error:
+                raise Exception(responseUpdateStyle.msg+" : "+str(responseUpdateStyle.description))
+
+        else:
+            self.qml_file.open(mode="r")
+            qml_content = self.qml_file.read()
+            self.qml= qml_content
+            responseAddStyle = addStyleQMLFromStringToLayer(self.provider_vector_id.id_server, self.provider_vector_id.url_server, self.name, qml_content)
+            if responseAddStyle.error:
+                raise Exception(responseAddStyle.msg+" : "+str(responseAddStyle.description))
+        
         super(Style,self).save(*args, **kwargs)
         
     def delete(self, *args, **kwargs):
