@@ -1,21 +1,21 @@
 import os
+from os.path import join
 from qgis.core import QgsVectorLayer, QgsProject, QgsApplication, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings, QgsMapLayerStyle
 import traceback
-from geosmBackend.type import OperationResponse, GetQMLStyleOfLayerResponse
 from dataclasses import dataclass
 import tempfile
-from django.db import connection, Error
-from psycopg2.extensions import AsIs
-import os
 from qgis.PyQt.QtXml import QDomDocument, QDomElement
 from qgis.PyQt.QtCore import QFile, QIODevice
 import logging
+from geosmBackend.type import OperationResponse, GetQMLStyleOfLayerResponse
+from geosmBackend.settings import OSMDATA
 log = logging.getLogger(__name__)
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 QgsApplication.setPrefixPath("/usr/", True)
 qgs = QgsApplication([], False)
 
+project_qgis_path = OSMDATA['project_qgis_path']
 
 def _getProjectInstance(pathToQgisProject:str)->QgsProject:
     """ 
@@ -31,7 +31,7 @@ def _getProjectInstance(pathToQgisProject:str)->QgsProject:
     try:
         qgs.initQgis()
         project = QgsProject()
-        project.read(pathToQgisProject)
+        project.read(join(project_qgis_path, pathToQgisProject))
         return project
 
     except:

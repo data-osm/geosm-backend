@@ -37,6 +37,8 @@ class Vector(models.Model):
     """ url of the carto server """
     id_server = models.CharField(max_length=50,null=True,default=None)
     """ identifiant of this ressource in the carto server """
+    path_qgis = models.CharField(max_length=250,null=True,blank=True,default=None)
+    """ Path to QGIS project """
     extent = models.TextField(null=True)
     """ extent of this ressource """
     z_min = models.IntegerField(null=False,default=0)
@@ -53,6 +55,9 @@ class Vector(models.Model):
         choices=StateOfProvider.choices,
         null=True
     )
+
+    class Meta:
+        unique_together = ('id_server', 'path_qgis',)
     
 class External (models.Model) :
     """ model of a external provider : data are not stre in the app DB"""
@@ -114,7 +119,7 @@ class Style (models.Model):
                 qml_content = self.qml_file.read()
                 self.qml= qml_content
 
-            responseUpdateStyle = updateStyle(self.provider_vector_id.id_server, self.provider_vector_id.url_server, previousStyle.name, self.name, qml_content)
+            responseUpdateStyle = updateStyle(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, previousStyle.name, self.name, qml_content)
 
             if responseUpdateStyle.error:
                 raise Exception(responseUpdateStyle.msg+" : "+str(responseUpdateStyle.description))
@@ -123,7 +128,7 @@ class Style (models.Model):
             self.qml_file.open(mode="r")
             qml_content = self.qml_file.read()
             self.qml= qml_content
-            responseAddStyle = addStyleQMLFromStringToLayer(self.provider_vector_id.id_server, self.provider_vector_id.url_server, self.name, qml_content)
+            responseAddStyle = addStyleQMLFromStringToLayer(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name, qml_content)
             if responseAddStyle.error:
                 raise Exception(responseAddStyle.msg+" : "+str(responseAddStyle.description))
         
@@ -131,7 +136,7 @@ class Style (models.Model):
         
     def delete(self, *args, **kwargs):
         """ delete a style """
-        responseRemoveStyle = removeStyle(self.provider_vector_id.id_server, self.provider_vector_id.url_server, self.name)
+        responseRemoveStyle = removeStyle(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name)
         if responseRemoveStyle.error :
             raise Exception(responseRemoveStyle.msg+" : "+str(responseRemoveStyle.description))
         super(Style,self).delete(*args, **kwargs)

@@ -79,7 +79,7 @@ class manageOsmDataSource():
         createOrReplaceTableResponse = self._createOrReplaceTable()
 
         if createOrReplaceTableResponse.error == False:
-
+            qgis_project = 'projet.qgs'
             createOSMDataSourceResponse =  addVectorLayerFomPostgis(
                 DATABASES['default']['HOST'],
                 DATABASES['default']['PORT'],
@@ -91,28 +91,26 @@ class manageOsmDataSource():
                 'geom',
                 'osm_id',
                 self.provider_vector.table,
-                join(OSMDATA['project_qgis_path'],'projet.qgs')
+                qgis_project
             )
 
             if createOSMDataSourceResponse.error == False:
-                qmlStyle:GetQMLStyleOfLayerResponse = getQMLStyleOfLayer(createOSMDataSourceResponse.layerName, createOSMDataSourceResponse.pathProject)
-
-                if qmlStyle.error == False:
                     
-                    self.provider_vector.url_server = createOSMDataSourceResponse.pathProject
-                    self.provider_vector.id_server = createOSMDataSourceResponse.layerName
-                    self.provider_vector.save()
-
-                    try:
-                        f = open(join(OSMDATA['qml_default_path'],'default-'+self.provider_vector.geometry_type+'.qml'))
-                        myfile = File(f)
-                        default_style = Style(
-                            name='default',
-                            qml_file=myfile,
-                            provider_vector_id=self.provider_vector
-                        )
-                        default_style.save()
-                    except Exception as e :
+                self.provider_vector.path_qgis = qgis_project
+                self.provider_vector.url_server = OSMDATA['url_qgis_server_prefix']+qgis_project
+                self.provider_vector.id_server = createOSMDataSourceResponse.layerName
+                self.provider_vector.save()
+                
+                try:
+                    f = open(join(OSMDATA['qml_default_path'],'default-'+self.provider_vector.geometry_type+'.qml'))
+                    myfile = File(f)
+                    default_style = Style(
+                        name='default',
+                        qml_file=myfile,
+                        provider_vector_id=self.provider_vector
+                    )
+                    default_style.save()
+                except Exception as e :
                         print(str(e),'error')
                         
                 

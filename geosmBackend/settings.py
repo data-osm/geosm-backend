@@ -186,4 +186,5 @@ SIMPLE_JWT = {
 OSMDATA = {
     'project_qgis_path':os.path.join(BASE_DIR, "provider","qgis","project"),
     'qml_default_path':os.path.join(BASE_DIR, "provider","qgis","defaultQml"),
+    'url_qgis_server_prefix':'http://localhost:3000/ows/?map='
 }

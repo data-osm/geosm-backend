@@ -29,8 +29,8 @@ def deleteStateVectorProvider(sender, instance:Querry, **kwargs):
         sender ([type]): 
         instance (Querry): The vector provider that have already been deleted
     """
-    if instance.provider_vector_id.url_server and instance.provider_vector_id.id_server:
-        if removeLayer(instance.provider_vector_id.url_server,instance.provider_vector_id.id_server).error == False:
+    if instance.provider_vector_id.path_qgis and instance.provider_vector_id.id_server:
+        if removeLayer(instance.provider_vector_id.path_qgis,instance.provider_vector_id.id_server).error == False:
             manageOsmDataSource(instance.provider_vector_id).deleteDataSource()
     
     

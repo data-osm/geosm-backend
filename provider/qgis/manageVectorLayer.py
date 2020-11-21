@@ -1,14 +1,16 @@
 import os
+from os.path import join
 from qgis.core import QgsVectorLayer, QgsProject, QgsApplication, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings
 import traceback
 from geosmBackend.type import OperationResponse, AddVectorLayerResponse
+from geosmBackend.settings import OSMDATA
 from dataclasses import dataclass
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 QgsApplication.setPrefixPath("/usr/", True)
 qgs = QgsApplication([], False)
 
-
+project_qgis_path = OSMDATA['project_qgis_path']
 
 
 def _getProjectInstance(pathToQgisProject:str)->QgsProject:
@@ -25,7 +27,7 @@ def _getProjectInstance(pathToQgisProject:str)->QgsProject:
     try:
         qgs.initQgis()
         project = QgsProject()
-        project.read(pathToQgisProject)
+        project.read(join(project_qgis_path, pathToQgisProject))
         return project
 
     except:
