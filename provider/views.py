@@ -55,6 +55,15 @@ class styleView(APIView):
         else:
             return Response(op_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def delete(self, request, pk):
+        """ Delete a style """
+        try:
+            style = get_object_or_404(Style.objects.all(), pk=pk)
+            style.delete()
+            return Response(httpResponse(False).__dict__,status=status.HTTP_200_OK)
+        except Exception as e :
+            traceback.print_exc()
+            return Response(httpResponse(error=True,msg=str(e)).toJson(),status=status.HTTP_400_BAD_REQUEST)
 
 class vectorProviderView(APIView):
     """

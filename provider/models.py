@@ -1,7 +1,7 @@
 from django.contrib.gis.db import models
 import re
 import os
-from .qgis.manageStyle import addStyleQMLFromStringToLayer
+from .qgis.manageStyle import addStyleQMLFromStringToLayer, removeStyle
 
 # Create your models here.
 
@@ -109,3 +109,9 @@ class Style (models.Model):
             raise Exception(response.msg+" : "+str(response.description))
         super(Style,self).save(*args, **kwargs)
         
+    def delete(self, *args, **kwargs):
+        """ delete a style """
+        responseRemoveStyle = removeStyle(self.provider_vector_id.id_server, self.provider_vector_id.url_server, self.name)
+        if responseRemoveStyle.error :
+            raise Exception(responseRemoveStyle.msg+" : "+str(responseRemoveStyle.description))
+        super(Style,self).delete(*args, **kwargs)

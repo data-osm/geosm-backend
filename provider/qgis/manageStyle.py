@@ -82,7 +82,43 @@ def getQMLStyleOfLayer( layerName:str, pathToQgisProject:str)->GetQMLStyleOfLaye
 
     return response
 
+def removeStyle(layerName:str, pathToQgisProject:str, styleName:str )->OperationResponse:
+    """ Remove a style from a layer in QGIS 
+    Args:
+        layerName (str): name of the layer
+        pathToQgisProject (str): path to the QGIS project
+        styleName (str): name of the  styleb to remove
+    
+    Returns:
+        OperationResponse
+    """
 
+    response = OperationResponse(error=False,msg='',description='')
+
+    QGISProject = _getProjectInstance(pathToQgisProject)
+
+    try:
+        if QGISProject:
+            if len(QGISProject.mapLayersByName(layerName)) != 0:
+                layer = QGISProject.mapLayersByName(layerName)[0]
+                styleManager = layer.styleManager()
+                if styleName in styleManager.styles():
+                    response.error = styleManager.removeStyle(styleName) != True
+
+            else:
+                response.error = True
+                response.msg = "Impossible to retrieve layer : "+str(layerName)
+        else:
+            response.error = True
+            response.msg = "Impossible to load the project"
+
+        return response
+        
+    except Exception as e:
+        traceback.print_exc()
+        response.error = True
+        response.description = str(e)
+        response.msg = "An unexpected error has occurred"
 
 def _addStyleToLayer(layerName:str, pathToQgisProject:str, styleName:str, QML:str)->OperationResponse:
     """Add or update style from a qml file or an XML of QML on a layer. The new style will have a new name
