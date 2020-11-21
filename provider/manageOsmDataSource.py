@@ -39,7 +39,7 @@ class manageOsmDataSource():
 
         try:
             with connection.cursor() as cursor:
-                cursor.execute("DROP TABLE  "+self.tableAndShema.shema+"."+self.tableAndShema.table)
+                cursor.execute("DROP TABLE IF EXISTS "+self.tableAndShema.shema+"."+self.tableAndShema.table)
                 response.error = False
                 return response
         except Error as errorIdentifier :
