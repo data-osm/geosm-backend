@@ -2,6 +2,7 @@ from django.contrib.gis.db import models
 import re
 import os
 from .qgis.manageStyle import addStyleQMLFromStringToLayer, removeStyle, updateStyle
+from django.contrib.postgres.fields import ArrayField
 
 # Create your models here.
 
@@ -39,7 +40,13 @@ class Vector(models.Model):
     """ identifiant of this ressource in the carto server """
     path_qgis = models.CharField(max_length=250,null=True,blank=True,default=None)
     """ Path to QGIS project """
-    extent = models.TextField(null=True)
+    extent = ArrayField(
+        models.FloatField(),
+        size=4,
+        null=True,
+        blank=True,
+        default=None
+    )
     """ extent of this ressource """
     z_min = models.IntegerField(null=False,default=0)
     z_max = models.IntegerField(null=False,default=24)

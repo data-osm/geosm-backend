@@ -150,7 +150,7 @@ def updateStyle(layerName:str, pathToQgisProject:str, styleName:str, newStyleNam
 
                 if QML is not None and response.error == False:
                     style = styleManager.style(newStyleName)
-                    if style:
+                    if style and styleManager.setCurrentStyle(newStyleName):
                         style.clear()
                         doc = QDomDocument()
                         elem = doc.createElement("style-data-som")
@@ -163,6 +163,8 @@ def updateStyle(layerName:str, pathToQgisProject:str, styleName:str, newStyleNam
                         if response.error:
                             response.error = True
                             response.msg = "The QML file is not valid !"
+                        else:
+                            style.writeToLayer(layer)
                     else:
                         response.error = True
                         response.msg = " Impossible to retrive style name "+str(newStyleName)
@@ -221,11 +223,6 @@ def _addStyleToLayer(layerName:str, pathToQgisProject:str, styleName:str, QML:st
                     
                     if styleName not in styleManager.styles():
                         response.error = styleManager.addStyle(styleName,newStyle) != True
-                    else:
-                        oldStyle:QgsMapLayerStyle = styleManager.style(styleName)
-                        oldStyle.clear()
-                        oldStyle.readXml(elem)
-                        response.error = oldStyle.isValid() != True
                     
                     # print(styleManager.styles())
                     if response.error == True:

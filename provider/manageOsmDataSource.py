@@ -60,7 +60,16 @@ class manageOsmDataSource():
         )
         self.osm_querry:Querry = osm_querry
         self._getTableAndSchema()
-        return self._createOrReplaceTable()
+
+        createOrReplaceTableResponse = self._createOrReplaceTable()
+
+        if createOrReplaceTableResponse.error == False:
+            if createOrReplaceTableResponse.data['extent']:
+                self.provider_vector.extent = createOrReplaceTableResponse.data['extent']
+            self.provider_vector.count = createOrReplaceTableResponse.data['count']
+            self.provider_vector.save()
+
+        return createOrReplaceTableResponse
 
     def createDataSource(self, osm_querry:Querry)->AddVectorLayerResponse:
         """ create an osm datsource, after add it to an QGIS project """
@@ -95,12 +104,15 @@ class manageOsmDataSource():
             )
 
             if createOSMDataSourceResponse.error == False:
-                    
+                if createOrReplaceTableResponse.data['extent']:
+                    self.provider_vector.extent = createOrReplaceTableResponse.data['extent']
+                self.provider_vector.count = createOrReplaceTableResponse.data['count']
+
                 self.provider_vector.path_qgis = qgis_project
                 self.provider_vector.url_server = OSMDATA['url_qgis_server_prefix']+qgis_project
                 self.provider_vector.id_server = createOSMDataSourceResponse.layerName
                 self.provider_vector.save()
-                
+
                 try:
                     f = open(join(OSMDATA['qml_default_path'],'default-'+self.provider_vector.geometry_type+'.qml'))
                     myfile = File(f)
@@ -162,6 +174,10 @@ class manageOsmDataSource():
             error=False,
             msg="",
             description="",
+            data={
+                'extent':None,
+                'count':0
+            }
         )
 
         with connection.cursor() as cursor:
@@ -180,6 +196,18 @@ class manageOsmDataSource():
                 if self.provider_vector.geometry_type == 'Point':
                     cursor.execute("ALTER TABLE "+ self.tableAndShema.shema+"."+self.tableAndShema.table+" ALTER COLUMN geom TYPE geometry(Point,4326) USING ST_centroid(geom); ")
             
+            with connection.cursor() as cursor:
+                cursor.execute("select min(ST_XMin(geom)) as l,min(ST_YMin(geom)) as b,max(ST_XMax(geom)) as r,max(ST_YMax(geom)) as t, count(*) as count from "+self.tableAndShema.shema+"."+self.tableAndShema.table)
+                responseExtent = cursor.fetchall()[0]
+                response.data['extent']=[
+                    responseExtent[0],
+                    responseExtent[1],
+                    responseExtent[2],
+                    responseExtent[3]
+                ]
+               
+                response.data['count']= int(responseExtent[4])
+
         except Error as errorIdentifier :
             response.error = True
             response.msg = ' Can not create the table '+self.tableAndShema.table
