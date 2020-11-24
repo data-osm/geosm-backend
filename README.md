@@ -1,7 +1,7 @@
 ### Create the virtual env and install requirements
 ```sh
-$ python3 -m venv dataosmenv
-$ source dataosmenv/bin/activate
+$ python3 -m venv --system-site-packages dataosmenv
+$ source dataosmenv/bin/activate 
 $ python -m pip install --upgrade pip
 $ pip install -r requirements.txt
 ```
@@ -10,8 +10,8 @@ First create the database and install extention
 ```sh
 $ psql postgres
 $ create database ...
-$ CREATE EXTENSION unaccent
-$ CREATE EXTENSION hstore
+$ CREATE EXTENSION unaccent;
+$ CREATE EXTENSION hstore;
 ```
 
 ```sh
