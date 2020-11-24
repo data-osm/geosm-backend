@@ -1,16 +1,17 @@
 from django.shortcuts import render
 
 # Create your views here.
-from .models import Icon
+from .models import Icon, Map, Group, Sub, Layer, Default_map, Type
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
 from rest_framework import status
 from django.db.models import Count
 
-from .serializers import IconSerializer
+from .serializers import IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, TypeSerializer
 from collections import defaultdict
 
 
@@ -56,4 +57,52 @@ class searchIcon(APIView):
 
         return Response(responseQuerry,status=status.HTTP_200_OK)
 
-        
+class MapViewDetail(RetrieveUpdateDestroyAPIView):
+    queryset=Map.objects.all()
+    serializer_class=MapSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class MapViewListCreate(ListCreateAPIView):
+    queryset=Map.objects.all()
+    serializer_class=MapSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class GroupVieuwDetail(RetrieveUpdateDestroyAPIView):
+    queryset=Group.objects.all()
+    serializer_class=GroupSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class GroupVieuwListCreate(ListCreateAPIView):
+    queryset=Group.objects.all()
+    serializer_class=GroupSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class SubVieuwDetail(RetrieveUpdateDestroyAPIView):
+    queryset=Sub.objects.all()
+    serializer_class=SubSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class SubVieuwListCreate(ListCreateAPIView):
+    queryset=Sub.objects.all()
+    serializer_class=SubSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
+    queryset=Layer.objects.all()
+    serializer_class=LayerSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class LayerVieuwListCreate(ListCreateAPIView):
+    queryset=Layer.objects.all()
+    serializer_class=LayerSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class TypeVieuwListCreate(ListCreateAPIView):
+    queryset=Type.objects.all()
+    serializer_class=TypeSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class TypeVieuwDetail(RetrieveUpdateDestroyAPIView):
+    queryset=Type.objects.all()
+    serializer_class=TypeSerializer
+    permission_classes=[permissions.IsAuthenticated]
