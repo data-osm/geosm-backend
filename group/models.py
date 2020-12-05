@@ -85,4 +85,4 @@ class Layer (models.Model):
     share = models.BooleanField(default=True)
     vector_prov = models.ManyToManyField(Vector,blank=True)
     external_prov = models.ManyToManyField(External,blank=True)
-
+    sub = models.ForeignKey(Sub,on_delete=models.CASCADE)

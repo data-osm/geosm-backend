@@ -1,4 +1,4 @@
-from django.urls import include, path
+from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
 from .views import iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
@@ -16,8 +16,9 @@ urlpatterns = [
     path("group",GroupVieuwListCreate.as_view()),
     path("group/<int:pk>",GroupVieuwDetail.as_view()),
 
-    path("sub",SubVieuwDetail.as_view()),
-    path("sub/<int:pk>",SubVieuwListCreate.as_view()),
+    path("sub",SubVieuwListCreate.as_view()),
+    path("sub/<int:pk>",SubVieuwDetail.as_view()),
+
 
     path("layer",LayerVieuwListCreate.as_view()),
     path("layer/<int:pk>",LayerVieuwDetail.as_view()),

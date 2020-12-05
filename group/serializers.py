@@ -34,10 +34,18 @@ class GroupSerializer(serializers.ModelSerializer):
     """
         Group serializer
     """
-
+    map_id = serializers.PrimaryKeyRelatedField(queryset=Map.objects.all(), write_only=True)
+    group_id = serializers.IntegerField(read_only=True)
+    
     class Meta:
         model = Group
-        fields = "__all__"
+        fields = ("name", "color", "icon", "type_group", "map_id", "group_id")
+    
+    def create(self, validate_data):
+        map = validate_data.pop('map_id')
+        group = Group.objects.create(map=map, **validate_data)
+        group.map_set.add(map)
+        return group
 
 class SubSerializer(serializers.ModelSerializer):
     """

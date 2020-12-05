@@ -7,14 +7,32 @@ from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
+from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, ListAPIView)
 from rest_framework import status
 from django.db.models import Count
+from django.shortcuts import get_list_or_404, get_object_or_404
 
 from .serializers import IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer
 from collections import defaultdict
 
-
+class MultipleFieldLookupListMixin:
+    """
+    Apply this mixin to any view or viewset to get multiple field filtering
+    based on a `lookup_fields` attribute, instead of the default single field filtering.
+    """
+    def get_queryset(self):
+        """
+        Optionally restricts the returned purchases to a given user,
+        by filtering against a `username` query parameter in the URL.
+        """
+        queryset=self.model.objects.all()
+        filter = {}
+        for field in self.lookup_fields:
+            if self.request.query_params.get(field, None):
+                filter[field] = self.request.query_params.get(field)
+        queryset = queryset.filter(**filter)
+        return queryset
+        
 class listIconByCategory(APIView):
     """
         View to list icons by group
@@ -72,20 +90,24 @@ class GroupVieuwDetail(RetrieveUpdateDestroyAPIView):
     serializer_class=GroupSerializer
     permission_classes=[permissions.IsAuthenticated]
 
-class GroupVieuwListCreate(ListCreateAPIView):
+class GroupVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
     queryset=Group.objects.all()
     serializer_class=GroupSerializer
     permission_classes=[permissions.IsAuthenticated]
+    lookup_fields=['map']
+    model = Group
 
 class SubVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Sub.objects.all()
     serializer_class=SubSerializer
     permission_classes=[permissions.IsAuthenticated]
 
-class SubVieuwListCreate(ListCreateAPIView):
+class SubVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
     queryset=Sub.objects.all()
     serializer_class=SubSerializer
     permission_classes=[permissions.IsAuthenticated]
+    lookup_fields=['group_id']
+    model = Sub
 
 class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Layer.objects.all()
@@ -96,3 +118,5 @@ class LayerVieuwListCreate(ListCreateAPIView):
     queryset=Layer.objects.all()
     serializer_class=LayerSerializer
     permission_classes=[permissions.IsAuthenticated]
+    lookup_fields=['sub_id']
+    model = Layer
