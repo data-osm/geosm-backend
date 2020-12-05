@@ -40,13 +40,6 @@ class Icon (models.Model):
         db_table = "icon"
         unique_together = ('name', 'category',)
 
-class Type (models.Model):
-    """ A group type, like thematiques, base maps etc... """
-    group_type_id = models.AutoField(primary_key=True)
-    key = models.CharField(max_length=50, choices=groupType.choices)
-    display_name = models.CharField(max_length=50)
-    description = models.CharField(max_length=50, null=True)
-
 class Group (models.Model):
     """ A group that  contains sub group and a sub group contains layer """
 
@@ -58,7 +51,7 @@ class Group (models.Model):
     name = models.CharField(max_length=200)
     color = models.CharField(max_length=30)
     icon = models.ForeignKey(Icon,on_delete=models.RESTRICT)
-    type_group = models.ForeignKey(Type,on_delete=models.CASCADE)
+    type_group = models.CharField(max_length=50, choices=groupType.choices)
 
 class Map (models.Model):
     """ A map is compose of group """

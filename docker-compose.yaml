@@ -1,0 +1,23 @@
+version: "3.8"
+   
+services:
+    
+  web:
+    build: .
+    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+
+  qgis-server:
+    image: 3liz/qgis-map-server:3.16
+    volumes: 
+        - ./provider/qgis/project:/projects
+    ports: 
+        - 3000:8080
+    environment: 
+        - QGSRV_SERVER_WORKERS=4
+        - QGSRV_LOGGING_LEVEL=DEBUG
+        - QGSRV_CACHE_ROOTDIR=/projects
+        - QGSRV_CACHE_SIZE=10

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
-from .models import Icon, Map, Group, Sub, Layer, Default_map, Type
+from .models import Icon, Map, Group, Sub, Layer, Default_map
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
@@ -11,7 +11,7 @@ from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIV
 from rest_framework import status
 from django.db.models import Count
 
-from .serializers import IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, TypeSerializer
+from .serializers import IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer
 from collections import defaultdict
 
 
@@ -95,14 +95,4 @@ class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
 class LayerVieuwListCreate(ListCreateAPIView):
     queryset=Layer.objects.all()
     serializer_class=LayerSerializer
-    permission_classes=[permissions.IsAuthenticated]
-
-class TypeVieuwListCreate(ListCreateAPIView):
-    queryset=Type.objects.all()
-    serializer_class=TypeSerializer
-    permission_classes=[permissions.IsAuthenticated]
-
-class TypeVieuwDetail(RetrieveUpdateDestroyAPIView):
-    queryset=Type.objects.all()
-    serializer_class=TypeSerializer
     permission_classes=[permissions.IsAuthenticated]

@@ -1,4 +1,4 @@
-from .models import Icon, Map, Group, Sub, Layer, Default_map, Type
+from .models import Icon, Map, Group, Sub, Layer, Default_map
 from rest_framework import serializers
 
 
@@ -11,15 +11,6 @@ class IconSerializer(serializers.ModelSerializer):
         model = Icon
         fields = "__all__"
         # fields = ['icon_id', 'name', 'tags', 'category']
-
-class TypeSerializer(serializers.ModelSerializer):
-    """
-        Type serializer
-    """
-
-    class Meta:
-        model = Type
-        fields = "__all__"
 
 class MapSerializer(serializers.ModelSerializer):
     """
