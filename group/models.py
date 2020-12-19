@@ -20,6 +20,9 @@ class protocolCartoChoice (models.TextChoices):
 def get_upload_path(instance, filename):
     category = re.sub('[^A-Za-z0-9]+', '', instance.category)
     return os.path.join(category, filename)
+    
+def get_upload_path_group_icon (instance, filename):
+    return os.path.join('group', instance.name+'.png')
 
 class Icon (models.Model):
     """ an Icon in svg """
@@ -52,6 +55,9 @@ class Group (models.Model):
     color = models.CharField(max_length=30)
     icon = models.ForeignKey(Icon,on_delete=models.RESTRICT)
     type_group = models.CharField(max_length=50, choices=groupType.choices)
+    icon_path = models.FileField(blank=False, null=False, upload_to=get_upload_path_group_icon)
+
+
 
 class Map (models.Model):
     """ A map is compose of group """

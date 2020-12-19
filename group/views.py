@@ -14,6 +14,10 @@ from django.shortcuts import get_list_or_404, get_object_or_404
 
 from .serializers import IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer
 from collections import defaultdict
+from cairosvg import svg2png
+import tempfile
+from django.core.files import File
+from django.conf import settings
 
 class MultipleFieldLookupListMixin:
     """
@@ -85,10 +89,31 @@ class MapViewListCreate(ListCreateAPIView):
     serializer_class=MapSerializer
     permission_classes=[permissions.IsAuthenticated]
 
+
+
 class GroupVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Group.objects.all()
     serializer_class=GroupSerializer
     permission_classes=[permissions.IsAuthenticated]
+
+    def put(self, request, pk):
+        """ update a new group """
+        group = get_object_or_404(Group.objects.all(), pk=pk)
+        vp_serializer = GroupSerializer(instance=group, data=request.data, partial=True)
+
+        if 'svg_as_text' in  request.data:
+            f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
+            fileName = f.name
+            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
+            del request.data['svg_as_text']
+            dataFile = open(fileName, "rb")
+            request.data['icon_path'] = File(dataFile)
+
+        if vp_serializer.is_valid():
+            vp_serializer.save()
+            return Response(vp_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class GroupVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
     queryset=Group.objects.all()
@@ -96,6 +121,24 @@ class GroupVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
     permission_classes=[permissions.IsAuthenticated]
     lookup_fields=['map']
     model = Group
+
+    def post(self, request, *args, **kwargs):
+        """ store a new group """
+        vp_serializer = GroupSerializer(data=request.data)
+        
+        if 'svg_as_text' in  request.data:
+            f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
+            fileName = f.name
+            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
+            del request.data['svg_as_text']
+            dataFile = open(fileName, "rb")
+            request.data['icon_path'] = File(dataFile)
+
+        if vp_serializer.is_valid():
+            vp_serializer.save()
+            return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class SubVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Sub.objects.all()

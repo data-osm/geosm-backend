@@ -177,6 +177,7 @@ AUTH_USER_MODEL = 'account.User'
 
 MEDIA_URL =  '/icons/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "icons")
+TEMP_URL =  os.path.join(MEDIA_ROOT, "temp")
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=180),
