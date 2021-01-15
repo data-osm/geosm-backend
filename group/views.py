@@ -1,7 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
-from .models import Icon, Map, Group, Sub, Layer, Default_map
+from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
@@ -12,7 +12,7 @@ from rest_framework import status
 from django.db.models import Count
 from django.shortcuts import get_list_or_404, get_object_or_404
 
-from .serializers import IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer
+from .serializers import IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, LayerProviderStyleSerializer
 from collections import defaultdict
 from cairosvg import svg2png
 import tempfile
@@ -157,9 +157,47 @@ class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
     serializer_class=LayerSerializer
     permission_classes=[permissions.IsAuthenticated]
 
-class LayerVieuwListCreate(ListCreateAPIView):
+class LayerVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
     queryset=Layer.objects.all()
     serializer_class=LayerSerializer
     permission_classes=[permissions.IsAuthenticated]
-    lookup_fields=['sub_id']
+    lookup_fields=['sub']
     model = Layer
+
+    def post(self, request, *args, **kwargs):
+        """ store a new group """
+        vp_serializer = LayerSerializer(data=request.data)
+        
+        if 'svg_as_text' in  request.data:
+            f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
+            fileName = f.name
+            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
+            del request.data['svg_as_text']
+            dataFile = open(fileName, "rb")
+            request.data['cercle_icon'] = File(dataFile)
+
+        if 'svg_as_text_square' in  request.data:
+            f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
+            fileName = f.name
+            svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName)
+            del request.data['svg_as_text_square']
+            dataFile = open(fileName, "rb")
+            request.data['square_icon'] = File(dataFile)
+
+        if vp_serializer.is_valid():
+            vp_serializer.save()
+            return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LayerProviderStyleVieuwDetail(RetrieveUpdateDestroyAPIView):
+    queryset=Layer_provider_style.objects.all()
+    serializer_class=LayerProviderStyleSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class LayerProviderStyleVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
+    queryset=Layer_provider_style.objects.all()
+    serializer_class=LayerProviderStyleSerializer
+    permission_classes=[permissions.IsAuthenticated]
+    model = Layer_provider_style
+    lookup_fields=['layer_id']

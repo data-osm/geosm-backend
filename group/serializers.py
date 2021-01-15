@@ -1,4 +1,6 @@
-from .models import Icon, Map, Group, Sub, Layer, Default_map
+from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style
+from provider.models import Vector, Style
+from provider.serializers import styleProviderSerializer, VectorProviderSerializer
 from rest_framework import serializers
 
 
@@ -62,11 +64,18 @@ class SubSerializer(serializers.ModelSerializer):
         model = Sub
         fields = "__all__"
 
-class LayerSerializer(serializers.ModelSerializer):
-    """
-        Sub group serializer
-    """
+
+class LayerProviderStyleSerializer(serializers.ModelSerializer):
+    vp = VectorProviderSerializer(read_only=True, source='vp_id')
+    vs = styleProviderSerializer(read_only=True, source='vs_id')
 
     class Meta:
-        model = Layer
+        model = Layer_provider_style
         fields = "__all__"
+
+class LayerSerializer(serializers.ModelSerializer):
+    providers = LayerProviderStyleSerializer(read_only=True, source="layer")
+    class Meta:
+        model = Layer
+        fields ="__all__"
+

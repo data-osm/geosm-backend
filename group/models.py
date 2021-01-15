@@ -24,6 +24,9 @@ def get_upload_path(instance, filename):
 def get_upload_path_group_icon (instance, filename):
     return os.path.join('group', instance.name+'.png')
 
+def get_upload_path_layer_icon (instance, filename):
+    return os.path.join('layer', instance.name+'.png')
+
 class Icon (models.Model):
     """ an Icon in svg """
     
@@ -83,12 +86,18 @@ class Layer (models.Model):
     protocol_carto = models.CharField(max_length=5,choices=protocolCartoChoice.choices)
     color = models.CharField(max_length=30)
     icon = models.ForeignKey(Icon,on_delete=models.RESTRICT)
-    cercle_icon = models.ImageField()
-    square_icon = models.ImageField()
+    cercle_icon = models.ImageField(upload_to=get_upload_path_layer_icon)
+    square_icon = models.ImageField(upload_to=get_upload_path_layer_icon)
     description = models.TextField(null=True)
     opacity = models.BooleanField(default=True)
     metadata = models.BooleanField(default=True)
     share = models.BooleanField(default=True)
-    vector_prov = models.ManyToManyField(Vector,blank=True)
-    external_prov = models.ManyToManyField(External,blank=True)
     sub = models.ForeignKey(Sub,on_delete=models.CASCADE)
+
+class Layer_provider_style(models.Model):
+    layer_id = models.OneToOneField(Layer,on_delete=models.CASCADE)
+    vp_id = models.OneToOneField(Vector,on_delete=models.CASCADE, blank=True, null=True)
+    vs_id = models.OneToOneField(Style,on_delete=models.CASCADE, blank=True, null=True)
+
+    class meta :
+        unique_together = ('layer_id', 'vp_id')

@@ -6,14 +6,14 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
 from rest_framework.response import Response
-from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
+from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, ListAPIView)
 from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Count
 from geosmBackend.type import httpResponse
 from django.shortcuts import get_list_or_404, get_object_or_404
 
-from .serializers import VectorProviderSerializer, styleProviderSerializer
+from .serializers import VectorProviderSerializer, styleProviderSerializer, VectorProviderWithStyleSerializer
 from collections import defaultdict
 import traceback
 # Create your views here.
@@ -116,3 +116,10 @@ class vectorProviderDetailView(RetrieveUpdateDestroyAPIView):
     queryset=Vector.objects.all()
     serializer_class=VectorProviderSerializer
     permission_classes=[permissions.IsAuthenticated]
+
+class vectorProviderWithStyleDetailView(ListAPIView):
+    """ View get a vector provider with a style """
+    queryset=Vector.objects.all()
+    serializer_class=VectorProviderWithStyleSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
