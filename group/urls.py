@@ -23,8 +23,7 @@ urlpatterns = [
     path("layer",LayerVieuwListCreate.as_view()),
     path("layer/<int:pk>",LayerVieuwDetail.as_view()),
 
-    path("layer/provider/<int:layer_id>",LayerProviderStyleVieuwListCreate.as_view()),
     path("layer/provider",LayerProviderStyleVieuwListCreate.as_view()),
-    path("layer/provider/detail/<int:pk>",LayerProviderStyleVieuwDetail.as_view()),
+    path("layer/provider/<int:pk>",LayerProviderStyleVieuwDetail.as_view()),
 
 ]
