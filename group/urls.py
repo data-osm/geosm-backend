@@ -1,7 +1,7 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from .views import LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
+from .views import LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
 
 urlpatterns = [
     #gets all user profiles and create a new profile
@@ -25,5 +25,7 @@ urlpatterns = [
 
     path("layer/provider",LayerProviderStyleVieuwListCreate.as_view()),
     path("layer/provider/<int:pk>",LayerProviderStyleVieuwDetail.as_view()),
+    path("layer/provider/reorder",LayerProviderReorderView.as_view()),
+
 
 ]

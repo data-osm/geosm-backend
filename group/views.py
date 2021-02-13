@@ -201,3 +201,20 @@ class LayerProviderStyleVieuwListCreate(MultipleFieldLookupListMixin, ListCreate
     permission_classes=[permissions.IsAuthenticated]
     model = Layer_provider_style
     lookup_fields=['layer_id']
+
+class LayerProviderReorderView(APIView):
+    permission_classes=[permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+
+        if 'reorderProviders' in  request.data:
+            reorderProviders = request.data['reorderProviders']
+
+            for provider in reorderProviders:
+                layer_provider_style = get_object_or_404(Layer_provider_style.objects.all(), pk=provider['id'])
+                layer_provider_style.ordre = provider['ordre']
+                layer_provider_style.save()
+
+            return Response([], status=status.HTTP_200_OK)
+        else:
+            return Response({'msg':" the 'reorderProviders' parameters is missing "}, status=status.HTTP_400_BAD_REQUEST)

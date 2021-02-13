@@ -95,9 +95,17 @@ class Layer (models.Model):
     sub = models.ForeignKey(Sub,on_delete=models.CASCADE)
 
 class Layer_provider_style(models.Model):
-    layer_id = models.OneToOneField(Layer,on_delete=models.CASCADE)
-    vp_id = models.OneToOneField(Vector,on_delete=models.CASCADE, blank=True, null=True)
-    vs_id = models.OneToOneField(Style,on_delete=models.CASCADE, blank=True, null=True)
+    layer_id = models.ForeignKey(Layer,on_delete=models.CASCADE)
+    vp_id = models.ForeignKey(Vector,on_delete=models.CASCADE, blank=True, null=True)
+    vs_id = models.ForeignKey(Style,on_delete=models.CASCADE, blank=True, null=True)
+    ordre = models.IntegerField(default=1,blank=False, null=False)
 
     class meta :
-        unique_together = ('layer_id', 'vp_id')
+        unique_together = [['layer_id', 'vp_id']]
+
+    def save(self, *args, **kwargs):
+        numberOfLPSOfLayer = Layer_provider_style.objects.filter(layer_id=self.layer_id).count()+1
+        self.ordre = numberOfLPSOfLayer
+        super(Layer_provider_style,self).save(*args, **kwargs)
+
+        
