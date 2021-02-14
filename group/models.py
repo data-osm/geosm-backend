@@ -90,7 +90,7 @@ class Layer (models.Model):
     square_icon = models.ImageField(upload_to=get_upload_path_layer_icon)
     description = models.TextField(null=True)
     opacity = models.BooleanField(default=True)
-    metadata = models.BooleanField(default=True)
+    metadata_cap = models.BooleanField(default=True)
     share = models.BooleanField(default=True)
     sub = models.ForeignKey(Sub,on_delete=models.CASCADE)
 
@@ -109,3 +109,10 @@ class Layer_provider_style(models.Model):
         super(Layer_provider_style,self).save(*args, **kwargs)
 
         
+class Tags(models.Model):
+    name = models.CharField(max_length=200)
+
+class Metadata(models.Model):
+    layer = models.OneToOneField(Layer,on_delete=models.CASCADE)
+    description = models.TextField(null=True,blank=True)
+    tags = models.ManyToManyField(Tags, blank=True)

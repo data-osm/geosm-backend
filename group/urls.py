@@ -1,7 +1,7 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from .views import LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
+from .views import searchTags,MetadataVieuwListCreate, MetadataVieuwDetail, LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
 
 urlpatterns = [
     #gets all user profiles and create a new profile
@@ -27,5 +27,9 @@ urlpatterns = [
     path("layer/provider/<int:pk>",LayerProviderStyleVieuwDetail.as_view()),
     path("layer/provider/reorder",LayerProviderReorderView.as_view()),
 
+    path("metadata",MetadataVieuwListCreate.as_view()),
+    path("metadata/<int:pk>",MetadataVieuwDetail.as_view()),
+
+    path("tags/search",searchTags.as_view(),name="search-tags"),
 
 ]

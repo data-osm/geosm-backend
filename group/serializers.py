@@ -1,8 +1,8 @@
-from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style
+from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style, Metadata, Tags
 from provider.models import Vector, Style
 from provider.serializers import styleProviderSerializer, VectorProviderSerializer
 from rest_framework import serializers
-
+from typing import List
 
 class IconSerializer(serializers.ModelSerializer):
     """
@@ -79,3 +79,48 @@ class LayerSerializer(serializers.ModelSerializer):
         model = Layer
         fields ="__all__"
 
+class TagsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tags
+        fields ="__all__"
+
+class MetadataSerializer(serializers.ModelSerializer):
+    tags = TagsSerializer(many=True)
+    class Meta:
+        model = Metadata
+        fields ="__all__"
+
+    def create(self, validate_data):
+        if 'tags' in validate_data:
+            list_tags = validate_data.pop('tags')
+
+            metadata = Metadata.objects.create(**validate_data)
+            for api_tag in list_tags:
+                tag = Tags.objects.filter(name=api_tag['name'])
+                if tag.exists() == False:
+                    metadata.tags.create(name=api_tag['name'])
+                else:
+                    metadata.tags.add(tag.first().pk)
+        else:
+            metadata = Metadata.objects.create(**validate_data)
+        return metadata
+
+    def update(self, instance, validate_data):
+        metadata = instance
+        if 'tags' in validate_data:
+            list_tags = validate_data.pop('tags')
+
+            for existing_tag in metadata.tags.all():
+                metadata.tags.remove(existing_tag)
+
+            for api_tag in list_tags:
+                tag = Tags.objects.filter(name=api_tag['name'])
+                if tag.exists() == False:
+                    metadata.tags.create(name=api_tag['name'])
+                else:
+                    metadata.tags.add(tag.first().pk)
+
+            return metadata
+        else:
+            return metadata
+      

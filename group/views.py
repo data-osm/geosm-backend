@@ -1,23 +1,38 @@
 from django.shortcuts import render
 
 # Create your views here.
-from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style
+from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style, Tags, Metadata
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
-from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, ListAPIView)
+from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView , ListAPIView)
 from rest_framework import status
 from django.db.models import Count
 from django.shortcuts import get_list_or_404, get_object_or_404
 
-from .serializers import IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, LayerProviderStyleSerializer
+from .serializers import IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
 from collections import defaultdict
 from cairosvg import svg2png
 import tempfile
 from django.core.files import File
 from django.conf import settings
+from django.db.models import Q
+from functools import reduce
+
+import operator
+class MultipleFieldLookupMixin(object):
+    def get_object(self):
+        queryset = self.get_queryset()             # Get the base queryset
+        queryset = self.filter_queryset(queryset)  # Apply any filter backends
+        filter = {}
+        for field in self.lookup_fields:
+            filter[field] = self.request.query_params.get(field) 
+            # self.kwargs[field]
+        q = reduce(operator.or_, (Q(x) for x in filter.items()))
+        return get_object_or_404(queryset, q)
 
 class MultipleFieldLookupListMixin:
     """
@@ -218,3 +233,29 @@ class LayerProviderReorderView(APIView):
             return Response([], status=status.HTTP_200_OK)
         else:
             return Response({'msg':" the 'reorderProviders' parameters is missing "}, status=status.HTTP_400_BAD_REQUEST)
+
+class searchTags(APIView):
+    """
+        View to search tags
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        searchWord = request.data['search_word']
+        responseQuerry = []
+        for tag in Tags.objects.raw("SELECT * FROM group_tags WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 "):
+            responseQuerry.append(TagsSerializer(tag).data)
+
+        return Response(responseQuerry,status=status.HTTP_200_OK)
+
+class MetadataVieuwListCreate(MultipleFieldLookupMixin, RetrieveAPIView, CreateAPIView):
+    queryset=Metadata.objects.all()
+    serializer_class=MetadataSerializer
+    permission_classes=[permissions.IsAuthenticated]
+    # model = Metadata
+    lookup_fields=['layer']
+
+class MetadataVieuwDetail(RetrieveUpdateDestroyAPIView):
+    queryset=Metadata.objects.all()
+    serializer_class=MetadataSerializer
+    permission_classes=[permissions.IsAuthenticated]
