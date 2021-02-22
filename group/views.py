@@ -51,7 +51,12 @@ class MultipleFieldLookupListMixin:
                 filter[field] = self.request.query_params.get(field)
         queryset = queryset.filter(**filter)
         return queryset
-        
+
+class retrieveIconView(RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset=Icon.objects.all()
+    serializer_class=IconSerializer
+
 class listIconByCategory(APIView):
     """
         View to list icons by group
@@ -171,6 +176,32 @@ class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Layer.objects.all()
     serializer_class=LayerSerializer
     permission_classes=[permissions.IsAuthenticated]
+
+    def put(self, request, pk, format=None):
+        """ update layer """
+        vp_serializer = LayerSerializer(self.get_object(), data=request.data)
+        
+        if 'svg_as_text' in  request.data:
+            f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
+            fileName = f.name
+            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
+            del request.data['svg_as_text']
+            dataFile = open(fileName, "rb")
+            request.data['cercle_icon'] = File(dataFile)
+
+        if 'svg_as_text_square' in  request.data:
+            f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
+            fileName = f.name
+            svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName)
+            del request.data['svg_as_text_square']
+            dataFile = open(fileName, "rb")
+            request.data['square_icon'] = File(dataFile)
+
+        if vp_serializer.is_valid():
+            vp_serializer.save()
+            return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LayerVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
     queryset=Layer.objects.all()

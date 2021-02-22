@@ -1,11 +1,12 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from .views import searchTags,MetadataVieuwListCreate, MetadataVieuwDetail, LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
+from .views import retrieveIconView,searchTags,MetadataVieuwListCreate, MetadataVieuwDetail, LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
 
 urlpatterns = [
     #gets all user profiles and create a new profile
     path("icons",listIconByCategory.as_view(),name="icons-by-category"),
+    path("icon/<int:pk>",retrieveIconView.as_view(),name="get-icon"),
     # path("icons",iconViewSet.as_view({'get': 'list'}),name="icons"),
     path("icons/add",iconUploadView.as_view(),name="add-icons"),
     path("icons/search",searchIcon.as_view(),name="search-icons"),
