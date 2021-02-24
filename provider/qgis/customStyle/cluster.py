@@ -1,52 +1,75 @@
 import base64
 import os
+from os.path import join
 import xml.etree.ElementTree
 from xml.etree import ElementTree as et
 from xml.dom.minidom import Document
 import tempfile
 from qgis.PyQt.QtXml import QDomDocument, QDomElement
 from qgis.PyQt.QtCore import QFile, QIODevice
-from qgis.core import QgsSvgMarkerSymbolLayer, QgsMapLayerStyle, QgsRenderContext
+from qgis.PyQt.QtGui import QColor
 
+from qgis.core import QgsSvgMarkerSymbolLayer, QgsSimpleMarkerSymbolLayer, QgsMapLayerStyle, QgsRenderContext, QgsVectorLayer, QgsPointClusterRenderer
+from geosmBackend.settings import DATABASES, OSMDATA
+
+import tempfile
 from django.conf import settings
+from django.core.files import File
 
-def getStyle(svgEncoded:str, color:str)->QgsMapLayerStyle:
-    QMLPath=join(settings['OSMDATA']['qml_default_path'],'custom-cluster.qml')
 
-    svgPath = _getEncodedImg(svgEncoded)
+def getStyle(svgEncoded:str, color:str)->File:
+    """get a qml file of cluster style. With the icon svgEncoded and the color (hexagonal) of the background 
+ 
+    """
+    
+    QMLPath=join(OSMDATA["qml_default_path"],'custom-cluster.qml')
+
+    img_svg_encoded = _getEncodedImg(svgEncoded)
+
     if os.path.exists(QMLPath) and os.path.isfile(QMLPath) :
         qFile= QFile(QMLPath)
         if qFile.open(QIODevice.ReadOnly):
-            response = _addStyleToLayer(layerName, pathToQgisProject, styleName, qFile)
-            newStyle = QgsMapLayerStyle()
+            newStyle:QgsMapLayerStyle = QgsMapLayerStyle()
 
             doc = QDomDocument()
             elem = doc.createElement("style-data-som")
 
             xmlStyle:QDomDocument = QDomDocument()
-            xmlStyle.setContent(QML)
+            xmlStyle.setContent(qFile)
             elem.appendChild(xmlStyle.childNodes().at(0))
                 
             newStyle.readXml(elem)
-
             if newStyle.isValid():
+                tempLayer = QgsVectorLayer("Point", "temporary_points", "memory")
+                res = tempLayer.styleManager().addStyle("cluster", newStyle)
+                tempLayer.styleManager().setCurrentStyle("cluster")
+                layerSymbols:QgsPointClusterRenderer = tempLayer.renderer()
+                
+                layerSymbols.symbols(QgsRenderContext())[0].symbolLayer(0).setPath(img_svg_encoded)
+                symbols = layerSymbols.clusterSymbol().symbolLayers()
 
-                symbols = symbol_layer.clusterSymbol().symbolLayers()
-                newStyle.symbols(QgsRenderContext())[0].symbolLayer(0).setPath(svgPath)
                 for symbol in symbols:
                     if  type(symbol) is QgsSvgMarkerSymbolLayer:
-                        symbol.setPath(svgPath)
-                        # symbol.setColor(QColor.fromRgb(3,63,94))
+                        symbol.setPath(img_svg_encoded)
+                    if  type(symbol) is QgsSimpleMarkerSymbolLayer:
+                        # symbol.setColor(QColor.fromRgb(0,255,0))
+                        # print(QColor(color).isValid(), color)
+                        symbol.setColor(QColor(color))
 
-            return newStyle
+                f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.qml', delete=True)
+                fileName = f.name
+                tempLayer.saveNamedStyle(fileName)
+                
+                dataFile = open(fileName, "rb")
+                return File(dataFile)
+
 
 def _getEncodedImg(imgPath:str)->str:
     """ 
-        transform png image to svg by encoding it. If imgPath already an svg, it will return imgPath
+        transform png image to a base64 svg string. If imgPath already an svg, it will return it in base 64 directly
     """
-    f = tempfile.NamedTemporaryFile(dir=settings['TEMP_URL'], suffix='.svg')
+    f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.svg')
     fileName = f.name
-
     if '.svg' not in imgPath:
         
         encoded = base64.b64encode(open(imgPath, "rb").read()).decode()
@@ -65,11 +88,14 @@ def _getEncodedImg(imgPath:str)->str:
         image.setAttribute("height", "160")
         image.setAttribute("xlink:href", 'data:image/png;base64,{}'.format(encoded))
 
-        myFile = open(fileName, "w")
-        myFile.write(doc.toprettyxml())
-        return fileName
-    else:
-        return imgPath
+ 
+        message_bytes = doc.toprettyxml().encode('ascii')
+        base64_bytes = base64.b64encode(message_bytes)
+        base64_message = base64_bytes.decode('ascii')
 
-# print(_getEncodedImg('/code/icons/group/bnm.png'))
-# print(_getEncodedImg('/code/icons/Maki/aerialway-15.svg'))
+        img_svg_encoded = 'base64:{}'.format(base64_message)
+        return img_svg_encoded
+    else:
+        encoded = base64.b64encode(open(imgPath, "rb").read()).decode()
+        img_svg_encoded = 'base64:{}'.format(encoded)
+        return img_svg_encoded
