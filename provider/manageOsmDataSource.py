@@ -8,7 +8,7 @@ from django.db import connection, Error
 from psycopg2.extensions import AsIs
 from .qgis.manageVectorLayer import addVectorLayerFomPostgis, removeLayer
 from .qgis.manageStyle import getQMLStyleOfLayer
-from geosmBackend.settings import DATABASES, OSMDATA
+from django.conf import settings
 from os.path import join
 from geosmBackend.type import OperationResponse, AddVectorLayerResponse, GetQMLStyleOfLayerResponse
 from django.core.files import File
@@ -16,6 +16,8 @@ from django.core.files.base import ContentFile
 
 import traceback
 
+DATABASES = settings.DATABASES
+OSMDATA = settings.OSMDATA
 class TableAndSchema(NamedTuple):
     """ represent the table and shema of a provider """
     table:str

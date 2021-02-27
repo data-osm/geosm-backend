@@ -8,9 +8,10 @@ from qgis.PyQt.QtXml import QDomDocument, QDomElement
 from qgis.PyQt.QtCore import QFile, QIODevice
 import logging
 from geosmBackend.type import OperationResponse, GetQMLStyleOfLayerResponse
-from geosmBackend.settings import OSMDATA
-log = logging.getLogger(__name__)
+from django.conf import settings
 
+log = logging.getLogger(__name__)
+OSMDATA = settings.OSMDATA
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 QgsApplication.setPrefixPath("/usr/", True)
 qgs = QgsApplication([], False)

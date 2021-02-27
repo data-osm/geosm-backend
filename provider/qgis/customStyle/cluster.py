@@ -10,12 +10,13 @@ from qgis.PyQt.QtCore import QFile, QIODevice
 from qgis.PyQt.QtGui import QColor
 
 from qgis.core import QgsSvgMarkerSymbolLayer, QgsSimpleMarkerSymbolLayer, QgsMapLayerStyle, QgsRenderContext, QgsVectorLayer, QgsPointClusterRenderer
-from geosmBackend.settings import DATABASES, OSMDATA
 
 import tempfile
 from django.conf import settings
 from django.core.files import File
 
+DATABASES = settings.DATABASES
+OSMDATA = settings.OSMDATA
 
 def getStyle(svgEncoded:str, color:str)->File:
     """get a qml file of cluster style. With the icon svgEncoded and the color (hexagonal) of the background 
