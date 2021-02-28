@@ -6,3 +6,4 @@ djoser~=2.0
 djangorestframework-simplejwt~=4.4
 django-cors-headers~=3.5
 cairosvg~=2.5
+daphne~=3.0

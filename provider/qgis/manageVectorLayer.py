@@ -3,13 +3,14 @@ from os.path import join
 from qgis.core import QgsVectorLayer, QgsProject, QgsApplication, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings
 import traceback
 from geosmBackend.type import OperationResponse, AddVectorLayerResponse
-from geosmBackend.settings import OSMDATA
+from django.conf import settings
 from dataclasses import dataclass
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 QgsApplication.setPrefixPath("/usr/", True)
 qgs = QgsApplication([], False)
 
+OSMDATA = settings.OSMDATA
 project_qgis_path = OSMDATA['project_qgis_path']
 
 

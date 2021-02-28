@@ -20,12 +20,6 @@ class Migration(migrations.Migration):
             model_name='layer',
             name='vector_prov',
         ),
-        migrations.AddField(
-            model_name='layer_provider_style',
-            name='id',
-            field=models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
-            preserve_default=False,
-        ),
         migrations.AlterField(
             model_name='layer',
             name='cercle_icon',

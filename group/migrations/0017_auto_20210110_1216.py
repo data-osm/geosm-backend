@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Layer_provider_style',
             fields=[
-                ('layer_id', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='group.layer')),
+                ('layer_id', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, serialize=False, to='group.layer')),
                 ('vp_id', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='provider.vector')),
                 ('vs_id', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='provider.style')),
             ],

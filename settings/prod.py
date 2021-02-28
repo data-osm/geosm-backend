@@ -2,18 +2,30 @@ from .base import *
 from datetime import timedelta
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+
+CORS_ALLOWED_ORIGINS = ['http://preprod.dataosm.info','https://preprod.dataosm.info']
+ALLOWED_HOSTS=['localhost','127.0.0.1']
+https://demo.openstreetmap.fr'
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'country',
-        'HOST': 'host.docker.internal',
+        'NAME': 'admin_osm',
+        'HOST': '172.17.0.1',
         'PORT': '5432',
         'USER': 'postgres',
-        'PASSWORD': 'postgres',
+        'PASSWORD': 'postgresgeosm',
     }
 }
 
@@ -26,7 +38,7 @@ SIMPLE_JWT = {
 OSMDATA = {
     'project_qgis_path':os.path.join(BASE_DIR, "provider","qgis","project"),
     'qml_default_path':os.path.join(BASE_DIR, "provider","qgis","defaultQml"),
-    'url_qgis_server_prefix':'http://localhost:3000/ows/?map='
+    'url_qgis_server_prefix':''
 }
 
 LOGGING = {
@@ -34,7 +46,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, "geosmBackend",'debug.log'),
         },
@@ -42,7 +54,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['file'],
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'propagate': True,
         },
     },

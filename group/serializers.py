@@ -13,6 +13,11 @@ class IconSerializer(serializers.ModelSerializer):
         model = Icon
         fields = "__all__"
         # fields = ['icon_id', 'name', 'tags', 'category']
+    def to_representation(self, instance):
+        representation = super(IconSerializer, self).to_representation(instance)
+        full_path =  instance.path.url
+        representation['path'] = full_path
+        return representation
 
 class MapSerializer(serializers.ModelSerializer):
     """
@@ -44,6 +49,12 @@ class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ("name", "color", "icon", "type_group", "map_id", "group_id", "icon_path", "icon_id")
+
+    def to_representation(self, instance):
+        representation = super(GroupSerializer, self).to_representation(instance)
+        full_path =  instance.icon_path.url
+        representation['icon_path'] = full_path
+        return representation
 
     def create(self, validate_data):
         
@@ -78,6 +89,12 @@ class LayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Layer
         fields ="__all__"
+    
+    def to_representation(self, instance):
+        representation = super(LayerSerializer, self).to_representation(instance)
+        representation['cercle_icon'] = instance.cercle_icon.url
+        representation['square_icon'] = instance.square_icon.url
+        return representation
 
 class TagsSerializer(serializers.ModelSerializer):
     class Meta:
