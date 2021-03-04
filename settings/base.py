@@ -23,10 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'vr)rd0$p7@*j4-o5rzr!=l&^bwe$g_f51*dmtj6+!g4hoc%!p%'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -107,16 +104,6 @@ WSGI_APPLICATION = 'geosmBackend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'country',
-        'HOST': 'host.docker.internal',
-        'PORT': '5432',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-    }
-}
 
 
 # Password validation
@@ -154,37 +141,10 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, "geosmBackend",'debug.log'),
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-    },
-}
+
 STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'account.User'
 
 MEDIA_URL =  '/icons/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "icons")
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=180),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=190)
-}
-
-OSMDATA = {
-    'project_qgis_path':os.path.join(BASE_DIR, "provider","qgis","project"),
-    'qml_default_path':os.path.join(BASE_DIR, "provider","qgis","defaultQml"),
-    'url_qgis_server_prefix':'http://localhost:3000/ows/?map='
-}
+TEMP_URL =  os.path.join(MEDIA_ROOT, "temp")

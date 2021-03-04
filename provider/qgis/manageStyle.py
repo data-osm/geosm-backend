@@ -8,9 +8,10 @@ from qgis.PyQt.QtXml import QDomDocument, QDomElement
 from qgis.PyQt.QtCore import QFile, QIODevice
 import logging
 from geosmBackend.type import OperationResponse, GetQMLStyleOfLayerResponse
-from geosmBackend.settings import OSMDATA
-log = logging.getLogger(__name__)
+from django.conf import settings
 
+log = logging.getLogger(__name__)
+OSMDATA = settings.OSMDATA
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 QgsApplication.setPrefixPath("/usr/", True)
 qgs = QgsApplication([], False)
@@ -224,11 +225,21 @@ def _addStyleToLayer(layerName:str, pathToQgisProject:str, styleName:str, QML:st
                     if styleName not in styleManager.styles():
                         response.error = styleManager.addStyle(styleName,newStyle) != True
                     
-                    # print(styleManager.styles())
                     if response.error == True:
                         response.msg = "Can not add the new style"
                     else:
+                        
+                        # print(QGISProject.isDirty(), styleManager.styles())
                         QGISProject.write()
+
+                        QGISProject = _getProjectInstance(pathToQgisProject)
+                        layer = QGISProject.mapLayersByName(layerName)[0]
+                        styleManager = layer.styleManager()
+
+                        if styleName not in styleManager.styles():
+                            response.error = True
+                            response.msg = "An unknow error has occurred"
+
                 else:
                     response.error = True
                     response.msg = "The QML file is not valid !"

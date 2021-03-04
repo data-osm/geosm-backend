@@ -6,16 +6,23 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
 from rest_framework.response import Response
-from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
+from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, ListAPIView)
 from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Count
 from geosmBackend.type import httpResponse
 from django.shortcuts import get_list_or_404, get_object_or_404
 
-from .serializers import VectorProviderSerializer, styleProviderSerializer
+from cairosvg import svg2png
+import tempfile
+from django.core.files import File
+from django.conf import settings
+
+from .serializers import VectorProviderSerializer, styleProviderSerializer, VectorProviderWithStyleSerializer
 from collections import defaultdict
 import traceback
+
+from .qgis.customStyle import cluster
 # Create your views here.
 
 class styleView(APIView):
@@ -45,6 +52,25 @@ class styleView(APIView):
     def post(self, request, *args, **kwargs):
         """ store a new style"""
         op_serializer = styleProviderSerializer(data=request.data)
+
+        if 'type' in  request.data:
+            if request.data['type'] == 'cluster':
+                # _mutable = request.data._mutable
+
+                # request.data._mutable = True
+                
+                f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
+                fileName = f.name
+                svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
+                dataFile = open(fileName, "rb")
+                png = File(dataFile)
+
+                request.data['qml_file'] = cluster.getStyle(fileName, request.data['color'])
+
+                del request.data['svg_as_text']
+                del request.data['color']
+                # request.data._mutable = _mutable
+
         if op_serializer.is_valid():
             try:
                 op_serializer.save()
@@ -116,3 +142,10 @@ class vectorProviderDetailView(RetrieveUpdateDestroyAPIView):
     queryset=Vector.objects.all()
     serializer_class=VectorProviderSerializer
     permission_classes=[permissions.IsAuthenticated]
+
+class vectorProviderWithStyleDetailView(ListAPIView):
+    """ View get a vector provider with a style """
+    queryset=Vector.objects.all()
+    serializer_class=VectorProviderWithStyleSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
