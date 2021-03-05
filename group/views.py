@@ -257,9 +257,7 @@ class LayerProviderReorderView(APIView):
             reorderProviders = request.data['reorderProviders']
 
             for provider in reorderProviders:
-                layer_provider_style = get_object_or_404(Layer_provider_style.objects.all(), pk=provider['id'])
-                layer_provider_style.ordre = provider['ordre']
-                layer_provider_style.save()
+                Layer_provider_style.objects.filter(pk=provider['id']).update(ordre=provider['ordre'])
 
             return Response([], status=status.HTTP_200_OK)
         else:

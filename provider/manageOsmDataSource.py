@@ -90,7 +90,8 @@ class manageOsmDataSource():
         createOrReplaceTableResponse = self._createOrReplaceTable()
 
         if createOrReplaceTableResponse.error == False:
-            qgis_project = 'projet.qgs'
+            qgis_project = 'projet'+'_'+str(int(Vector.objects.count()/10))+'.qgs'
+            
             createOSMDataSourceResponse =  addVectorLayerFomPostgis(
                 DATABASES['default']['HOST'],
                 DATABASES['default']['PORT'],

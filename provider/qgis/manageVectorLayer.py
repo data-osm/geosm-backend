@@ -120,7 +120,9 @@ def addVectorLayerFomPostgis(host:str, port:str, database:str, user:str, passwor
             # print(conn.tables(schema))
        
             uri.setDataSource(schema, table , geometryColumn, "",primaryKeyColumn)
-            
+            if len(QGISProject.mapLayersByName(layerName)) > 0 :
+                layerName = layerName+'_'+str(len(QGISProject.mapLayersByName(layerName))+1)
+                
             vectorLayer = QgsVectorLayer(uri.uri(False), layerName, "postgres")
 
             if vectorLayer.isValid():
