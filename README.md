@@ -1,26 +1,11 @@
-## Create the virtual env and install requirements
-```sh
-$ python3 -m venv --system-site-packages dataosmenv
-$ source dataosmenv/bin/activate 
-$ python -m pip install --upgrade pip
-$ pip install -r requirements.txt
-```
-## Migrate the databse 
-First create the database
-```sh
-$ psql postgres
-$ create database ...
-```
-
 ## run the server in prod
 ```sh
+$ create database ...
 $ docker-compose -f docker-compose-prod.yaml build
 $ docker-compose -f docker-compose-prod.yaml up - d
 ```
-
 ## Load icons in prod 
 Load icons
-
 ```sh
 $ docker-compose -f docker-compose-prod.yaml exec web python manage.py loaddata --settings=settings.prod  seed/icon.json
 ```

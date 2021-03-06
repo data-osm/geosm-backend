@@ -24,7 +24,17 @@ import traceback
 
 from .qgis.customStyle import cluster
 # Create your views here.
+class EnablePartialUpdateMixin:
+    """Enable partial updates
+    https://tech.serhatteker.com/post/2020-09/enable-partial-update-drf/
 
+    Override partial kwargs in UpdateModelMixin class
+    https://github.com/encode/django-rest-framework/blob/91916a4db14cd6a06aca13fb9a46fc667f6c0682/rest_framework/mixins.py#L64
+    """
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return super().update(request, *args, **kwargs)
+        
 class styleView(APIView):
     """View to list style of a provider, delete, add or edit style"""
     permission_classes = [permissions.IsAuthenticated]
@@ -137,7 +147,7 @@ class searchVectorProvider(APIView):
         return Response(responseQuerry,status=status.HTTP_200_OK)
 
 
-class vectorProviderDetailView(RetrieveUpdateDestroyAPIView):
+class vectorProviderDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
     """ View get a vector provider, update or delete it """
     queryset=Vector.objects.all()
     serializer_class=VectorProviderSerializer
