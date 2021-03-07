@@ -7,6 +7,6 @@
 /icons/qml/*
 __pycache__
 .DS_Store
-/icons/temp
+/icons/temp/*
 /icons/group/*
 /icons/layer/*

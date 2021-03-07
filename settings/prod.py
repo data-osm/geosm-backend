@@ -7,7 +7,7 @@ DEBUG = False
 
 CORS_ALLOWED_ORIGINS = ['http://preprod.dataosm.info','https://preprod.dataosm.info']
 ALLOWED_HOSTS=['localhost','127.0.0.1']
-https://demo.openstreetmap.fr'
+
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
