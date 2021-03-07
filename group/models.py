@@ -27,20 +27,18 @@ def get_upload_path_group_icon (instance, filename):
 def get_upload_path_layer_icon (instance, filename):
     return os.path.join('layer', instance.name+'.png')
 
+class TagsIcon(models.Model):
+    name = models.CharField(max_length=200)
+
 class Icon (models.Model):
     """ an Icon in svg """
     
     icon_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=200)
-    tags = ArrayField(
-            models.CharField(max_length=50, blank=True),
-            size=10,
-            blank=True,
-            null=True
-    )
     category = models.TextField(null=False,default='Custom')
     attribution = models.TextField(null=True)
     path = models.FileField(blank=False, null=False,default=None,upload_to=get_upload_path)
+    tags = models.ManyToManyField(TagsIcon, blank=True)
 
     class meta :
         db_table = "icon"

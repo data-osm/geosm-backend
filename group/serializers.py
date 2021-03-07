@@ -1,13 +1,19 @@
-from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style, Metadata, Tags
+from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style, Metadata, Tags, TagsIcon
 from provider.models import Vector, Style
 from provider.serializers import styleProviderSerializer, VectorProviderSerializer
 from rest_framework import serializers
 from typing import List
+import ast
+class TagsIconSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TagsIcon
+        fields ="__all__"
 
 class IconSerializer(serializers.ModelSerializer):
     """
         Icon serializer
     """
+    tags = TagsIconSerializer(many=True, required=False)
 
     class Meta:
         model = Icon
@@ -18,6 +24,40 @@ class IconSerializer(serializers.ModelSerializer):
         full_path =  instance.path.url
         representation['path'] = full_path
         return representation
+    
+    def create(self, validate_data):
+        if 'tags' in validate_data:
+            list_tags =  ast.literal_eval(validate_data.pop('tags'))
+            icon = Icon.objects.create(**validate_data)
+            for api_tag in list_tags:
+                tag = TagsIcon.objects.filter(name=api_tag)
+                if tag.exists() == False:
+                    icon.tags.create(name=api_tag)
+                else:
+                    icon.tags.add(tag.first().pk)
+        else:
+            icon = Icon.objects.create(**validate_data)
+        
+        return icon
+
+    def update(self, instance, validate_data):
+        icon = instance
+        if 'tags' in validate_data:
+            list_tags = ast.literal_eval(validate_data.pop('tags'))
+
+            for existing_tag in icon.tags.all():
+                icon.tags.remove(existing_tag)
+
+            for api_tag in list_tags:
+                tag = TagsIcon.objects.filter(name=api_tag)
+                if tag.exists() == False:
+                    icon.tags.create(name=api_tag)
+                else:
+                    icon.tags.add(tag.first().pk)
+
+            return icon
+        else:
+            return icon
 
 class MapSerializer(serializers.ModelSerializer):
     """

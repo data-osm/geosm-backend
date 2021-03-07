@@ -1,7 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
-from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style, Tags, Metadata
+from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style, Tags, Metadata, TagsIcon
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
@@ -13,7 +13,7 @@ from rest_framework import status
 from django.db.models import Count
 from django.shortcuts import get_list_or_404, get_object_or_404
 
-from .serializers import IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
+from .serializers import TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
 from collections import defaultdict
 from cairosvg import svg2png
 import tempfile
@@ -23,6 +23,18 @@ from django.db.models import Q
 from functools import reduce
 
 import operator
+
+class EnablePartialUpdateMixin:
+    """Enable partial updates
+    https://tech.serhatteker.com/post/2020-09/enable-partial-update-drf/
+
+    Override partial kwargs in UpdateModelMixin class
+    https://github.com/encode/django-rest-framework/blob/91916a4db14cd6a06aca13fb9a46fc667f6c0682/rest_framework/mixins.py#L64
+    """
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return super().update(request, *args, **kwargs)
+
 class MultipleFieldLookupMixin(object):
     def get_object(self):
         queryset = self.get_queryset()             # Get the base queryset
@@ -52,10 +64,24 @@ class MultipleFieldLookupListMixin:
         queryset = queryset.filter(**filter)
         return queryset
 
-class retrieveIconView(RetrieveAPIView):
+class retrieveIconView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset=Icon.objects.all()
     serializer_class=IconSerializer
+
+    def put(self, request, pk):
+        """ update a icon """
+        icon = get_object_or_404(Icon.objects.all(), pk=pk)
+        vp_serializer = IconSerializer(instance=icon, data=request.data, partial=True)
+
+        if vp_serializer.is_valid():
+            if 'tags' in request.data:
+                vp_serializer.validated_data['tags'] =  request.data['tags']
+            vp_serializer.save()
+            return Response(vp_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class listIconByCategory(APIView):
     """
@@ -80,10 +106,26 @@ class iconUploadView(APIView):
     def post(self, request, *args, **kwargs):
       file_serializer = IconSerializer(data=request.data)
       if file_serializer.is_valid():
+          if 'tags' in request.data:
+            file_serializer.validated_data['tags'] =  request.data['tags']
           file_serializer.save()
           return Response(file_serializer.data, status=status.HTTP_201_CREATED)
       else:
           return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class searchIconsTags(APIView):
+    """
+        View to search tags
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        searchWord = request.data['search_word']
+        responseQuerry = []
+        for tag in TagsIcon.objects.raw("SELECT * FROM group_tagsicon WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 "):
+            responseQuerry.append(TagsIconSerializer(tag).data)
+        return Response(responseQuerry,status=status.HTTP_200_OK)
+
 
 class searchIcon(APIView):
     """
@@ -94,7 +136,11 @@ class searchIcon(APIView):
     def post(self, request, *args, **kwargs):
         searchWord = request.data['search_word']
         responseQuerry = []
+
         for icon in Icon.objects.raw("SELECT * FROM group_icon WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 "):
+            responseQuerry.append(IconSerializer(icon).data)
+
+        for icon  in Icon.objects.filter(tags__in=TagsIcon.objects.raw("SELECT id FROM group_tagsicon WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 ")) :
             responseQuerry.append(IconSerializer(icon).data)
 
         return Response(responseQuerry,status=status.HTTP_200_OK)
@@ -263,7 +309,7 @@ class LayerProviderReorderView(APIView):
         else:
             return Response({'msg':" the 'reorderProviders' parameters is missing "}, status=status.HTTP_400_BAD_REQUEST)
 
-class searchTags(APIView):
+class searchLayerTags(APIView):
     """
         View to search tags
     """
