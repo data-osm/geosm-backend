@@ -340,10 +340,32 @@ class MetadataVieuwDetail(RetrieveUpdateDestroyAPIView):
     serializer_class=MetadataSerializer
     permission_classes=[permissions.IsAuthenticated]
 
-class BaseMapGetDestroyVieuw(DestroyAPIView, RetrieveAPIView):
+class BaseMapGetDestroyVieuw(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
     queryset=Base_map.objects.all()
     serializer_class=BaseMapSerializer
     permission_classes=[permissions.IsAuthenticated]
+
+    def put(self, request, pk, format=None):
+        """ update base maps """
+        transaction.set_autocommit(False)
+
+        vp_serializer = BaseMapSerializer(self.get_object(), data=request.data, partial=True)
+
+        if 'picto' in request.data:
+            request.data['picto'] = {
+                'raster_icon':request.data['picto']
+            }
+            picto = updatePicto(request.data['picto'], ImageBox(left=0, top=0, right=976, bottom=310))
+            request.data['picto'] = picto.pk
+          
+        if vp_serializer.is_valid():
+            vp_serializer.save()
+            transaction.commit()
+            return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            transaction.rollback()
+            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class BaseMapListView(MultipleFieldLookupListMixin, ListAPIView):
     queryset=Base_map.objects.all()
@@ -383,24 +405,3 @@ class BaseMapView(APIView):
         else:
             return Response(" 'picto' field is required", status=status.HTTP_400_BAD_REQUEST)
 
-
-        def put(self, request, pk, format=None):
-            """ update base maps """
-            transaction.set_autocommit(False)
-
-            vp_serializer = BaseMapSerializer(self.get_object(), data=request.data)
-
-            if 'picto' in request.data:
-                request.data['picto'] = {
-                    'raster_icon':request.data['picto']
-                }
-                picto = updatePicto(request.data['picto'], ImageBox(left=0, top=0, right=976, bottom=310))
-                request.data['picto'] = picto.pk
-          
-            if vp_serializer.is_valid():
-                vp_serializer.save()
-                transaction.commit()
-                return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                transaction.rollback()
-                return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
