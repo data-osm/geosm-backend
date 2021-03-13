@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'django_extensions',
     'corsheaders',
+    'genericIcon',
     'account',
     'djoser',
     'rest_framework',

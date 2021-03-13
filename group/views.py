@@ -1,19 +1,24 @@
 from django.shortcuts import render
 
 # Create your views here.
-from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style, Tags, Metadata, TagsIcon
+from .models import Map, Group, Sub, Layer, Default_map, Layer_provider_style, Tags, Metadata, Base_map
+from genericIcon.models import Picto
+from genericIcon.managePicto import createPicto, updatePicto, ImageBox
+from .subModels.icon import Icon, TagsIcon
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
-from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView , ListAPIView)
+from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView , ListAPIView, DestroyAPIView)
 from rest_framework import status
 from django.db.models import Count
 from django.shortcuts import get_list_or_404, get_object_or_404
+from django.db import transaction
 
-from .serializers import TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
+
+from .serializers import BaseMapSerializer ,TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
 from collections import defaultdict
 from cairosvg import svg2png
 import tempfile
@@ -334,3 +339,68 @@ class MetadataVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Metadata.objects.all()
     serializer_class=MetadataSerializer
     permission_classes=[permissions.IsAuthenticated]
+
+class BaseMapGetDestroyVieuw(DestroyAPIView, RetrieveAPIView):
+    queryset=Base_map.objects.all()
+    serializer_class=BaseMapSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+class BaseMapListView(MultipleFieldLookupListMixin, ListAPIView):
+    queryset=Base_map.objects.all()
+    serializer_class=BaseMapSerializer
+    permission_classes=[permissions.IsAuthenticated]
+    lookup_fields=['']
+    model = Base_map
+
+class BaseMapView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        """ store a new base map """
+
+        if 'picto' in request.data:
+
+            transaction.set_autocommit(False)
+   
+            request.data['picto'] = {
+                'raster_icon':request.data['picto']
+            }
+            # print(request.data['picto'])
+            picto = createPicto(request.data['picto'], ImageBox(left=0, top=0, right=976, bottom=310) )
+
+            request.data['picto'] = picto.pk
+
+            vp_serializer = BaseMapSerializer(data=request.data)
+
+            if vp_serializer.is_valid():
+                vp_serializer.save()
+                transaction.commit()
+                return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                transaction.rollback()
+                return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        else:
+            return Response(" 'picto' field is required", status=status.HTTP_400_BAD_REQUEST)
+
+
+        def put(self, request, pk, format=None):
+            """ update base maps """
+            transaction.set_autocommit(False)
+
+            vp_serializer = BaseMapSerializer(self.get_object(), data=request.data)
+
+            if 'picto' in request.data:
+                request.data['picto'] = {
+                    'raster_icon':request.data['picto']
+                }
+                picto = updatePicto(request.data['picto'], ImageBox(left=0, top=0, right=976, bottom=310))
+                request.data['picto'] = picto.pk
+          
+            if vp_serializer.is_valid():
+                vp_serializer.save()
+                transaction.commit()
+                return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                transaction.rollback()
+                return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
