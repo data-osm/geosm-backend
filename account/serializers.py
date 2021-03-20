@@ -2,6 +2,10 @@ from rest_framework import serializers
 from .models import User
 from djoser.serializers import UserCreateSerializer as BaseUserRegistrationSerializer
 
+class UserNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["email", "last_name"]
 class userSerializer(serializers.ModelSerializer):
     # user=serializers.StringRelatedField(read_only=True)
     class Meta:

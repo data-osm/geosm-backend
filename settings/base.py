@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'django_extensions',
     'corsheaders',
+    'cuser',
+    'tracking_fields',
     'genericIcon',
     'account',
     'djoser',
@@ -63,6 +65,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'cuser.middleware.CuserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

@@ -4,13 +4,15 @@ from group.models import Layer, Vector
 from .validateOsmQuerry import validateOsmQuerry
 from django.core.exceptions import ObjectDoesNotExist
 import traceback
+from tracking_fields.decorators import track
+
 # Create your models here.
 
 class Struct:
     def __init__(self, **entries):
         self.__dict__.update(entries)
 
-
+@track('select', 'where')
 class Querry(models.Model):
     """ model of osm querry """
     # osm_querry_id = models.OneToOneField(primary_key=True)

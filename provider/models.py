@@ -3,7 +3,7 @@ import re
 import os
 from .qgis.manageStyle import addStyleQMLFromStringToLayer, removeStyle, updateStyle
 from django.contrib.postgres.fields import ArrayField
-
+from tracking_fields.decorators import track
 # Create your models here.
 
 class StateOfProvider(models.TextChoices):
@@ -21,6 +21,7 @@ class protocolCartoChoice (models.TextChoices):
     wms='wms'
     wfs='wfs'
 
+@track('name', 'url_server', 'id_server', 'path_qgis', 'table', 'count')
 class Vector(models.Model):
     """ model of a vector provider : data is store in a shema and table """
     provider_vector_id = models.AutoField(primary_key=True)
@@ -98,6 +99,7 @@ class Custom_style (models.Model):
     class_name = models.CharField(max_length=50,blank=True)
     """ name of the class responsible to format QML """
 
+@track('name', 'qml_file', 'qml')
 class Style (models.Model):
     """ model that store name, qml, ol style of a provider (raster and vector) """
     provider_style_id = models.BigAutoField(primary_key=True)

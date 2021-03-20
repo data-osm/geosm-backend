@@ -8,13 +8,14 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
-from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
+from geosmBackend.cuserViews import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
 from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Count
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from geosmBackend.type import httpResponse
+from cuser.middleware import CuserMiddleware
 
 from .serializers import osmQuerrySerializer
 from collections import defaultdict
@@ -36,6 +37,7 @@ class osmQuerryView(APIView):
 
     def put(self, request, pk):
         """ update an osm querry """
+        CuserMiddleware.set_user(request.user)
         saved_querry = get_object_or_404(Querry.objects.all(), pk=pk)
         op_serializer = osmQuerrySerializer(instance=saved_querry, data=request.data, partial=True)
         if op_serializer.is_valid(raise_exception=True):
@@ -50,6 +52,7 @@ class osmQuerryView(APIView):
 
     def post(self, request, *args, **kwargs):
         """ store a new osm querry"""
+        CuserMiddleware.set_user(request.user)
         op_serializer = osmQuerrySerializer(data=request.data)
         if op_serializer.is_valid():
             try:

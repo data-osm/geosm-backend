@@ -6,12 +6,13 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
 from rest_framework.response import Response
-from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, ListAPIView)
+from geosmBackend.cuserViews import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, ListAPIView)
 from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Count
 from geosmBackend.type import httpResponse
 from django.shortcuts import get_list_or_404, get_object_or_404
+from cuser.middleware import CuserMiddleware
 
 from cairosvg import svg2png
 import tempfile
@@ -47,6 +48,7 @@ class styleView(APIView):
        
     def put(self, request, pk):
         """ update a style """
+        CuserMiddleware.set_user(request.user)
         style = get_object_or_404(Style.objects.all(), pk=pk)
         op_serializer = styleProviderSerializer(instance=style, data=request.data, partial=True)
         if op_serializer.is_valid(raise_exception=False):
@@ -62,7 +64,7 @@ class styleView(APIView):
     def post(self, request, *args, **kwargs):
         """ store a new style"""
         op_serializer = styleProviderSerializer(data=request.data)
-
+        CuserMiddleware.set_user(request.user)
         if 'type' in  request.data:
             if request.data['type'] == 'cluster':
                 # _mutable = request.data._mutable
@@ -93,6 +95,7 @@ class styleView(APIView):
 
     def delete(self, request, pk):
         """ Delete a style """
+        CuserMiddleware.set_user(request.user)
         try:
             style = get_object_or_404(Style.objects.all(), pk=pk)
             style.delete()
@@ -113,6 +116,7 @@ class vectorProviderView(APIView):
     
     def post(self, request, *args, **kwargs):
         """ store a new vector providor """
+        CuserMiddleware.set_user(request.user)
         vp_serializer = VectorProviderSerializer(data=request.data)
 
         if vp_serializer.is_valid():
@@ -123,6 +127,7 @@ class vectorProviderView(APIView):
 
     def delete(self, request, *args, **kwargs):
         """ Delete vector providers """
+        CuserMiddleware.set_user(request.user)
         try:
             provider_vector_ids= request.data['provider_vector_ids']
             vector_providers = Vector.objects.filter(pk__in=provider_vector_ids)
@@ -139,6 +144,7 @@ class searchVectorProvider(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        CuserMiddleware.set_user(request.user)
         searchWord = request.data['search_word']
         responseQuerry = []
         for vector in Vector.objects.raw("SELECT * FROM provider_vector WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 "):

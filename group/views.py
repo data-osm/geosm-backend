@@ -11,11 +11,12 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
-from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView , ListAPIView, DestroyAPIView)
+from geosmBackend.cuserViews import ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView , ListAPIView, DestroyAPIView
 from rest_framework import status
 from django.db.models import Count
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django.db import transaction
+from cuser.middleware import CuserMiddleware
 
 
 from .serializers import BaseMapSerializer ,TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
@@ -109,6 +110,7 @@ class iconUploadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+      CuserMiddleware.set_user(request.user)
       file_serializer = IconSerializer(data=request.data)
       if file_serializer.is_valid():
           if 'tags' in request.data:
@@ -306,7 +308,7 @@ class LayerProviderReorderView(APIView):
 
         if 'reorderProviders' in  request.data:
             reorderProviders = request.data['reorderProviders']
-
+            CuserMiddleware.set_user(request.user)
             for provider in reorderProviders:
                 Layer_provider_style.objects.filter(pk=provider['id']).update(ordre=provider['ordre'])
 
@@ -348,7 +350,7 @@ class BaseMapGetDestroyVieuw(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIV
     def put(self, request, pk, format=None):
         """ update base maps """
         transaction.set_autocommit(False)
-
+        CuserMiddleware.set_user(request.user)
         vp_serializer = BaseMapSerializer(self.get_object(), data=request.data, partial=True)
 
         if 'picto' in request.data:
@@ -379,6 +381,7 @@ class BaseMapView(APIView):
 
     def post(self, request, *args, **kwargs):
         """ store a new base map """
+        CuserMiddleware.set_user(request.user)
 
         if 'picto' in request.data:
 
