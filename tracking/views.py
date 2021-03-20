@@ -26,7 +26,7 @@ class MultipleFieldLookupListMixin:
 class TrackingEventListView(MultipleFieldLookupListMixin, ListAPIView):
     queryset=TrackingEvent.objects.all()
     serializer_class=TrackingEventSerializer
-    # permission_classes=[permissions.IsAuthenticated]
+    permission_classes=[permissions.IsAuthenticated]
     model = TrackingEvent
     lookup_fields=['object_id']
 
