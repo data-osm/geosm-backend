@@ -3,6 +3,8 @@ import re
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from provider.models import Vector, External, Style
+from .subModels.icon import Icon
+from genericIcon.models import Picto
 # Create your models here.
 
 class groupType (models.TextChoices):
@@ -15,34 +17,29 @@ class protocolCartoChoice (models.TextChoices):
     wms='wms'
     wfs='wfs'
 
-
-
+class protocolBaseMapChoice (models.TextChoices):
+    wmts='wmts'
+    wms='wms'
+    
 def get_upload_path(instance, filename):
     category = re.sub('[^A-Za-z0-9]+', '', instance.category)
     return os.path.join(category, filename)
     
+
 def get_upload_path_group_icon (instance, filename):
     return os.path.join('group', instance.name+'.png')
 
 def get_upload_path_layer_icon (instance, filename):
     return os.path.join('layer', instance.name+'.png')
 
-class TagsIcon(models.Model):
+class Base_map (models.Model):
     name = models.CharField(max_length=200)
-
-class Icon (models.Model):
-    """ an Icon in svg """
+    url = models.TextField()
+    protocol_carto = models.CharField(max_length=5,choices=protocolBaseMapChoice.choices)
+    identifiant = models.TextField(null=True, blank=True)
+    attribution = models.TextField(null=True, blank=True)
+    picto = models.ForeignKey(Picto, on_delete=models.CASCADE)
     
-    icon_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=200)
-    category = models.TextField(null=False,default='Custom')
-    attribution = models.TextField(null=True)
-    path = models.FileField(blank=False, null=False,default=None,upload_to=get_upload_path)
-    tags = models.ManyToManyField(TagsIcon, blank=True)
-
-    class meta :
-        db_table = "icon"
-        unique_together = ('name', 'category',)
 
 class Group (models.Model):
     """ A group that  contains sub group and a sub group contains layer """

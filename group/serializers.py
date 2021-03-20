@@ -1,9 +1,18 @@
-from .models import Icon, Map, Group, Sub, Layer, Default_map, Layer_provider_style, Metadata, Tags, TagsIcon
+from .models import Map, Group, Sub, Layer, Default_map, Layer_provider_style, Metadata, Tags, Base_map
+from .subModels.icon import Icon, TagsIcon
 from provider.models import Vector, Style
 from provider.serializers import styleProviderSerializer, VectorProviderSerializer
 from rest_framework import serializers
 from typing import List
 import ast
+from genericIcon.serializers import PictoSerializer
+
+class BaseMapSerializer(serializers.ModelSerializer):
+    pictogramme = PictoSerializer(read_only=True, source='picto')
+    class Meta:
+        model = Base_map
+        fields ="__all__"
+
 class TagsIconSerializer(serializers.ModelSerializer):
     class Meta:
         model = TagsIcon
