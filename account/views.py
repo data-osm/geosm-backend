@@ -2,14 +2,14 @@ from django.shortcuts import render
 # Create your views here.
 from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
 from rest_framework.permissions import IsAuthenticated
-from .models import userProfile
+from .models import User
 from .permissions import IsOwnerProfileOrReadOnly
-from .serializers import userProfileSerializer
+from .serializers import userSerializer
 
 
-class UserProfileListCreateView(ListCreateAPIView):
-    queryset=userProfile.objects.all()
-    serializer_class=userProfileSerializer
+class UserListCreateView(ListCreateAPIView):
+    queryset=User.objects.all()
+    serializer_class=userSerializer
     permission_classes=[IsAuthenticated]
 
     def perform_create(self, serializer):
@@ -17,7 +17,7 @@ class UserProfileListCreateView(ListCreateAPIView):
         serializer.save(user=user)
 
 
-class userProfileDetailView(RetrieveUpdateDestroyAPIView):
-    queryset=userProfile.objects.all()
-    serializer_class=userProfileSerializer
+class userDetailView(RetrieveUpdateDestroyAPIView):
+    queryset=User.objects.all()
+    serializer_class=userSerializer
     permission_classes=[IsOwnerProfileOrReadOnly,IsAuthenticated]
