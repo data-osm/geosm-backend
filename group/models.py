@@ -5,6 +5,7 @@ from django.contrib.postgres.fields import ArrayField
 from provider.models import Vector, External, Style
 from .subModels.icon import Icon
 from genericIcon.models import Picto
+from tracking_fields.decorators import track
 # Create your models here.
 
 class groupType (models.TextChoices):
@@ -32,6 +33,7 @@ def get_upload_path_group_icon (instance, filename):
 def get_upload_path_layer_icon (instance, filename):
     return os.path.join('layer', instance.name+'.png')
 
+@track('name', 'url', 'identifiant', 'attribution')
 class Base_map (models.Model):
     name = models.CharField(max_length=200)
     url = models.TextField()
@@ -40,7 +42,7 @@ class Base_map (models.Model):
     attribution = models.TextField(null=True, blank=True)
     picto = models.ForeignKey(Picto, on_delete=models.CASCADE)
     
-
+@track('name', 'color', 'icon__name', 'icon_path')
 class Group (models.Model):
     """ A group that  contains sub group and a sub group contains layer """
 
@@ -56,7 +58,7 @@ class Group (models.Model):
     icon_path = models.FileField(blank=False, null=False, upload_to=get_upload_path_group_icon)
 
 
-
+@track('name', 'group_id__name')
 class Map (models.Model):
     """ A map is compose of group """
     map_id = models.AutoField(primary_key=True)
@@ -67,12 +69,14 @@ class Default_map (models.Model):
     """ the default map: this will be display as default in the portail """
     map_id = models.ForeignKey(Map, on_delete=models.CASCADE)
 
+@track('name', 'group__name')
 class Sub (models.Model):
     """ A sub group that contains layers. It belong to a group """
     group_sub_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=200)
     group = models.ForeignKey(Group,on_delete=models.CASCADE)
 
+@track('name', 'color', 'icon_color', 'icon_background', 'icon_background')
 class Layer (models.Model):
     """ A layer that reference to one or may provider of different types """
 
@@ -91,6 +95,7 @@ class Layer (models.Model):
     share = models.BooleanField(default=True)
     sub = models.ForeignKey(Sub,on_delete=models.CASCADE)
 
+@track('vp_id__name', 'vs_id__name', 'ordre')
 class Layer_provider_style(models.Model):
     layer_id = models.ForeignKey(Layer,on_delete=models.CASCADE)
     vp_id = models.ForeignKey(Vector,on_delete=models.CASCADE, blank=True, null=True)
@@ -109,6 +114,7 @@ class Layer_provider_style(models.Model):
 class Tags(models.Model):
     name = models.CharField(max_length=200)
 
+@track('layer__name', 'description')
 class Metadata(models.Model):
     layer = models.OneToOneField(Layer,on_delete=models.CASCADE)
     description = models.TextField(null=True,blank=True)
