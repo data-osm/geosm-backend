@@ -1,7 +1,7 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from .views import BaseMapGetDestroyVieuw, BaseMapListView, BaseMapView, searchIconsTags, retrieveIconView,searchLayerTags,MetadataVieuwListCreate, MetadataVieuwDetail, LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
+from .views import searchMaps, BaseMapGetDestroyVieuw, BaseMapListView, BaseMapView, searchIconsTags, retrieveIconView,searchLayerTags,MetadataVieuwListCreate, MetadataVieuwDetail, LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
 
 urlpatterns = [
     #gets all user profiles and create a new profile
@@ -12,6 +12,7 @@ urlpatterns = [
     path("icons/search",searchIcon.as_view(),name="search-icons"),
     # """ search icon by name. parameter :search_word  """
     path("map",MapViewListCreate.as_view()),
+    path("map/search",searchMaps.as_view()),
     path("map/<int:pk>",MapViewDetail.as_view()),
 
     path("group",GroupVieuwListCreate.as_view()),

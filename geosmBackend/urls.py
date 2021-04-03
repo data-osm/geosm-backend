@@ -29,6 +29,7 @@ urlpatterns = [
     path("api/group/",include("group.urls")),
     path("api/provider/",include("provider.urls")),
     path("api/datasource/",include("osm.urls")),
-    path("api/tracking/",include("tracking.urls"))
+    path("api/tracking/",include("tracking.urls")),
+    path("api/parameter/",include("parameter.urls"))
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

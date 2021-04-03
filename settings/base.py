@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'osm',
     'provider',
-    'group'
+    'group',
+    'parameter',
 ]
 
 REST_FRAMEWORK = {

@@ -162,6 +162,19 @@ class MapViewListCreate(ListCreateAPIView):
     serializer_class=MapSerializer
     permission_classes=[permissions.IsAuthenticated]
 
+class searchMaps(APIView):
+    """
+        View to search map's
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        searchWord = request.data['search_word']
+        responseQuerry = []
+        for map in Map.objects.raw("SELECT * FROM group_map WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 "):
+            responseQuerry.append(MapSerializer(map).data)
+
+        return Response(responseQuerry,status=status.HTTP_200_OK)
 
 
 class GroupVieuwDetail(RetrieveUpdateDestroyAPIView):
