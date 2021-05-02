@@ -19,7 +19,7 @@ from django.db import transaction
 from cuser.middleware import CuserMiddleware
 
 
-from .serializers import BaseMapSerializer ,TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
+from .serializers import BaseMapSerializer ,TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, SubWithLayersSerializer,  LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
 from collections import defaultdict
 from cairosvg import svg2png
 import tempfile
@@ -201,7 +201,14 @@ class GroupVieuwDetail(RetrieveUpdateDestroyAPIView):
         else:
             return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class GroupVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
+class GroupVieuwList(MultipleFieldLookupListMixin, ListAPIView):
+    queryset=Group.objects.all()
+    serializer_class=GroupSerializer
+    lookup_fields=['map']
+    model = Group
+    authentication_classes = []
+
+class GroupVieuwListCreate(MultipleFieldLookupListMixin, CreateAPIView):
     queryset=Group.objects.all()
     serializer_class=GroupSerializer
     permission_classes=[permissions.IsAuthenticated]
@@ -230,6 +237,13 @@ class SubVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Sub.objects.all()
     serializer_class=SubSerializer
     permission_classes=[permissions.IsAuthenticated]
+
+class SubListWithLayersView(MultipleFieldLookupListMixin, ListAPIView):
+    queryset=Sub.objects.all()
+    serializer_class=SubWithLayersSerializer
+    authentication_classes = []
+    lookup_fields=['group_id']
+    model = Sub
 
 class SubVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
     queryset=Sub.objects.all()
@@ -385,7 +399,7 @@ class BaseMapGetDestroyVieuw(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIV
 class BaseMapListView(MultipleFieldLookupListMixin, ListAPIView):
     queryset=Base_map.objects.all()
     serializer_class=BaseMapSerializer
-    permission_classes=[permissions.IsAuthenticated]
+    authentication_classes = []
     lookup_fields=['']
     model = Base_map
 

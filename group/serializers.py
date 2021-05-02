@@ -115,16 +115,6 @@ class GroupSerializer(serializers.ModelSerializer):
             group = Group.objects.create(**validate_data)
         return group
 
-class SubSerializer(serializers.ModelSerializer):
-    """
-        Sub group serializer
-    """
-
-    class Meta:
-        model = Sub
-        fields = "__all__"
-
-
 class LayerProviderStyleSerializer(serializers.ModelSerializer):
     vp = VectorProviderSerializer(read_only=True, source='vp_id')
     vs = styleProviderSerializer(read_only=True, source='vs_id')
@@ -134,16 +124,42 @@ class LayerProviderStyleSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class LayerSerializer(serializers.ModelSerializer):
-    providers = LayerProviderStyleSerializer(read_only=True, source="layer")
+    providers = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Layer
         fields ="__all__"
-    
+        
+    def get_providers(self, instance:Layer):
+        return LayerProviderStyleSerializer(Layer_provider_style.objects.filter(layer_id=instance.pk), many=True).data
+
     def to_representation(self, instance):
         representation = super(LayerSerializer, self).to_representation(instance)
         representation['cercle_icon'] = instance.cercle_icon.url
         representation['square_icon'] = instance.square_icon.url
         return representation
+
+class SubWithLayersSerializer(serializers.ModelSerializer):
+    """
+        Sub group serializer
+    """
+    layers = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Sub
+        fields = "__all__"
+
+    def get_layers(self, instance:Sub):
+        return LayerSerializer(Layer.objects.filter(sub=instance.pk), many=True).data
+
+class SubSerializer(serializers.ModelSerializer):
+    """
+        Sub group with thier layers serializer
+    """
+    class Meta:
+        model = Sub
+        fields = "__all__"
+
+
 
 class TagsSerializer(serializers.ModelSerializer):
     class Meta:

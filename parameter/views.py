@@ -42,9 +42,10 @@ class ParameterCreateView(CreateAPIView):
     serializer_class=ParameterCreateSerializer
 
 class ParameterListView(ListAPIView):
-    permission_classes = [permissions.IsAuthenticated]
     queryset=Parameter.objects.all()
     serializer_class=ParameterSerializer
+    authentication_classes = []
+
 
 class ExtentListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -77,7 +78,7 @@ class ExtentListView(APIView):
             return Response([],status=status.HTTP_404_NOT_FOUND)
 
 class ExtenView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = []
     def get(self, request, *args, **kwargs):
         try:
             extent_pk = Parameter.objects.first().extent_pk

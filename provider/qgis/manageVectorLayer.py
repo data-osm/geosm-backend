@@ -55,6 +55,7 @@ def _makeVectorLayerAvaibleOnWfs(project:QgsProject, vectorLayer:QgsVectorLayer 
         WFSLayersList = list(WFSLayers)[0]
         WFSLayersList.append(u'%s' % vectorLayer.id())
         project.writeEntry('WFSLayers', '',  WFSLayersList) 
+        project.writeEntry('WMSAddWktGeometry', '',  'true') 
 
         return True
     else:
