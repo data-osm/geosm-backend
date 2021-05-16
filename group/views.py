@@ -364,7 +364,7 @@ class MetadataVieuwListCreate(MultipleFieldLookupMixin, RetrieveAPIView, CreateA
     # model = Metadata
     lookup_fields=['layer']
 
-class MetadataVieuwDetail(RetrieveUpdateDestroyAPIView):
+class MetadataVieuwDetail(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
     queryset=Metadata.objects.all()
     serializer_class=MetadataSerializer
     permission_classes=[permissions.IsAuthenticated]

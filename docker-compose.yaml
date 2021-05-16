@@ -10,6 +10,8 @@ services:
     ports:
       - "8000:8000"
     # network_mode: host
+    networks:
+      - travellist
     
   qgis-server:
     image: 3liz/qgis-map-server:3.16
@@ -23,3 +25,22 @@ services:
         - QGSRV_CACHE_ROOTDIR=/projects
         - QGSRV_CACHE_STRICT_CHECK=no
         - QGSRV_CACHE_SIZE=10
+    networks:
+          - travellist
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - ./elasticdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - travellist
+
+networks:
+  travellist:
+    driver: bridge
+
+    # docker run -e "ELASTICSEARCH_HOSTS=http://host.docker.internal:9200" -p 5601:5601 kibana:7.12.1

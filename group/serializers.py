@@ -187,8 +187,10 @@ class MetadataSerializer(serializers.ModelSerializer):
             metadata = Metadata.objects.create(**validate_data)
         return metadata
 
-    def update(self, instance, validate_data):
+    def update(self, instance:Metadata, validate_data):
         metadata = instance
+        metadata.description = validate_data.get('description', metadata.description)
+
         if 'tags' in validate_data:
             list_tags = validate_data.pop('tags')
 
@@ -201,8 +203,9 @@ class MetadataSerializer(serializers.ModelSerializer):
                     metadata.tags.create(name=api_tag['name'])
                 else:
                     metadata.tags.add(tag.first().pk)
-
+            metadata.save()
             return metadata
         else:
+            metadata.save()
             return metadata
       
