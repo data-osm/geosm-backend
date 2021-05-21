@@ -1,7 +1,7 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from .views import SubListWithLayersView, GroupVieuwList, searchMaps, BaseMapGetDestroyVieuw, BaseMapListView, BaseMapView, searchIconsTags, retrieveIconView,searchLayerTags,MetadataVieuwListCreate, MetadataVieuwDetail, LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
+from .views import searchLayer, SubListWithLayersView, GroupVieuwList, searchMaps, BaseMapGetDestroyVieuw, BaseMapListView, BaseMapView, searchIconsTags, retrieveIconView,searchLayerTags,MetadataVieuwListCreate, MetadataVieuwDetail, LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
 
 urlpatterns = [
     #gets all user profiles and create a new profile
@@ -25,6 +25,7 @@ urlpatterns = [
 
 
     path("layer",LayerVieuwListCreate.as_view()),
+    path("layer/search",searchLayer.as_view()),
     path("layer/<int:pk>",LayerVieuwDetail.as_view()),
 
     path("layer/provider",LayerProviderStyleVieuwListCreate.as_view()),
