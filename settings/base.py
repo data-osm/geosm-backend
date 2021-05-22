@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'django_extensions',
     'corsheaders',
+    'django_elasticsearch_dsl',
     'cuser',
     'tracking_fields',
     'genericIcon',
@@ -70,6 +71,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+ELASTICSEARCH_DSL={
+    'default': {
+        'hosts': 'elastic:9200'
+    },
+}
 
 DJOSER = {
     'SERIALIZERS': {

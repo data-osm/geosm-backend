@@ -1,3 +1,4 @@
+from typing import List
 from django.shortcuts import render
 
 # Create your views here.
@@ -18,8 +19,9 @@ from django.shortcuts import get_list_or_404, get_object_or_404
 from django.db import transaction
 from cuser.middleware import CuserMiddleware
 
+from .documents import LayerDocument
 
-from .serializers import BaseMapSerializer ,TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, SubWithLayersSerializer,  LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
+from .serializers import SubWithGroupSerializer, BaseMapSerializer ,TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, SubWithLayersSerializer,  LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
 from collections import defaultdict
 from cairosvg import svg2png
 import tempfile
@@ -238,6 +240,11 @@ class SubVieuwDetail(RetrieveUpdateDestroyAPIView):
     serializer_class=SubSerializer
     permission_classes=[permissions.IsAuthenticated]
 
+class SubWithGroupDetail(RetrieveAPIView):
+    queryset=Sub.objects.all()
+    serializer_class=SubWithGroupSerializer
+    authentication_classes = []
+
 class SubListWithLayersView(MultipleFieldLookupListMixin, ListAPIView):
     queryset=Sub.objects.all()
     serializer_class=SubWithLayersSerializer
@@ -364,7 +371,7 @@ class MetadataVieuwListCreate(MultipleFieldLookupMixin, RetrieveAPIView, CreateA
     # model = Metadata
     lookup_fields=['layer']
 
-class MetadataVieuwDetail(RetrieveUpdateDestroyAPIView):
+class MetadataVieuwDetail(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
     queryset=Metadata.objects.all()
     serializer_class=MetadataSerializer
     permission_classes=[permissions.IsAuthenticated]
@@ -435,3 +442,68 @@ class BaseMapView(APIView):
         else:
             return Response(" 'picto' field is required", status=status.HTTP_400_BAD_REQUEST)
 
+class searchLayer(APIView):
+    """
+        View to search layer
+    """
+    authentication_classes = []
+    def post(self, request, *args, **kwargs):
+        searchQuerry = request.data['search_word']
+        shouldTags:List=[]
+        for item in searchQuerry.split():
+            shouldTags.append(
+                {
+                    "match": {
+                        "metadata.tags": item
+                    }
+                }
+            )
+
+        elasticResponse = LayerDocument.search().from_dict(
+            {
+                "query": {
+                    "bool": {
+                    "should": [
+                        {
+                        "multi_match": {
+                            "boost": 4,
+                            "query": searchQuerry,
+                            "type": "best_fields",
+                            "fuzziness": 2,
+                            "fields": [
+                            "name",
+                            "name._2gram",
+                            "name._3gram"
+                            ]
+                        }
+                        },
+                        {
+                        "nested": {
+                            "path": "metadata",
+                            "query": {
+                            "bool": {
+                                    "should": shouldTags
+                                }
+                            }
+                        }
+                        },
+                        {
+                        "multi_match": {
+                            "query": searchQuerry,
+                            "boost": 0.5, 
+                            "fields": [
+                            "sub.group",
+                            "sub.name"
+                            ]
+                        }
+                        }
+                    ]
+                    }
+                }
+            }
+        )
+        
+        pks = [result.meta.id for result in elasticResponse]
+        
+
+        return Response( LayerSerializer(Layer.objects.filter(pk__in=pks), many=True).data ,status=status.HTTP_200_OK)

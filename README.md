@@ -20,3 +20,5 @@ $  psql -d 'your local database -f import_foreign_osm_table.sql
 ```
 docker-compose -f docker-compose-prod.yaml exec web python manage.py createsuperuser --settings=settings.prod
 docker-compose  exec web python manage.py makemigrations --settings=settings.dev
+
+docker-compose  exec web python manage.py search_index --rebuild --settings=settings.dev
