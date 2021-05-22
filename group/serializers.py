@@ -159,7 +159,14 @@ class SubSerializer(serializers.ModelSerializer):
         model = Sub
         fields = "__all__"
 
-
+class SubWithGroupSerializer(serializers.ModelSerializer):
+    """
+        Sub group with thier group serializer
+    """
+    group = GroupSerializer()
+    class Meta:
+        model = Sub
+        fields = "__all__"
 
 class TagsSerializer(serializers.ModelSerializer):
     class Meta:

@@ -21,7 +21,7 @@ from cuser.middleware import CuserMiddleware
 
 from .documents import LayerDocument
 
-from .serializers import BaseMapSerializer ,TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, SubWithLayersSerializer,  LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
+from .serializers import SubWithGroupSerializer, BaseMapSerializer ,TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, SubWithLayersSerializer,  LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
 from collections import defaultdict
 from cairosvg import svg2png
 import tempfile
@@ -239,6 +239,11 @@ class SubVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Sub.objects.all()
     serializer_class=SubSerializer
     permission_classes=[permissions.IsAuthenticated]
+
+class SubWithGroupDetail(RetrieveAPIView):
+    queryset=Sub.objects.all()
+    serializer_class=SubWithGroupSerializer
+    authentication_classes = []
 
 class SubListWithLayersView(MultipleFieldLookupListMixin, ListAPIView):
     queryset=Sub.objects.all()
