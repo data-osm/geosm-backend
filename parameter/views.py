@@ -1,3 +1,4 @@
+from typing import List
 from django.shortcuts import render
 from geosmBackend.cuserViews import ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView , ListAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework import permissions
@@ -9,7 +10,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from psycopg2.extras import NamedTupleCursor
 from .documents import BoundarysDocument
-
+from django.shortcuts import get_list_or_404, get_object_or_404
+from group.models import Vector
 # Create your views here.
 class EnablePartialUpdateMixin:
     """Enable partial updates
@@ -114,6 +116,21 @@ class ExtenView(APIView):
 class SearchBoundary(APIView):
     authentication_classes = []
     def post(self, request, *args, **kwargs):
+
+        def getAdminBoundaryFeature(table:str, shema:str, id:int):
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT osm_id as table_id, name FROM "+shema+"."+table+" WHERE osm_id ="+ str(id) )
+                temp = []
+                for x in cursor.fetchall():
+                    temp2 = {}
+                    c = 0
+                    for col in cursor.description:
+                        temp2.update({str(col[0]): x[c]})
+                        c = c+1
+                    temp.append(temp2)
+                if len(temp) ==1 :
+                    return temp[0]
+
         searchQuerry = request.data['search_word']
         search = BoundarysDocument.search()
         esResponse = search.from_dict(
@@ -133,5 +150,43 @@ class SearchBoundary(APIView):
             }
         )
         pks = [result.meta.id for result in esResponse]
+        response=[]
+        for result in esResponse:
+            adminBoundary_id = int(result.meta.id.split('_')[1]) 
+            table_id = int(result.meta.id.split('_')[0]) 
+            adminBoundary:AdminBoundary = AdminBoundary.objects.get(pk=adminBoundary_id)
+            if adminBoundary:
+                feature = getAdminBoundaryFeature(adminBoundary.vector.table, adminBoundary.vector.shema, table_id)
+                if feature :
+                    response.append({
+                        "feature":feature,
+                        'adminBoundary':AdminBoundaryCreateSerializer(adminBoundary).data
+                    })
+        
+        return Response( response ,status=status.HTTP_200_OK)
 
-        return Response( pks ,status=status.HTTP_200_OK)
+class GetFeatureAdminBoundary(APIView):
+    authentication_classes = []
+    def post(self, request, *args, **kwargs):
+        def getAdminBoundaryFeatureWithGeometry(table:str, shema:str, id:int):
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT osm_id as table_id, name, st_asgeojson(st_transform(geom,3857)) as geometry FROM "+shema+"."+table+" WHERE osm_id ="+ str(id) )
+                temp = []
+                for x in cursor.fetchall():
+                    temp2 = {}
+                    c = 0
+                    for col in cursor.description:
+                        temp2.update({str(col[0]): x[c]})
+                        c = c+1
+                    temp.append(temp2)
+                if len(temp) ==1 :
+                    return temp[0]
+
+        vector_id = int(request.data['vector_id'])
+        table_id = int(request.data['table_id'])
+        adminBoundary = get_object_or_404(Vector.objects.all(), pk=vector_id)
+        feature = getAdminBoundaryFeatureWithGeometry(adminBoundary.table, adminBoundary.shema, table_id)
+        if feature:
+            return Response( feature ,status=status.HTTP_200_OK)
+        else:
+            Response({},status=status.HTTP_404_NOT_FOUND)
