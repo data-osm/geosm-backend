@@ -20,7 +20,7 @@ class ParameterCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ParameterSerializer(serializers.ModelSerializer):
-    boundary = serializers.SerializerMethodField()
+    boundary = serializers.SerializerMethodField(read_only=True)
     extent = VectorProviderSerializer(read_only=True)
     map = MapSerializer(read_only=True)
 

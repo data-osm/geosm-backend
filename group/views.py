@@ -502,7 +502,6 @@ class searchLayer(APIView):
                 }
             }
         )
-        
         pks = [result.meta.id for result in elasticResponse]
         
 

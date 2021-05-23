@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from psycopg2.extras import NamedTupleCursor
+from .documents import BoundarysDocument
 
 # Create your views here.
 class EnablePartialUpdateMixin:
@@ -110,3 +111,27 @@ class ExtenView(APIView):
         except:
             return Response({},status=status.HTTP_404_NOT_FOUND)
         
+class SearchBoundary(APIView):
+    authentication_classes = []
+    def post(self, request, *args, **kwargs):
+        searchQuerry = request.data['search_word']
+        search = BoundarysDocument.search()
+        esResponse = search.from_dict(
+            {
+            "query": {
+                "bool": {
+                    "should": 
+                        [
+                            {
+                                "match": {
+                                    "name": searchQuerry
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        )
+        pks = [result.meta.id for result in esResponse]
+
+        return Response( pks ,status=status.HTTP_200_OK)
