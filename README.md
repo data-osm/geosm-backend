@@ -22,3 +22,6 @@ docker-compose -f docker-compose-prod.yaml exec web python manage.py createsuper
 docker-compose  exec web python manage.py makemigrations --settings=settings.dev
 
 docker-compose  exec web python manage.py search_index --rebuild --settings=settings.dev
+
+<!-- INSERT INTO public.planet_osm_polygon(osm_id, admin_level , name , way)
+	SELECT id, 'roi' , nom, st_transform(ST_SetSRID(geom, 4326),3857) FROM public.instances_gc;  -->

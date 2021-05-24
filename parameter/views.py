@@ -51,7 +51,7 @@ class ParameterListView(ListAPIView):
 
 
 class ExtentListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = []
     def get(self, request, *args, **kwargs):
         try:
             with connection.cursor() as cursor:
@@ -59,7 +59,7 @@ class ExtentListView(APIView):
                     cursor.execute("select *, st_asgeojson(geom) as  st_asgeojson from public.extent")
                 else:
                     cursor.execute('''
-                        SELECT 'SELECT ' || STRING_AGG('o.' || column_name, ', ') || ' FROM extent AS o'
+                        SELECT 'SELECT ' || STRING_AGG('o.' || column_name, ', ') || ' , ST_XMin(st_transform(o.geom,3857)) as a, ST_YMin(st_transform(o.geom,3857)) as b, ST_XMax(st_transform(o.geom,3857)) as c, ST_YMax(st_transform(o.geom,3857)) as d   FROM extent AS o'
                         FROM information_schema.columns
                         WHERE table_name = 'extent'
                         AND table_schema = 'public'
@@ -77,8 +77,27 @@ class ExtentListView(APIView):
                     temp.append(temp2)
 
                 return Response(temp,status=status.HTTP_200_OK)
-        except :
+        except Exception as e:
+            raise Exception(e)
             return Response([],status=status.HTTP_404_NOT_FOUND)
+
+class GetExtentViewById(APIView):
+    authentication_classes=[]
+    def post(self, request, *args, **kwargs):
+        id = request.data['id']
+        with connection.cursor() as cursor:
+            cursor.execute("select *, min(ST_XMin(st_transform(geom,3857))) as a,min(ST_YMin(st_transform(geom,3857))) as b,max(ST_XMax(st_transform(geom,3857))) as c,max(ST_YMax(st_transform(geom,3857))) as d from public.extent where id="+str(id)+" group by id")
+            temp = []
+            for x in cursor.fetchall():
+                temp2 = {}
+                c = 0
+                for col in cursor.description:
+                    temp2.update({str(col[0]): x[c]})
+                    c = c+1
+                temp.append(temp2)
+            if len(temp) > 0:
+                return Response(temp[0],status=status.HTTP_200_OK)
+        return Response({},status=status.HTTP_404_NOT_FOUND)
 
 class ExtenView(APIView):
     authentication_classes = []
