@@ -25,3 +25,8 @@ docker-compose  exec web python manage.py search_index --rebuild --settings=sett
 
 <!-- INSERT INTO public.planet_osm_polygon(osm_id, admin_level , name , way)
 	SELECT id, 'roi' , nom, st_transform(ST_SetSRID(geom, 4326),3857) FROM public.instances_gc;  -->
+
+## Setup elasticsearch
+```sh
+$ docker-compose -f docker-compose-prod.yaml exec web python manage.py  search_index --rebuild --settings=settings.prod  
+```
