@@ -1,4 +1,6 @@
+from io import BytesIO
 from typing import List
+from django.db.backends.utils import CursorWrapper
 from django.shortcuts import render
 
 # Create your views here.
@@ -16,10 +18,15 @@ from geosmBackend.cuserViews import ListCreateAPIView,RetrieveUpdateDestroyAPIVi
 from rest_framework import status
 from django.db.models import Count
 from django.shortcuts import get_list_or_404, get_object_or_404
-from django.db import transaction
+from django.http import HttpResponse, StreamingHttpResponse
+
+from django.db import connection, transaction
 from cuser.middleware import CuserMiddleware
+from uuid import uuid4
 
 from .documents import LayerDocument
+from provider.models import Vector
+from provider.serializers import VectorProviderSerializer
 
 from .serializers import SubWithGroupSerializer, BaseMapSerializer ,TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, SubWithLayersSerializer,  LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
 from collections import defaultdict
@@ -29,8 +36,15 @@ from django.core.files import File
 from django.conf import settings
 from django.db.models import Q
 from functools import reduce
-
+from os.path import join, relpath
+import shutil
+from wsgiref.util import FileWrapper
 import operator
+import ogr
+from ogr import DataSource, Layer as OgrLayer
+from pathlib import Path
+from zipfile import ZipFile
+from os import walk, remove
 
 class EnablePartialUpdateMixin:
     """Enable partial updates
@@ -506,3 +520,101 @@ class searchLayer(APIView):
         
 
         return Response( LayerSerializer(Layer.objects.filter(pk__in=pks), many=True).data ,status=status.HTTP_200_OK)
+
+class CountFeaturesInGeometry(APIView):
+    authentication_classes = []
+    def post(self, request, *args, **kwargs):
+
+        provider_vector_id = request.data['provider_vector_id']
+        table_id = request.data['table_id']
+        layer_ids = request.data['layer_ids']
+        # layer_ids = [11]
+
+        boundaryVector:Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id)
+        layer_provider_styles:List[Layer_provider_style] = get_list_or_404(Layer_provider_style.objects.select_related('vp_id').all(),layer_id__in=layer_ids)
+
+        def countFeatyure_(cursor:CursorWrapper, vector:Vector):
+            cursor.execute("SELECT count(A.osm_id) as count FROM "+vector.shema+"."+vector.table+" AS A INNER JOIN  "+boundaryVector.shema+"."+boundaryVector.table+" AS B  ON ST_Intersects(st_transform(A.geom,3857),st_transform(B.geom,3857)) WHERE B.osm_id="+str(table_id))
+            return cursor.fetchone()[0]
+
+        with connection.cursor() as cursor:
+            return Response( [ {'count':countFeatyure_(cursor, lp.vp_id),'vector':VectorProviderSerializer(lp.vp_id).data, 'layer_id':lp.layer_id.layer_id} for lp in layer_provider_styles] ,status=status.HTTP_200_OK)
+            
+class DownloadFeaturesInGeometry(APIView):
+    authentication_classes = []
+    def post(self, request, *args, **kwargs):
+
+
+        provider_vector_id:int = request.data['provider_vector_id']
+        """ boundary vector id """
+        table_id = request.data['table_id']
+        """ id of the boundary in his vector table """
+        provider_vector_id_target:int = request.data['provider_vector_id_target']
+        """ layer vector id """
+        try:
+            format:str = request.data['format']
+        except:
+            format = 'shp'
+
+        if format == 'shp':
+            extention ='.shp'
+            driver = 'ESRI Shapefile' 
+            content_type='application/zip'
+        elif format == 'geojson':
+            extention = '.geojson'
+            driver = 'GeoJSON' 
+            content_type='application/json'
+        elif format == 'gpkg':
+            extention = '.gpkg'
+            driver = 'GPKG' 
+            content_type='application/x-sqlite3'
+        elif format == 'kml':
+            extention = '.kml'
+            driver = 'KML' 
+            content_type='application/vnd.google-earth.kml+xml'
+        else:
+            extention ='.shp'
+            driver = 'ESRI Shapefile' 
+            content_type='application/zip'
+       
+        boundaryVector:Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id)
+        targetVector:Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id_target)
+
+        datasource:DataSource = ogr.Open("PG:host="+settings.DATABASES['default']['HOST']+" port="+settings.DATABASES['default']['PORT']+" dbname="+settings.DATABASES['default']['NAME']+" user="+settings.DATABASES['default']['USER']+" password="+settings.DATABASES['default']['PASSWORD'], 0)
+        layer:OgrLayer = datasource.ExecuteSQL("SELECT A.* FROM "+targetVector.shema+"."+targetVector.table+" AS A INNER JOIN  "+boundaryVector.shema+"."+boundaryVector.table+" AS B  ON ST_Intersects(st_transform(A.geom,3857),st_transform(B.geom,3857)) WHERE B.osm_id="+str(table_id))
+
+        # directory_for_files = join(settings.TEMP_URL, str(uuid4()))
+        tempDir = tempfile.TemporaryDirectory(dir=settings.TEMP_URL)
+        directory_for_files = tempDir.name
+        Path(directory_for_files).mkdir(parents=True, exist_ok=True)
+
+        nameShapefile = targetVector.name+' - '+boundaryVector.name
+        outShapefile = join(directory_for_files,nameShapefile+extention) 
+        outDriver = ogr.GetDriverByName(driver)
+        outDataSource = outDriver.CreateDataSource(outShapefile)
+        outDataSource.CopyLayer(layer,'name of the layer',[])
+        outDataSource.SyncToDisk()
+
+        if format == 'shp':
+            temp = BytesIO()
+            with ZipFile( temp , 'w') as zipObj:
+                for root, dirs, files in walk(directory_for_files):
+                    for file in files:
+                        zipObj.write(join(root, file), relpath(join(root, file), join(directory_for_files)))
+
+            response = StreamingHttpResponse(FileWrapper(temp), content_type=content_type)
+            response['Content-Disposition'] = 'attachment; filename="'+nameShapefile+'.zip"'
+            response['Content-Length'] = temp.tell()
+
+            temp.seek(0)
+            
+        else:
+            response = StreamingHttpResponse(open(outShapefile, 'rb'), content_type=content_type)
+            response['Content-Disposition'] = 'attachment; filename="'+nameShapefile+extention+'"'
+
+        tempDir.cleanup()
+        return response
+
+        
+
+

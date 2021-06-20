@@ -1,7 +1,7 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from .views import SubWithGroupDetail,searchLayer, SubListWithLayersView, GroupVieuwList, searchMaps, BaseMapGetDestroyVieuw, BaseMapListView, BaseMapView, searchIconsTags, retrieveIconView,searchLayerTags,MetadataVieuwListCreate, MetadataVieuwDetail, LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
+from .views import DownloadFeaturesInGeometry, CountFeaturesInGeometry, SubWithGroupDetail,searchLayer, SubListWithLayersView, GroupVieuwList, searchMaps, BaseMapGetDestroyVieuw, BaseMapListView, BaseMapView, searchIconsTags, retrieveIconView,searchLayerTags,MetadataVieuwListCreate, MetadataVieuwDetail, LayerProviderReorderView, LayerProviderStyleVieuwDetail, LayerProviderStyleVieuwListCreate, iconUploadView, listIconByCategory, searchIcon, MapViewDetail, MapViewListCreate, GroupVieuwDetail, GroupVieuwListCreate, SubVieuwDetail, SubVieuwListCreate, LayerVieuwDetail, LayerVieuwListCreate
 
 urlpatterns = [
     #gets all user profiles and create a new profile
@@ -42,5 +42,8 @@ urlpatterns = [
     path("basemaps",BaseMapListView.as_view()),
     path("basemaps/add",BaseMapView.as_view()),
     path("basemaps/<int:pk>",BaseMapGetDestroyVieuw.as_view()),
+
+    path("count",CountFeaturesInGeometry.as_view()),
+    path("download",DownloadFeaturesInGeometry.as_view())
 
 ]
