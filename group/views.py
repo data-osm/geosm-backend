@@ -565,6 +565,7 @@ class DownloadFeaturesInGeometry(APIView):
             """ boundary vector id """
             table_id = request.GET['table_id']
             """ id of the boundary in his vector table """
+            Vector.objects.filter(pk=provider_vector_id)
         except:
             provider_vector_id = None
         
