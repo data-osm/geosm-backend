@@ -529,7 +529,7 @@ class CountFeaturesInGeometry(APIView):
         table_id = request.data['table_id']
         layer_ids = request.data['layer_ids']
         # layer_ids = [11]
-
+        # return Response(table_id ,status=status.HTTP_200_OK)
         boundaryVector:Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id)
         layer_provider_styles:List[Layer_provider_style] = get_list_or_404(Layer_provider_style.objects.select_related('vp_id').all(),layer_id__in=layer_ids)
 
@@ -538,21 +538,21 @@ class CountFeaturesInGeometry(APIView):
             return cursor.fetchone()[0]
 
         with connection.cursor() as cursor:
-            return Response( [ {'count':countFeatyure_(cursor, lp.vp_id),'vector':VectorProviderSerializer(lp.vp_id).data, 'layer_id':lp.layer_id.layer_id} for lp in layer_provider_styles] ,status=status.HTTP_200_OK)
+            return Response( [ {'count':countFeatyure_(cursor, lp.vp_id),'vector':VectorProviderSerializer(lp.vp_id).data, 'layer_id':lp.layer_id.layer_id,'layer_name':lp.layer_id.name} for lp in layer_provider_styles] ,status=status.HTTP_200_OK)
             
 class DownloadFeaturesInGeometry(APIView):
     authentication_classes = []
-    def post(self, request, *args, **kwargs):
 
-
-        provider_vector_id:int = request.data['provider_vector_id']
+    def get(self, request, *args, **kwargs):
+        print(0, request.GET)
+        provider_vector_id:int = request.GET['provider_vector_id']
         """ boundary vector id """
-        table_id = request.data['table_id']
+        table_id = request.GET['table_id']
         """ id of the boundary in his vector table """
-        provider_vector_id_target:int = request.data['provider_vector_id_target']
+        provider_vector_id_target:int = request.GET['provider_vector_id_target']
         """ layer vector id """
         try:
-            format:str = request.data['format']
+            format:str = request.GET['driver']
         except:
             format = 'shp'
 
@@ -576,10 +576,11 @@ class DownloadFeaturesInGeometry(APIView):
             extention ='.shp'
             driver = 'ESRI Shapefile' 
             content_type='application/zip'
-       
+        print(1)
         boundaryVector:Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id)
+        print(2)
         targetVector:Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id_target)
-
+        print(3)
         datasource:DataSource = ogr.Open("PG:host="+settings.DATABASES['default']['HOST']+" port="+settings.DATABASES['default']['PORT']+" dbname="+settings.DATABASES['default']['NAME']+" user="+settings.DATABASES['default']['USER']+" password="+settings.DATABASES['default']['PASSWORD'], 0)
         layer:OgrLayer = datasource.ExecuteSQL("SELECT A.* FROM "+targetVector.shema+"."+targetVector.table+" AS A INNER JOIN  "+boundaryVector.shema+"."+boundaryVector.table+" AS B  ON ST_Intersects(st_transform(A.geom,3857),st_transform(B.geom,3857)) WHERE B.osm_id="+str(table_id))
 

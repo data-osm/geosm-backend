@@ -1,3 +1,4 @@
+from django.conf.urls import url
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
@@ -44,6 +45,6 @@ urlpatterns = [
     path("basemaps/<int:pk>",BaseMapGetDestroyVieuw.as_view()),
 
     path("count",CountFeaturesInGeometry.as_view()),
-    path("download",DownloadFeaturesInGeometry.as_view())
+    url(r'download/$',DownloadFeaturesInGeometry.as_view()),
 
 ]
