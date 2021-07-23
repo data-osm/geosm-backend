@@ -176,7 +176,7 @@ class MapViewDetail(RetrieveUpdateDestroyAPIView):
 class MapViewListCreate(ListCreateAPIView):
     queryset=Map.objects.all()
     serializer_class=MapSerializer
-    permission_classes=[permissions.IsAuthenticated]
+    authentication_classes = []
 
 class searchMaps(APIView):
     """
