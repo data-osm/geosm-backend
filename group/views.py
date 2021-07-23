@@ -276,7 +276,17 @@ class SubVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
 class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Layer.objects.all()
     serializer_class=LayerSerializer
-    permission_classes=[permissions.IsAuthenticated]
+
+    def get_authenticators(self): 
+        if self.request.method == "GET":
+            authentication_classes = []
+            return authentication_classes
+
+    def get_permissions(self):
+        if self.request.method != 'GET' :
+            self.permission_classes = [permissions.IsAuthenticated]
+        return super(self.__class__, self).get_permissions()
+
 
     def put(self, request, pk, format=None):
         """ update layer """
