@@ -1,7 +1,9 @@
 from io import BytesIO
 from typing import List
 from django.db.backends.utils import CursorWrapper
+from django.http.request import QueryDict
 from django.shortcuts import render
+from rest_framework.exceptions import NotAuthenticated
 
 # Create your views here.
 from .models import Map, Group, Sub, Layer, Default_map, Layer_provider_style, Tags, Metadata, Base_map
@@ -202,14 +204,24 @@ class GroupVieuwDetail(RetrieveUpdateDestroyAPIView):
         """ update a new group """
         group = get_object_or_404(Group.objects.all(), pk=pk)
         vp_serializer = GroupSerializer(instance=group, data=request.data, partial=True)
-
-        if 'svg_as_text' in  request.data:
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.request.data)
+        if query_dict.get('svg_as_text', None) is not  None :
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
             svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
             del request.data['svg_as_text']
             dataFile = open(fileName, "rb")
             request.data['icon_path'] = File(dataFile)
+
+        if 'icon_id' in  request.data and  query_dict.get('svg_as_text', None) is None :
+            icon:Icon = Icon.objects.get(pk=request.data['icon_id'])
+            request.data['icon_path'] = icon.path
+            try:
+                del request.data['svg_as_text']
+            except:
+                pass
+
 
         if vp_serializer.is_valid():
             vp_serializer.save()
@@ -234,14 +246,24 @@ class GroupVieuwListCreate(MultipleFieldLookupListMixin, CreateAPIView):
     def post(self, request, *args, **kwargs):
         """ store a new group """
         vp_serializer = GroupSerializer(data=request.data)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.request.data)
         
-        if 'svg_as_text' in  request.data:
+        if query_dict.get('svg_as_text', None) is not  None :
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
             svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
             del request.data['svg_as_text']
             dataFile = open(fileName, "rb")
             request.data['icon_path'] = File(dataFile)
+
+        if 'icon_id' in  request.data and  query_dict.get('svg_as_text', None) is None :
+            icon:Icon = Icon.objects.get(pk=request.data['icon_id'])
+            request.data['icon_path'] = icon.path
+            try:
+                del request.data['svg_as_text']
+            except:
+                pass
 
         if vp_serializer.is_valid():
             vp_serializer.save()
@@ -281,6 +303,8 @@ class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
         if self.request.method == "GET":
             authentication_classes = []
             return authentication_classes
+        else:
+            return super(self.__class__, self).get_authenticators()
 
     def get_permissions(self):
         if self.request.method != 'GET' :
@@ -291,8 +315,9 @@ class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
     def put(self, request, pk, format=None):
         """ update layer """
         vp_serializer = LayerSerializer(self.get_object(), data=request.data)
-        
-        if 'svg_as_text' in  request.data:
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.request.data)
+        if query_dict.get('svg_as_text', None) is not  None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
             svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
@@ -300,13 +325,23 @@ class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
             dataFile = open(fileName, "rb")
             request.data['cercle_icon'] = File(dataFile)
 
-        if 'svg_as_text_square' in  request.data:
+        if query_dict.get('svg_as_text_square', None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
             svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName)
             del request.data['svg_as_text_square']
             dataFile = open(fileName, "rb")
             request.data['square_icon'] = File(dataFile)
+
+        if 'icon' in  request.data and  query_dict.get('svg_as_text', None) is None and  query_dict.get('svg_as_text_square', None) is None:
+            icon:Icon = Icon.objects.get(pk=request.data['icon'])
+            request.data['cercle_icon'] = icon.path
+            request.data['square_icon'] = icon.path
+            try:
+                del request.data['svg_as_text_square']
+                del request.data['svg_as_text']
+            except:
+                pass
 
         if vp_serializer.is_valid():
             vp_serializer.save()
@@ -325,7 +360,9 @@ class LayerVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
         """ store a new group """
         vp_serializer = LayerSerializer(data=request.data)
         
-        if 'svg_as_text' in  request.data:
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.request.data)
+        if query_dict.get('svg_as_text', None) is not  None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
             svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
@@ -333,13 +370,23 @@ class LayerVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
             dataFile = open(fileName, "rb")
             request.data['cercle_icon'] = File(dataFile)
 
-        if 'svg_as_text_square' in  request.data:
+        if query_dict.get('svg_as_text_square', None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
             svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName)
             del request.data['svg_as_text_square']
             dataFile = open(fileName, "rb")
             request.data['square_icon'] = File(dataFile)
+
+        if 'icon' in  request.data and  query_dict.get('svg_as_text', None) is None and  query_dict.get('svg_as_text_square', None) is None:
+            icon:Icon = Icon.objects.get(pk=request.data['icon'])
+            request.data['cercle_icon'] = icon.path
+            request.data['square_icon'] = icon.path
+            try:
+                del request.data['svg_as_text_square']
+                del request.data['svg_as_text']
+            except:
+                pass
 
         if vp_serializer.is_valid():
             vp_serializer.save()

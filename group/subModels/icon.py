@@ -14,7 +14,7 @@ class Icon (models.Model):
     
     icon_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=200)
-    category = models.TextField(null=False,default='Custom')
+    category = models.TextField(null=False,default='Autres')
     attribution = models.TextField(null=True)
     path = models.FileField(blank=False, null=False,default=None,upload_to=get_upload_path)
     tags = models.ManyToManyField(TagsIcon, blank=True)

@@ -21,16 +21,16 @@ def createPicto(value:dict, box:ImageBox = None) -> Picto:
 
     picto = Picto.objects.create()
 
-    if 'background' in  value:
+    if 'background' in  value and value['background'] is not None:
         picto.background = value['background']
     
-    if 'color' in  value:
+    if 'color' in  value and value['color'] is not None:
         picto.color = value['color']
 
-    if 'icon' in  value:
+    if 'icon' in  value and value['icon'] is not None:
         picto.icon = value['icon']
 
-    if 'svg_as_text' in  value:
+    if 'svg_as_text' in  value and value['svg_as_text'] is not None:
         picto.raster_icon = None
 
         f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
@@ -40,16 +40,16 @@ def createPicto(value:dict, box:ImageBox = None) -> Picto:
         dataFile = open(fileName, "rb")
         picto.cercle_icon = File(dataFile)
 
-    if 'svg_as_text_square' in  value:
+    if 'svg_as_text_square' in  value and value['svg_as_text_square'] is not None:
         picto.raster_icon = None
 
         f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
         fileName = f.name
-        svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName)
+        svg2png(bytestring=value['svg_as_text_square'],write_to=fileName)
         dataFile = open(fileName, "rb")
         picto.square_icon = File(dataFile)
     
-    if 'raster_icon' in  value:
+    if 'raster_icon' in  value and value['raster_icon'] is not None:
         picto.cercle_icon = None
         picto.square_icon = None
 
