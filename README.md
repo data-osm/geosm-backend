@@ -3,6 +3,9 @@
 $ create database ...
 $ docker-compose -f docker-compose-prod.yaml build
 $ docker-compose -f docker-compose-prod.yaml up - d
+$ docker-compose -f docker-compose.prod.yml exec bweb python manage.py  seedCustomStyle --settings=settings.prod
+$ docker-compose  exec web python manage.py  seedCustomStyle --settings=settings.prod
+$ docker-compose  exec web python manage.py  seedCustomStyle --settings=settings.local
 ```
 ## Load icons in prod 
 Load icons

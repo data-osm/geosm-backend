@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import vectorProviderView, searchVectorProvider, vectorProviderDetailView, styleView, vectorProviderWithStyleDetailView
+from .views import vectorProviderView, searchVectorProvider, vectorProviderDetailView, styleView, vectorProviderWithStyleDetailView, ListCustomStyle
 
 urlpatterns = [
     path("vector",vectorProviderView.as_view(),name="List-vector-provider"),
@@ -11,5 +11,7 @@ urlpatterns = [
 
     path("style/vector/<int:provider_vector_id>",styleView.as_view(),name="get-style"),
     path("style/<int:pk>",styleView.as_view()),
-    path("style",styleView.as_view(),name="style")
+    path("style",styleView.as_view(),name="style"),
+
+    path("style/custom",ListCustomStyle.as_view(),name="list custom-style")
 ]

@@ -13,9 +13,9 @@ RUN apt-get update && apt-get install -y \
     software-properties-common
 
 
-RUN wget -O - https://qgis.org/downloads/qgis-2020.gpg.key | gpg --import
-RUN gpg --fingerprint F7E06F06199EF2F2
-RUN gpg --export --armor F7E06F06199EF2F2 | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import
+RUN wget -O - https://qgis.org/downloads/qgis-2021.gpg.key | gpg --import
+RUN gpg --fingerprint 46B5721DBBD2996A
+RUN gpg --export --armor 46B5721DBBD2996A | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import
 RUN chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg
 
 RUN apt-add-repository 'deb https://qgis.org/debian-ltr buster main'

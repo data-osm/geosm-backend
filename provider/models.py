@@ -1,9 +1,15 @@
+from django.conf import settings
 from django.contrib.gis.db import models
 import re
 import os
-from .qgis.manageStyle import addStyleQMLFromStringToLayer, removeStyle, updateStyle
+import uuid
+from django.core.files import File
+from .qgis.manageStyle import addStyleQMLFromStringToLayer, removeStyle, updateStyle, getImageFromSymbologieOfLayer
 from django.contrib.postgres.fields import ArrayField
 from tracking_fields.decorators import track
+from group.subModels.icon import Icon
+from pathlib import Path
+
 # Create your models here.
 
 class StateOfProvider(models.TextChoices):
@@ -84,7 +90,7 @@ class External (models.Model) :
 
 def get_custom_style_icon_path(instance, filename):
     directory = re.sub('[^A-Za-z0-9]+', '', instance.custom_style_id)
-    return os.path.join(directory, filename)
+    return os.path.join('pictoQgis', filename)
 
 def get_custom_qml_path(instance, filename):
     directory = re.sub('[^A-Za-z0-9]+', '', 'qml')
@@ -92,12 +98,16 @@ def get_custom_qml_path(instance, filename):
 
 class Custom_style (models.Model):
     """ model that store custom and parametrable QGIS styles """
-    custom_style_id = models.IntegerField(primary_key=True) 
+    custom_style_id = models.BigAutoField(primary_key=True) 
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=400,blank=True)
-    icon = models.FileField(blank=True, null=False,default=None,upload_to=get_custom_style_icon_path)
-    class_name = models.CharField(max_length=50,blank=True)
+    icon = models.ImageField(blank=True, null=False,default=None,upload_to='customStyle/')
+    fucntion_name = models.CharField(max_length=50,blank=True)
     """ name of the class responsible to format QML """
+    geometry_type = models.CharField(
+        max_length=11,
+        choices=geometryType.choices
+    )
 
 @track('name', 'qml_file', 'qml')
 class Style (models.Model):
@@ -109,7 +119,9 @@ class Style (models.Model):
     pictogram = models.ImageField(blank=True)
     provider_vector_id = models.ForeignKey(Vector,on_delete=models.CASCADE)
     custom_style_id = models.ForeignKey(Custom_style,on_delete=models.SET_NULL,blank=True,null=True)
+    icon = models.ForeignKey(Icon,on_delete=models.RESTRICT,null=True, blank=True)
     qml_file = models.FileField(blank=True, null=True,default=None,upload_to=get_custom_qml_path)
+    parameters = models.JSONField(blank=True, null=True)
     """ just use in order to write the content of the file in the field qml. ie: the file never exist"""
     class Meta:
         unique_together = ('name', 'provider_vector_id',)
@@ -133,6 +145,15 @@ class Style (models.Model):
             if responseUpdateStyle.error:
                 raise Exception(responseUpdateStyle.msg+" : "+str(responseUpdateStyle.description))
 
+            Path(os.path.join(settings.MEDIA_ROOT,'pictoQgis')).mkdir(parents=True, exist_ok=True)
+            if os.path.exists(self.pictogram.name):
+                path = self.pictogram.name
+            else:
+                path = os.path.join(settings.MEDIA_ROOT,'pictoQgis', str(uuid.uuid4())+'.png')
+
+            responsePicto = getImageFromSymbologieOfLayer(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name, path)
+            self.pictogram.name = path
+
         else:
             self.qml_file.open(mode="r")
             qml_content = self.qml_file.read()
@@ -140,7 +161,13 @@ class Style (models.Model):
             responseAddStyle = addStyleQMLFromStringToLayer(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name, qml_content)
             if responseAddStyle.error:
                 raise Exception(responseAddStyle.msg+" : "+str(responseAddStyle.description))
-        
+            Path(os.path.join(settings.MEDIA_ROOT,'pictoQgis')).mkdir(parents=True, exist_ok=True)
+            pictoPath = os.path.join('pictoQgis', str(uuid.uuid4())+'.png')
+            path = os.path.join(settings.MEDIA_ROOT,pictoPath)
+              
+            responsePicto = getImageFromSymbologieOfLayer(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name, path)
+            self.pictogram.name = pictoPath
+            
         super(Style,self).save(*args, **kwargs)
         
     def delete(self, *args, **kwargs):

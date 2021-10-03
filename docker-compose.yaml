@@ -25,6 +25,7 @@ services:
         - QGSRV_CACHE_ROOTDIR=/projects
         - QGSRV_CACHE_STRICT_CHECK=no
         - QGSRV_CACHE_SIZE=10
+        - QGSRV_SERVER_CROSS_ORIGIN=yes
     networks:
           - travellist
   elastic:

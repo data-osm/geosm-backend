@@ -1,14 +1,17 @@
 import os
 from os.path import join
-from qgis.core import QgsVectorLayer, QgsProject, QgsApplication, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings, QgsMapLayerStyle
+
+from django.core.files.base import File
+from qgis.core import QgsVectorLayer,QgsRenderContext, QgsCategorizedSymbolRenderer, QgsProject, QgsApplication, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings, QgsMapLayerStyle
 import traceback
 from dataclasses import dataclass
 import tempfile
 from qgis.PyQt.QtXml import QDomDocument, QDomElement
-from qgis.PyQt.QtCore import QFile, QIODevice
+from qgis.PyQt.QtCore import QFile, QIODevice, QSize
 import logging
 from geosmBackend.type import OperationResponse, GetQMLStyleOfLayerResponse
 from django.conf import settings
+from qgis.utils import iface
 
 log = logging.getLogger(__name__)
 OSMDATA = settings.OSMDATA
@@ -109,6 +112,7 @@ def removeStyle(layerName:str, pathToQgisProject:str, styleName:str )->Operation
                         QGISProject.write()
             else:
                 response.error = True
+                # print(pathToQgisProject,QGISProject.mapLayers(),'================')
                 response.msg = "Impossible to retrieve layer : "+str(layerName)
         else:
             response.error = True
@@ -238,6 +242,7 @@ def _addStyleToLayer(layerName:str, pathToQgisProject:str, styleName:str, QML:st
 
                         if styleName not in styleManager.styles():
                             response.error = True
+                            ''' This monstly happened when the folder of the project have no 755 right '''
                             response.msg = "An unknow error has occurred"
 
                 else:
@@ -298,3 +303,47 @@ def addStyleQMLFromStringToLayer(layerName:str, pathToQgisProject:str, styleName
 
     response = _addStyleToLayer(layerName, pathToQgisProject, styleName, QMLString)
     return response
+
+def getImageFromSymbologieOfLayer(layerName:str, pathToQgisProject:str, styleName:str, path:str)->OperationResponse:
+    '''
+        Get the symbology(legend) of a layer at a specify style
+        return the path to the png picture
+    '''
+    response = OperationResponse(error=False,msg='',description='')
+
+    try:
+        QGISProject = _getProjectInstance(pathToQgisProject)
+
+        if QGISProject:
+            if len(QGISProject.mapLayersByName(layerName)) != 0:
+                layer = QGISProject.mapLayersByName(layerName)[0]
+                styleManager = layer.styleManager()
+                styleManager.setCurrentStyle(styleName)
+                symbol_layer = layer.renderer()
+                ''' to merge png files https://stackoverflow.com/questions/30227466/combine-several-images-horizontally-with-python '''
+                if type(symbol_layer) != QgsCategorizedSymbolRenderer:
+                    all_symbols = symbol_layer.symbols(QgsRenderContext())
+                    size = QSize(142, 142)
+                    for sy in all_symbols[:1]:
+                        image =sy.bigSymbolPreviewImage()
+                        # f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
+                        # image =sy.asImage(size) 
+                        # image.save(r"C:\Users\Utilisateur\Desktop\STAGE KARL\dev web\design tarvel\img{}.png".format(i), "PNG")
+                        image.save(path, "PNG")
+                        
+                        response.data = File(open(path))
+                
+            else:
+                response.error = True
+                response.msg = "Impossible to retrieve layer : "+str(layerName)
+        else:
+            response.error = True
+            response.msg = "Impossible to load the project"
+
+        return response
+
+    except Exception as e:
+        traceback.print_exc()
+        response.error = True
+        response.description = str(e)
+        response.msg = "An unexpected error has occurred"
