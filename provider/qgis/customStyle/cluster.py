@@ -69,8 +69,8 @@ def _getEncodedImg(imgPath:str)->str:
     """ 
         transform png image to a base64 svg string. If imgPath already an svg, it will return it in base 64 directly
     """
-    f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.svg')
-    fileName = f.name
+    # f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.svg')
+    # fileName = f.name
     if '.svg' not in imgPath:
         
         encoded = base64.b64encode(open(imgPath, "rb").read()).decode()
