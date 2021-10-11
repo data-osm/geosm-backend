@@ -1,0 +1,10 @@
+FROM postgres:12
+
+ENV POSTGIS_MAJOR 3
+
+RUN apt-get update \
+    && apt-get install wget -y \
+    && apt-get install postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR -y \
+    && apt-get install postgis -y
+
+USER postgres

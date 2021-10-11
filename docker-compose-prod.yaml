@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+    
+  web:
+    build: .
+    container_name: admin_data_osm
+    command: bash -c "python manage.py migrate --settings=settings.prod && daphne -b 0.0.0.0 -p 8000 geosmBackend.asgi:application "
+    volumes:
+      - .:/code
+    ports:
+      - "9000:8000"
+    depends_on:
+      - db
+  
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile_DB
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./import_foreign_osm_table.sql:/import_foreign_osm_table.sql
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5432"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    
+  qgis-server:
+    image: 3liz/qgis-map-server:3.16
+    container_name: qgis_data_osm
+    volumes: 
+        - ./provider/qgis/project:/projects
+    ports: 
+        - 9100:8080
+    environment: 
+        - QGSRV_SERVER_WORKERS=6
+        - QGSRV_LOGGING_LEVEL=WARNING
+        - QGSRV_CACHE_ROOTDIR=/projects
+        - QGSRV_CACHE_STRICT_CHECK=no
+        - QGSRV_CACHE_SIZE=10
+    depends_on:
+      - db
+
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    container_name: elastic_data_osm
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - ./elasticdata:/usr/share/elasticsearch/data
+    depends_on:
+      - db

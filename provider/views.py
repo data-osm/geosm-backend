@@ -1,3 +1,2 @@
-from django.shortcuts import render
-
-# Create your views here.
+from .subViews.provider import *
+from .subViews.style import *

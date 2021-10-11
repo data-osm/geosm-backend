@@ -1,12 +1,29 @@
-### Create the virtual env and install requirements
+## run the server in prod
 ```sh
-$ python3 -m venv dataosmenv
-$ source dataosmenv/bin/activate
-$ python -m pip install --upgrade pip
-$ pip install -r requirements.txt
+$ docker-compose -f docker-compose-prod.yaml build
+$ docker-compose -f docker-compose-prod.yaml up - d
+$ docker-compose -f docker-compose.prod.yml exec bweb python manage.py  seedCustomStyle --settings=settings.prod
+$ docker-compose -f docker-compose-prod.yaml exec web python manage.py createsuperuser --settings=settings.prod
 ```
-#### Migrate the databse 
+
+## Load OSM data
+### If the OSM data  are in a foreign databsae
+
+Edit `import_foreign_osm_table.sql` with the connection parameters of the foreign database and execute it :
+
 ```sh
-$ python manage.py makemigrations
-$ python manage.py migrate
+$  docker-compose exec db psql -d postgres -f /import_foreign_osm_table.sql 
+```
+
+
+## Setup elasticsearch
+```sh
+docker-compose  exec web python manage.py search_index --rebuild --settings=settings.dev
+$ docker-compose -f docker-compose-prod.yaml exec web python manage.py  search_index --rebuild --settings=settings.prod  
+```
+
+## Load icons in prod 
+Load icons
+```sh
+$ docker-compose -f docker-compose-prod.yaml exec web python manage.py loaddata --settings=settings.prod  seed/icon.json
 ```
