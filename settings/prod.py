@@ -20,12 +20,11 @@ CORS_ALLOW_METHODS = [
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'admin_osm',
-        'HOST': '172.17.0.1',
-        'PORT': '5432',
+        'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': 'postgresgeosm',
+        'PASSWORD': 'postgres',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 

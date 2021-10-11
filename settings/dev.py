@@ -21,11 +21,11 @@ CORS_ALLOW_METHODS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'country',
-        'HOST': 'host.docker.internal',
-        'PORT': '5432',
+        'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 

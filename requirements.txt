@@ -3,6 +3,7 @@ psycopg2-binary>=2.8
 Pillow~=7.2
 djangorestframework~=3.12
 djoser~=2.0
+pyjwt~=2.1.0
 djangorestframework-simplejwt~=4.4
 django-cors-headers~=3.5
 cairosvg~=2.5
