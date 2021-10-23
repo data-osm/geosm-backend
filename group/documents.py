@@ -61,6 +61,6 @@ class LayerDocument(Document):
         to the updating of a lot of items.
         """
         if isinstance(related_instance, Sub):
-            return related_instance.sub_set.all()
+            return related_instance.layer_set.all()
         elif isinstance(related_instance, Metadata):
             return related_instance.layer

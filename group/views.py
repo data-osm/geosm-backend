@@ -209,7 +209,7 @@ class GroupVieuwDetail(RetrieveUpdateDestroyAPIView):
         if query_dict.get('svg_as_text', None) is not  None :
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
-            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
+            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName, unsafe=True)
             del request.data['svg_as_text']
             dataFile = open(fileName, "rb")
             request.data['icon_path'] = File(dataFile)
@@ -252,7 +252,7 @@ class GroupVieuwListCreate(MultipleFieldLookupListMixin, CreateAPIView):
         if query_dict.get('svg_as_text', None) is not  None :
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
-            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
+            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName, unsafe=True)
             del request.data['svg_as_text']
             dataFile = open(fileName, "rb")
             request.data['icon_path'] = File(dataFile)
@@ -320,7 +320,7 @@ class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
         if query_dict.get('svg_as_text', None) is not  None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
-            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
+            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName, unsafe=True)
             del request.data['svg_as_text']
             dataFile = open(fileName, "rb")
             request.data['cercle_icon'] = File(dataFile)
@@ -328,7 +328,7 @@ class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
         if query_dict.get('svg_as_text_square', None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
-            svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName)
+            svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName, unsafe=True)
             del request.data['svg_as_text_square']
             dataFile = open(fileName, "rb")
             request.data['square_icon'] = File(dataFile)
@@ -365,7 +365,7 @@ class LayerVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
         if query_dict.get('svg_as_text', None) is not  None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
-            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName)
+            svg2png(bytestring=request.data['svg_as_text'],write_to=fileName, unsafe=True)
             del request.data['svg_as_text']
             dataFile = open(fileName, "rb")
             request.data['cercle_icon'] = File(dataFile)
@@ -373,7 +373,7 @@ class LayerVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
         if query_dict.get('svg_as_text_square', None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
-            svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName)
+            svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName, unsafe=True)
             del request.data['svg_as_text_square']
             dataFile = open(fileName, "rb")
             request.data['square_icon'] = File(dataFile)

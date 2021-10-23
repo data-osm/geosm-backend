@@ -242,7 +242,7 @@ def _addStyleToLayer(layerName:str, pathToQgisProject:str, styleName:str, QML:st
 
                         if styleName not in styleManager.styles():
                             response.error = True
-                            ''' This monstly happened when the folder of the project have no 755 right '''
+                            ''' This monstly happened when the folder of the project have no 755 right, and reload the docker '''
                             response.msg = "An unknow error has occurred"
 
                 else:

@@ -2,7 +2,7 @@
 ```sh
 $ docker-compose -f docker-compose-prod.yaml build
 $ docker-compose -f docker-compose-prod.yaml up - d
-$ docker-compose -f docker-compose.prod.yml exec bweb python manage.py  seedCustomStyle --settings=settings.prod
+$ docker-compose -f docker-compose-prod.yaml exec web python manage.py  seedCustomStyle --settings=settings.prod
 $ docker-compose -f docker-compose-prod.yaml exec web python manage.py createsuperuser --settings=settings.prod
 ```
 
@@ -12,7 +12,7 @@ $ docker-compose -f docker-compose-prod.yaml exec web python manage.py createsup
 Edit `import_foreign_osm_table.sql` with the connection parameters of the foreign database and execute it :
 
 ```sh
-$  docker-compose exec db psql -d postgres -f /import_foreign_osm_table.sql 
+$  docker-compose exec --user postgres db psql -d postgres -f /import_foreign_osm_table.sql 
 ```
 
 

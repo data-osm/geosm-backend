@@ -14,8 +14,7 @@ __pycache__
 /elasticdata
 icons/pictoQgis/*
 pgdata
-
-seed/data-1633875123831.csv
-seed/data-1633875352610.csv
 .gitignore
 provider/management/commands/seedOldProvider.py
+icons/AUTRES/*
+seed/*
