@@ -8,8 +8,9 @@ import tempfile
 from qgis.PyQt.QtXml import QDomDocument, QDomElement
 from qgis.PyQt.QtCore import QFile, QIODevice
 from qgis.PyQt.QtGui import QColor
+import uuid
 
-from qgis.core import QgsSvgMarkerSymbolLayer, QgsSimpleMarkerSymbolLayer, QgsMapLayerStyle, QgsRenderContext, QgsVectorLayer, QgsPointClusterRenderer
+from qgis.core import QgsSvgMarkerSymbolLayer, QgsSimpleMarkerSymbolLayer, QgsMapLayerStyle, QgsRenderContext, QgsVectorLayer, QgsPointClusterRenderer, QgsProject, QgsApplication
 
 import tempfile
 from django.conf import settings
@@ -18,11 +19,15 @@ from django.core.files import File
 DATABASES = settings.DATABASES
 OSMDATA = settings.OSMDATA
 
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+QgsApplication.setPrefixPath("/usr/", True)
+qgs = QgsApplication([], False)
+
 def getStyle(svgEncoded:str, color:str)->File:
     """get a qml file of cluster style. With the icon svgEncoded and the color (hexagonal) of the background 
  
     """
-    
+    qgs.initQgis()
     QMLPath=join(OSMDATA["qml_default_path"],'custom-cluster.qml')
 
     img_svg_encoded = _getEncodedImg(svgEncoded)
@@ -41,7 +46,9 @@ def getStyle(svgEncoded:str, color:str)->File:
                 
             newStyle.readXml(elem)
             if newStyle.isValid():
+                project = QgsProject()
                 tempLayer = QgsVectorLayer("Point", "temporary_points", "memory")
+                project.addMapLayer(tempLayer)
                 res = tempLayer.styleManager().addStyle("cluster", newStyle)
                 tempLayer.styleManager().setCurrentStyle("cluster")
                 layerSymbols:QgsPointClusterRenderer = tempLayer.renderer()
@@ -52,16 +59,18 @@ def getStyle(svgEncoded:str, color:str)->File:
                 for symbol in symbols:
                     if  type(symbol) is QgsSvgMarkerSymbolLayer:
                         symbol.setPath(img_svg_encoded)
-                    if  type(symbol) is QgsSimpleMarkerSymbolLayer:
-                        # symbol.setColor(QColor.fromRgb(0,255,0))
-                        # print(QColor(color).isValid(), color)
-                        symbol.setColor(QColor(color))
+                    # if  type(symbol) is QgsSimpleMarkerSymbolLayer:
+                    #     # symbol.setColor(QColor.fromRgb(0,255,0))
+                    #     # print(QColor(color).isValid(), color)
+                    #     symbol.setColor(QColor(color))
 
-                f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.qml', delete=True)
+                f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.qml')
                 fileName = f.name
                 tempLayer.saveNamedStyle(fileName)
                 
                 dataFile = open(fileName, "rb")
+                project.removeMapLayer(tempLayer)
+
                 return File(dataFile)
 
 
