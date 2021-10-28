@@ -35,7 +35,7 @@ def createPicto(value:dict, box:ImageBox = None) -> Picto:
 
         f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
         fileName = f.name
-        svg2png(bytestring=value['svg_as_text'],write_to=fileName)
+        svg2png(bytestring=value['svg_as_text'],write_to=fileName, unsafe=True)
         # del request.data['svg_as_text']
         dataFile = open(fileName, "rb")
         picto.cercle_icon = File(dataFile)
@@ -45,7 +45,7 @@ def createPicto(value:dict, box:ImageBox = None) -> Picto:
 
         f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
         fileName = f.name
-        svg2png(bytestring=value['svg_as_text_square'],write_to=fileName)
+        svg2png(bytestring=value['svg_as_text_square'],write_to=fileName, unsafe=True)
         dataFile = open(fileName, "rb")
         picto.square_icon = File(dataFile)
     
@@ -94,7 +94,7 @@ def updatePicto(value:dict, box:ImageBox = None) -> Picto:
 
         f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
         fileName = f.name
-        svg2png(bytestring=value['svg_as_text'],write_to=fileName)
+        svg2png(bytestring=value['svg_as_text'],write_to=fileName, unsafe=True)
         dataFile = open(fileName, "rb")
         picto.cercle_icon = File(dataFile)
 
@@ -103,7 +103,7 @@ def updatePicto(value:dict, box:ImageBox = None) -> Picto:
         
         f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
         fileName = f.name
-        svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName)
+        svg2png(bytestring=request.data['svg_as_text_square'],write_to=fileName, unsafe=True)
         dataFile = open(fileName, "rb")
         picto.square_icon = File(dataFile)
 

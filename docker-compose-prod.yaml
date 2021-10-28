@@ -10,25 +10,8 @@ services:
       - .:/code
     ports:
       - "9000:8000"
-    depends_on:
-      - db
-  
-  db:
-    build:
-      context: .
-      dockerfile: Dockerfile_DB
-    volumes:
-      - ./pgdata:/var/lib/postgresql/data
-      - ./import_foreign_osm_table.sql:/import_foreign_osm_table.sql
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5432"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    networks:
+      - travellist
     
   qgis-server:
     image: 3liz/qgis-map-server:3.16
@@ -38,13 +21,13 @@ services:
     ports: 
         - 9100:8080
     environment: 
-        - QGSRV_SERVER_WORKERS=6
+        - QGSRV_SERVER_WORKERS=8
         - QGSRV_LOGGING_LEVEL=WARNING
         - QGSRV_CACHE_ROOTDIR=/projects
         - QGSRV_CACHE_STRICT_CHECK=no
-        - QGSRV_CACHE_SIZE=10
-    depends_on:
-      - db
+        - QGSRV_CACHE_SIZE=3000
+    networks:
+        - travellist
 
   elastic:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
@@ -54,5 +37,9 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
       - ./elasticdata:/usr/share/elasticsearch/data
-    depends_on:
-      - db
+    networks:
+      - travellist
+
+networks:
+  travellist:
+    driver: bridge

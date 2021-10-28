@@ -4,11 +4,13 @@ import re
 import os
 import uuid
 from django.core.files import File
+from django.core.files.base import ContentFile
 from .qgis.manageStyle import addStyleQMLFromStringToLayer, removeStyle, updateStyle, getImageFromSymbologieOfLayer
 from django.contrib.postgres.fields import ArrayField
 from tracking_fields.decorators import track
 from group.subModels.icon import Icon
 from pathlib import Path
+from django.core.files.storage import default_storage
 
 # Create your models here.
 
@@ -155,10 +157,17 @@ class Style (models.Model):
             self.pictogram.name = path
 
         else:
-            self.qml_file.open(mode="r")
+         
+            self.qml_file.open(mode="rb")
             qml_content = self.qml_file.read()
+            if isinstance(qml_content, str) == False:
+                qml_content = qml_content.decode("utf-8")
             self.qml= qml_content
-            responseAddStyle = addStyleQMLFromStringToLayer(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name, qml_content)
+
+            tmp_file = os.path.join(settings.TEMP_URL, str(uuid.uuid1())+'.qml')
+            default_storage.save(tmp_file, ContentFile(qml_content))
+            
+            responseAddStyle = addStyleQMLFromStringToLayer(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name, qml_content, tmp_file)
             if responseAddStyle.error:
                 raise Exception(responseAddStyle.msg+" : "+str(responseAddStyle.description))
             Path(os.path.join(settings.MEDIA_ROOT,'pictoQgis')).mkdir(parents=True, exist_ok=True)

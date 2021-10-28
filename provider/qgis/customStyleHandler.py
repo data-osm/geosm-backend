@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import os
 import tempfile
 from typing import Any, Optional
 
@@ -32,10 +33,12 @@ class CustomStyleHandler():
 
     def pointCluster(self, model:QueryDict)->ResponseCustomStyle:
         
-        if model.get('svg_as_text', None) is not None:
+        if model.get('fileName', None) is not None and os.path.exists(model.get('fileName')) and os.path.isfile(model.get('fileName')):
+            fileName = model.get('fileName')
+        elif model.get('svg_as_text', None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
             fileName = f.name
-            svg2png(bytestring=model.get('svg_as_text'),write_to=fileName)
+            svg2png(bytestring=model.get('svg_as_text'),write_to=fileName, unsafe=True)
             # dataFile = open(fileName, "rb")
             # png = File(dataFile)
         else:

@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS postgres_fdw;
 CREATE SERVER osm_server
    FOREIGN DATA WRAPPER postgres_fdw
-  OPTIONS (host 'host', port 'port', dbname 'dbname');
+  OPTIONS (host '172.17.0.1', port 'port', dbname 'dbname');
   
 CREATE USER MAPPING FOR USER
    SERVER osm_server

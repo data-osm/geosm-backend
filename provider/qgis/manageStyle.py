@@ -190,7 +190,7 @@ def updateStyle(layerName:str, pathToQgisProject:str, styleName:str, newStyleNam
         response.description = str(e)
         response.msg = "An unexpected error has occurred"
 
-def _addStyleToLayer(layerName:str, pathToQgisProject:str, styleName:str, QML:str)->OperationResponse:
+def _addStyleToLayer(layerName:str, pathToQgisProject:str, styleName:str, QML:str, QmlFIle:str)->OperationResponse:
     """Add or update style from a qml file or an XML of QML on a layer. The new style will have a new name
     As the method addStyle in QGIS API describred here https://qgis.org/api/qgsmaplayerstylemanager_8cpp_source.html#l00109 : we can not add a style with name that already exist
     So here, if a name style already exist in the QgsMapLayerStyleManager, we override it
@@ -213,27 +213,34 @@ def _addStyleToLayer(layerName:str, pathToQgisProject:str, styleName:str, QML:st
             if len(QGISProject.mapLayersByName(layerName)) != 0:
                 layer = QGISProject.mapLayersByName(layerName)[0]
                 styleManager = layer.styleManager()
-                newStyle = QgsMapLayerStyle()
+                # newStyle = QgsMapLayerStyle()
 
-                doc = QDomDocument()
-                elem = doc.createElement("style-data-som")
+                # doc = QDomDocument()
+                # elem = doc.createElement("style-data-som")
 
-                xmlStyle:QDomDocument = QDomDocument()
-                xmlStyle.setContent(QML)
-                elem.appendChild(xmlStyle.childNodes().at(0))
+                # xmlStyle:QDomDocument = QDomDocument()
+                # xmlStyle.setContent(QML)
+                # elem.appendChild(xmlStyle.childNodes().at(0))
                 
-                newStyle.readXml(elem)
+                # newStyle.readXml(elem)
 
-                if newStyle.isValid():
+                if True:
                     
                     if styleName not in styleManager.styles():
-                        response.error = styleManager.addStyle(styleName,newStyle) != True
-                    
+                        response.error = styleManager.addStyleFromLayer(styleName) != True
+                        if styleManager.setCurrentStyle(styleName) :
+                            mess, res = layer.loadNamedStyle(QmlFIle)
+                            response.error = res != True
+                            response.description = mess
+                        else:
+                            response.msg = "Can not add the new style"
+                            response.description = "Try to change the name of your style"
+                            return response
+
                     if response.error == True:
                         response.msg = "Can not add the new style"
                     else:
                         
-                        # print(QGISProject.isDirty(), styleManager.styles())
                         QGISProject.write()
 
                         QGISProject = _getProjectInstance(pathToQgisProject)
@@ -242,8 +249,7 @@ def _addStyleToLayer(layerName:str, pathToQgisProject:str, styleName:str, QML:st
 
                         if styleName not in styleManager.styles():
                             response.error = True
-                            ''' This monstly happened when the folder of the project have no 755 right '''
-                            response.msg = "An unknow error has occurred"
+                            response.msg = "An unknow error has occurred kk"
 
                 else:
                     response.error = True
@@ -281,14 +287,14 @@ def addStyleQMLFromFileToLayer(layerName:str, pathToQgisProject:str, styleName:s
     if os.path.exists(QMLPath) and os.path.isfile(QMLPath) :
         qFile= QFile(QMLPath)
         if qFile.open(QIODevice.ReadOnly):
-            response = _addStyleToLayer(layerName, pathToQgisProject, styleName, qFile)
+            response = _addStyleToLayer(layerName, pathToQgisProject, styleName, qFile, QMLPath)
     else:
         response.error = True
         response.msg = "The QML file does not exist"
     
     return response
 
-def addStyleQMLFromStringToLayer(layerName:str, pathToQgisProject:str, styleName:str, QMLString:str)->OperationResponse:
+def addStyleQMLFromStringToLayer(layerName:str, pathToQgisProject:str, styleName:str, QMLString:str, QMLpath:str)->OperationResponse:
     """Add or update style from an string of QML on a layer. The new style will have a new name
 
     Args:
@@ -301,7 +307,7 @@ def addStyleQMLFromStringToLayer(layerName:str, pathToQgisProject:str, styleName
         OperationResponse
     """  
 
-    response = _addStyleToLayer(layerName, pathToQgisProject, styleName, QMLString)
+    response = _addStyleToLayer(layerName, pathToQgisProject, styleName, QMLString, QMLpath)
     return response
 
 def getImageFromSymbologieOfLayer(layerName:str, pathToQgisProject:str, styleName:str, path:str)->OperationResponse:
