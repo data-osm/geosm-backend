@@ -1,6 +1,8 @@
 from .base import *
 from datetime import timedelta
-
+import environ
+env = environ.Env()
+environ.Env.read_env()
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
@@ -21,10 +23,10 @@ CORS_ALLOW_METHODS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db',
+        'NAME': env('DATABASE_NAME'),
+        'USER': env('DATABASE_USER'),
+        'PASSWORD': env('DATABASE_PASS'),
+        'HOST': '172.17.0.1',
         'PORT': '5432',
     }
 }
