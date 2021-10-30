@@ -18,3 +18,4 @@ pgdata
 provider/management/commands/seedOldProvider.py
 icons/AUTRES/*
 seed/*
+settings/.env

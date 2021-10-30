@@ -208,4 +208,4 @@ class GetFeatureAdminBoundary(APIView):
         if feature:
             return Response( feature ,status=status.HTTP_200_OK)
         else:
-            Response({},status=status.HTTP_404_NOT_FOUND)
+            return Response({},status=status.HTTP_404_NOT_FOUND)
