@@ -56,7 +56,7 @@ class ExtentListView(APIView):
         try:
             with connection.cursor() as cursor:
                 if self.request.query_params.get('geometry') =='true':
-                    cursor.execute("select *, st_asgeojson(geom) as  st_asgeojson from public.extent")
+                    cursor.execute("select *, st_asgeojson(geom) as  st_asgeojson , ST_XMin(st_transform(geom,3857)) as a, ST_YMin(st_transform(geom,3857)) as b, ST_XMax(st_transform(geom,3857)) as c, ST_YMax(st_transform(geom,3857)) as d from public.extent")
                 else:
                     cursor.execute('''
                         SELECT 'SELECT ' || STRING_AGG('o.' || column_name, ', ') || ' , ST_XMin(st_transform(o.geom,3857)) as a, ST_YMin(st_transform(o.geom,3857)) as b, ST_XMax(st_transform(o.geom,3857)) as c, ST_YMax(st_transform(o.geom,3857)) as d   FROM extent AS o'
@@ -170,9 +170,9 @@ class SearchBoundary(APIView):
         )
         pks = [result.meta.id for result in esResponse]
         response=[]
-        for result in esResponse:
-            adminBoundary_id = int(result.meta.id.split('_')[1]) 
-            table_id = int(result.meta.id.split('_')[0]) 
+        for id in set(pks):
+            adminBoundary_id = int(id.split('_')[1]) 
+            table_id = int(id.split('_')[0]) 
             adminBoundary:AdminBoundary = AdminBoundary.objects.get(pk=adminBoundary_id)
             if adminBoundary:
                 feature = getAdminBoundaryFeature(adminBoundary.vector.table, adminBoundary.vector.shema, table_id)
@@ -208,4 +208,4 @@ class GetFeatureAdminBoundary(APIView):
         if feature:
             return Response( feature ,status=status.HTTP_200_OK)
         else:
-            Response({},status=status.HTTP_404_NOT_FOUND)
+            return Response({},status=status.HTTP_404_NOT_FOUND)

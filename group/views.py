@@ -194,6 +194,21 @@ class searchMaps(APIView):
 
         return Response(responseQuerry,status=status.HTTP_200_OK)
 
+class UpdateOrderGroup(APIView):
+    ''' Update the order of group '''
+    permission_classes=[permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+
+        if 'reorderGroups' in  request.data:
+            reorderGroups = request.data['reorderGroups']
+            CuserMiddleware.set_user(request.user)
+            for group in reorderGroups:
+                Group.objects.filter(pk=group['group_id']).update(order=group['order'])
+
+            return Response([], status=status.HTTP_200_OK)
+        else:
+            return Response({'msg':" the 'reorderGroups' parameters is missing "}, status=status.HTTP_400_BAD_REQUEST)
 
 class GroupVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Group.objects.all()
@@ -235,6 +250,14 @@ class GroupVieuwList(MultipleFieldLookupListMixin, ListAPIView):
     lookup_fields=['map']
     model = Group
     authentication_classes = []
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        queryset = queryset.order_by('order')  
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class GroupVieuwListCreate(MultipleFieldLookupListMixin, CreateAPIView):
     queryset=Group.objects.all()
@@ -512,6 +535,26 @@ class BaseMapView(APIView):
             
         else:
             return Response(" 'picto' field is required", status=status.HTTP_400_BAD_REQUEST)
+
+class SetPrincipalBaseMap(APIView):
+    ''' Update the principal map'''
+    permission_classes=[permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+
+        if 'id' in  request.data:
+            id = request.data['id']
+            CuserMiddleware.set_user(request.user)
+            for baseMap in Base_map.objects.all():
+                baseMap.principal = False
+                baseMap.save()
+
+            baseMap = Base_map.objects.get(pk=id)
+            baseMap.principal = True
+            baseMap.save()
+            return Response({}, status=status.HTTP_200_OK)
+        else:
+            return Response({'msg':" the 'reorderGroups' parameters is missing "}, status=status.HTTP_400_BAD_REQUEST)
 
 class searchLayer(APIView):
     """

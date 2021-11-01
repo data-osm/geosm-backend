@@ -41,6 +41,7 @@ class Base_map (models.Model):
     identifiant = models.TextField(null=True, blank=True)
     attribution = models.TextField(null=True, blank=True)
     picto = models.ForeignKey(Picto, on_delete=models.CASCADE)
+    principal = models.BooleanField(default=False)
     
 @track('name', 'color', 'icon__name', 'icon_path')
 class Group (models.Model):
@@ -56,7 +57,7 @@ class Group (models.Model):
     icon = models.ForeignKey(Icon,on_delete=models.RESTRICT)
     type_group = models.CharField(max_length=50, choices=groupType.choices)
     icon_path = models.FileField(blank=False, null=False, upload_to=get_upload_path_group_icon)
-
+    order = models.IntegerField(blank=False, null=False)
 
 @track('name', 'group_id__name')
 class Map (models.Model):

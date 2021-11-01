@@ -7,7 +7,7 @@ environ.Env.read_env()
 DEBUG = False
 
 
-CORS_ALLOWED_ORIGINS = ['http://preprod.dataosm.info','https://preprod.dataosm.info']
+CORS_ALLOWED_ORIGINS = ['https://preprod.dataosm.info','https://www.dataosm.info','https://dataosm.info']
 ALLOWED_HOSTS=['localhost','127.0.0.1']
 
 CORS_ALLOW_METHODS = [
