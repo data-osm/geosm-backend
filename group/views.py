@@ -536,6 +536,26 @@ class BaseMapView(APIView):
         else:
             return Response(" 'picto' field is required", status=status.HTTP_400_BAD_REQUEST)
 
+class SetPrincipalBaseMap(APIView):
+    ''' Update the principal map'''
+    permission_classes=[permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+
+        if 'id' in  request.data:
+            id = request.data['id']
+            CuserMiddleware.set_user(request.user)
+            for baseMap in Base_map.objects.all():
+                baseMap.principal = False
+                baseMap.save()
+
+            baseMap = Base_map.objects.get(pk=id)
+            baseMap.principal = True
+            baseMap.save()
+            return Response({}, status=status.HTTP_200_OK)
+        else:
+            return Response({'msg':" the 'reorderGroups' parameters is missing "}, status=status.HTTP_400_BAD_REQUEST)
+
 class searchLayer(APIView):
     """
         View to search layer

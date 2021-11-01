@@ -41,6 +41,7 @@ class Base_map (models.Model):
     identifiant = models.TextField(null=True, blank=True)
     attribution = models.TextField(null=True, blank=True)
     picto = models.ForeignKey(Picto, on_delete=models.CASCADE)
+    principal = models.BooleanField(default=False)
     
 @track('name', 'color', 'icon__name', 'icon_path')
 class Group (models.Model):
