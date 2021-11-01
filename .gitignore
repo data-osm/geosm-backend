@@ -19,3 +19,4 @@ provider/management/commands/seedOldProvider.py
 icons/AUTRES/*
 seed/*
 settings/.env
+getCustomStyle.py
