@@ -168,8 +168,12 @@ class SearchBoundary(APIView):
                 }
             }
         )
-        pks = [result.meta.id for result in esResponse]
+        pks = []
+        for result in esResponse:
+            if result.meta.index == 'boundary':
+                pks.append(result.meta.id)
         response=[]
+        # [print(result.meta,'================')for result in esResponse]
         for id in set(pks):
             adminBoundary_id = int(id.split('_')[1]) 
             table_id = int(id.split('_')[0]) 

@@ -616,8 +616,12 @@ class searchLayer(APIView):
                 }
             }
         )
-        pks = [result.meta.id for result in elasticResponse]
-        
+        pks = []
+        for result in elasticResponse:
+            if result.meta.index == 'layer':
+                pks.append(result.meta.id)
+        # response=[]
+        # [print(result,'================')for result in elasticResponse]
 
         return Response( LayerSerializer(Layer.objects.filter(pk__in=pks), many=True).data ,status=status.HTTP_200_OK)
 
