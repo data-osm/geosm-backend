@@ -45,7 +45,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ("name", "color", "icon", "type_group", "map_id", "group_id", "icon_path", "icon_id")
+        fields = ("name", "color", "icon", "type_group", "map_id", "group_id", "icon_path", "icon_id","order")
 
     def to_representation(self, instance):
         representation = super(GroupSerializer, self).to_representation(instance)
