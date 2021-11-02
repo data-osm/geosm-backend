@@ -318,6 +318,26 @@ class SubVieuwListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
     lookup_fields=['group_id']
     model = Sub
 
+class GetOldLayer(APIView):
+    authentication_classes = []
+
+    def post(self, request, *args, **kwargs):
+        if 'layer_id' in request.data :
+            key_couche = request.data['layer_id']
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT layer_id FROM old_layer WHERE key_couche='+str(key_couche))
+                layer_id = cursor.fetchone()[0]
+                layer:Layer = Layer.objects.select_related().filter(pk=layer_id).get()
+
+                return Response( {
+                    'layer':LayerSerializer(Layer.objects.filter(pk__in=[layer.layer_id]), many=True).data[0],
+                    'group':GroupSerializer(Group.objects.filter(pk__in=[layer.sub.group.group_id]), many=True).data[0],
+                    }, 
+                    status=status.HTTP_200_OK
+                )
+        else:
+            return Response('key_couche not present in the request', status=status.HTTP_400_BAD_REQUEST)
+
 class LayerVieuwDetail(RetrieveUpdateDestroyAPIView):
     queryset=Layer.objects.all()
     serializer_class=LayerSerializer
