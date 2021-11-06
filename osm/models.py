@@ -23,6 +23,9 @@ class Querry(models.Model):
     sql = models.TextField(blank=True)
     """ the full querry """
     provider_vector_id = models.OneToOneField(Vector,on_delete=models.CASCADE,primary_key=True)
+    auto_update = models.BooleanField(default=True)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         validation = _isOsmQuerryValidate(self)
