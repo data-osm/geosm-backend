@@ -42,6 +42,8 @@ class Base_map (models.Model):
     attribution = models.TextField(null=True, blank=True)
     picto = models.ForeignKey(Picto, on_delete=models.CASCADE)
     principal = models.BooleanField(default=False)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
     
 @track('name', 'color', 'icon__name', 'icon_path')
 class Group (models.Model):
@@ -58,6 +60,8 @@ class Group (models.Model):
     type_group = models.CharField(max_length=50, choices=groupType.choices)
     icon_path = models.FileField(blank=False, null=False, upload_to=get_upload_path_group_icon)
     order = models.IntegerField(blank=False, null=False)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
 
 @track('name', 'group_id__name')
 class Map (models.Model):
@@ -65,6 +69,8 @@ class Map (models.Model):
     map_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=200)
     group_id = models.ManyToManyField(Group, blank=True)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
 
 class Default_map (models.Model):
     """ the default map: this will be display as default in the portail """
@@ -76,6 +82,8 @@ class Sub (models.Model):
     group_sub_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=200)
     group = models.ForeignKey(Group,on_delete=models.CASCADE)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
 
 @track('name', 'color', 'icon_color', 'icon_background', 'icon_background')
 class Layer (models.Model):
@@ -95,6 +103,8 @@ class Layer (models.Model):
     metadata_cap = models.BooleanField(default=True)
     share = models.BooleanField(default=True)
     sub = models.ForeignKey(Sub,on_delete=models.CASCADE)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
 
 @track('vp_id__name', 'vs_id__name', 'ordre')
 class Layer_provider_style(models.Model):
@@ -102,6 +112,8 @@ class Layer_provider_style(models.Model):
     vp_id = models.ForeignKey(Vector,on_delete=models.CASCADE, blank=True, null=True)
     vs_id = models.ForeignKey(Style,on_delete=models.CASCADE, blank=True, null=True)
     ordre = models.IntegerField(default=1,blank=False, null=False)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
 
     class meta :
         unique_together = [['layer_id', 'vp_id']]
@@ -120,3 +132,5 @@ class Metadata(models.Model):
     layer = models.OneToOneField(Layer,on_delete=models.CASCADE)
     description = models.TextField(null=True,blank=True)
     tags = models.ManyToManyField(Tags, blank=True)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)

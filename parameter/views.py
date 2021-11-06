@@ -1,4 +1,5 @@
 from typing import List
+from django.http.request import HttpRequest
 from django.shortcuts import render
 from geosmBackend.cuserViews import ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView , ListAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework import permissions
@@ -52,11 +53,12 @@ class ParameterListView(ListAPIView):
 
 class ExtentListView(APIView):
     authentication_classes = []
-    def get(self, request, *args, **kwargs):
+    def get(self, request:HttpRequest, *args, **kwargs):
         try:
             with connection.cursor() as cursor:
                 if self.request.query_params.get('geometry') =='true':
-                    cursor.execute("select *, st_asgeojson(geom) as  st_asgeojson , ST_XMin(st_transform(geom,3857)) as a, ST_YMin(st_transform(geom,3857)) as b, ST_XMax(st_transform(geom,3857)) as c, ST_YMax(st_transform(geom,3857)) as d from public.extent")
+                    tolerance = self.request.query_params.get('tolerance',0)
+                    cursor.execute("select *, st_asgeojson(ST_SimplifyPreserveTopology(geom,"+str(tolerance)+")) as  st_asgeojson , ST_XMin(st_transform(geom,3857)) as a, ST_YMin(st_transform(geom,3857)) as b, ST_XMax(st_transform(geom,3857)) as c, ST_YMax(st_transform(geom,3857)) as d from public.extent")
                 else:
                     cursor.execute('''
                         SELECT 'SELECT ' || STRING_AGG('o.' || column_name, ', ') || ' , ST_XMin(st_transform(o.geom,3857)) as a, ST_YMin(st_transform(o.geom,3857)) as b, ST_XMax(st_transform(o.geom,3857)) as c, ST_YMax(st_transform(o.geom,3857)) as d   FROM extent AS o'
@@ -107,8 +109,8 @@ class ExtenView(APIView):
             
             with connection.cursor() as cursor:
                 if self.request.query_params.get('geometry') =='true':
-                    
-                    cursor.execute("select *, st_asgeojson(geom) as  st_asgeojson, min(ST_XMin(st_transform(geom,3857))) as a,min(ST_YMin(st_transform(geom,3857))) as b,max(ST_XMax(st_transform(geom,3857))) as c,max(ST_YMax(st_transform(geom,3857))) as d from public.extent where id="+str(extent_pk)+" group by id")
+                    tolerance = self.request.query_params.get('tolerance',0)
+                    cursor.execute("select *, st_asgeojson(ST_SimplifyPreserveTopology(geom,"+str(tolerance)+")) as  st_asgeojson, min(ST_XMin(st_transform(geom,3857))) as a,min(ST_YMin(st_transform(geom,3857))) as b,max(ST_XMax(st_transform(geom,3857))) as c,max(ST_YMax(st_transform(geom,3857))) as d from public.extent where id="+str(extent_pk)+" group by id")
                 else:
                     cursor.execute(
                         "SELECT 'SELECT ' || STRING_AGG('o.' || column_name, ', ') || ' FROM extent AS o where o.id = "+ str(extent_pk)+"'" +
