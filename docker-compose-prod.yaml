@@ -22,6 +22,7 @@ services:
         - 9100:8080
     environment: 
         - QGSRV_SERVER_WORKERS=8
+        - QGSRV_SERVER_TIMEOUT=60
         - QGSRV_LOGGING_LEVEL=WARNING
         - QGSRV_CACHE_ROOTDIR=/projects
         - QGSRV_CACHE_STRICT_CHECK=no
