@@ -10,3 +10,4 @@ osm2pgsql --cache 10000 --number-processes 5 --extra-attributes --slim -G -c -U 
 chmod +x ../create_index.sh
 ../create_index.sh
 ```
+nohup osm2pgsql --cache 25000 --number-processes 6 --proj 2154 --extra-attributes --slim -G -c -U postgres -d france -H localhost -W --hstore-all -S ./default.style osm.pbf &

@@ -30,7 +30,7 @@ class styleProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Style
         # fields = "__all__"
-        fields = ['provider_style_id', 'name', 'custom_style_id', 'provider_vector_id', 'pictogram', 'qml_file', 'custom_style']
+        fields = ['provider_style_id', 'name', 'custom_style_id', 'provider_vector_id', 'pictogram', 'qml_file', 'custom_style', 'description']
 
 class styleSimpleProviderSerializer(serializers.ModelSerializer):
     """

@@ -26,7 +26,7 @@ class ParameterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Parameter
-        fields = ['extent','map','extent_pk','parameter_id','boundary']
+        fields = ['extent','map','extent_pk','parameter_id','boundary','info']
 
     def get_boundary(self, instance):
         return AdminBoundarySerializer(AdminBoundary.objects.all(), many=True).data
