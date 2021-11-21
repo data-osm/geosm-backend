@@ -139,25 +139,27 @@ class Style (models.Model):
         if self.pk:
             
             previousStyle = Style.objects.get(pk=self.pk)
-            qml_content = None
+            self.name = previousStyle.name
+            print(previousStyle.qml_file, self.qml_file,previousStyle.qml_file != self.qml_file)
             if previousStyle.qml_file != self.qml_file:
+                qml_content = None
                 self.qml_file.open(mode="r")
                 qml_content = self.qml_file.read()
                 self.qml= qml_content
 
-            responseUpdateStyle = updateStyle(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, previousStyle.name, self.name, qml_content)
+                responseUpdateStyle = updateStyle(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, previousStyle.name, self.name, qml_content)
 
-            if responseUpdateStyle.error:
-                raise Exception(responseUpdateStyle.msg+" : "+str(responseUpdateStyle.description))
+                if responseUpdateStyle.error:
+                    raise Exception(responseUpdateStyle.msg+" : "+str(responseUpdateStyle.description))
 
-            Path(os.path.join(settings.MEDIA_ROOT,'pictoQgis')).mkdir(parents=True, exist_ok=True)
-            if os.path.exists(self.pictogram.name):
-                path = self.pictogram.name
-            else:
-                path = os.path.join(settings.MEDIA_ROOT,'pictoQgis', str(uuid.uuid4())+'.png')
+                Path(os.path.join(settings.MEDIA_ROOT,'pictoQgis')).mkdir(parents=True, exist_ok=True)
+                if os.path.exists(self.pictogram.name):
+                    path = self.pictogram.name
+                else:
+                    path = os.path.join(settings.MEDIA_ROOT,'pictoQgis', str(uuid.uuid4())+'.png')
 
-            responsePicto = getImageFromSymbologieOfLayer(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name, path)
-            self.pictogram.name = path
+                responsePicto = getImageFromSymbologieOfLayer(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name, path)
+                self.pictogram.name = path
 
         else:
          
