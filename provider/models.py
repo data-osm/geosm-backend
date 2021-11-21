@@ -126,6 +126,7 @@ class Style (models.Model):
     icon = models.ForeignKey(Icon,on_delete=models.RESTRICT,null=True, blank=True)
     qml_file = models.FileField(blank=True, null=True,default=None,upload_to=get_custom_qml_path)
     parameters = models.JSONField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     """ just use in order to write the content of the file in the field qml. ie: the file never exist"""
     class Meta:
         unique_together = ('name', 'provider_vector_id',)
@@ -138,25 +139,27 @@ class Style (models.Model):
         if self.pk:
             
             previousStyle = Style.objects.get(pk=self.pk)
-            qml_content = None
+            self.name = previousStyle.name
+            print(previousStyle.qml_file, self.qml_file,previousStyle.qml_file != self.qml_file)
             if previousStyle.qml_file != self.qml_file:
+                qml_content = None
                 self.qml_file.open(mode="r")
                 qml_content = self.qml_file.read()
                 self.qml= qml_content
 
-            responseUpdateStyle = updateStyle(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, previousStyle.name, self.name, qml_content)
+                responseUpdateStyle = updateStyle(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, previousStyle.name, self.name, qml_content)
 
-            if responseUpdateStyle.error:
-                raise Exception(responseUpdateStyle.msg+" : "+str(responseUpdateStyle.description))
+                if responseUpdateStyle.error:
+                    raise Exception(responseUpdateStyle.msg+" : "+str(responseUpdateStyle.description))
 
-            Path(os.path.join(settings.MEDIA_ROOT,'pictoQgis')).mkdir(parents=True, exist_ok=True)
-            if os.path.exists(self.pictogram.name):
-                path = self.pictogram.name
-            else:
-                path = os.path.join(settings.MEDIA_ROOT,'pictoQgis', str(uuid.uuid4())+'.png')
+                Path(os.path.join(settings.MEDIA_ROOT,'pictoQgis')).mkdir(parents=True, exist_ok=True)
+                if os.path.exists(self.pictogram.name):
+                    path = self.pictogram.name
+                else:
+                    path = os.path.join(settings.MEDIA_ROOT,'pictoQgis', str(uuid.uuid4())+'.png')
 
-            responsePicto = getImageFromSymbologieOfLayer(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name, path)
-            self.pictogram.name = path
+                responsePicto = getImageFromSymbologieOfLayer(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis, self.name, path)
+                self.pictogram.name = path
 
         else:
          
