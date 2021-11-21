@@ -126,6 +126,7 @@ class Style (models.Model):
     icon = models.ForeignKey(Icon,on_delete=models.RESTRICT,null=True, blank=True)
     qml_file = models.FileField(blank=True, null=True,default=None,upload_to=get_custom_qml_path)
     parameters = models.JSONField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     """ just use in order to write the content of the file in the field qml. ie: the file never exist"""
     class Meta:
         unique_together = ('name', 'provider_vector_id',)

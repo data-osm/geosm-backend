@@ -51,7 +51,7 @@ class Parameter(models.Model):
     map = models.ForeignKey(Map,on_delete=models.CASCADE,null=True, blank=True)
     extent = models.ForeignKey(Vector,on_delete=models.CASCADE, null=True, blank=True)
     extent_pk = models.BigIntegerField(null=True, blank=True)
-
+    info = models.TextField(blank=True, null=True)
     def save(self, *args, **kwargs):
         if self.pk:
             previousParameter = Parameter.objects.get(pk=self.pk)

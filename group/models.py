@@ -71,6 +71,7 @@ class Map (models.Model):
     group_id = models.ManyToManyField(Group, blank=True)
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
+    description = models.TextField(blank=True, null=True)
 
 class Default_map (models.Model):
     """ the default map: this will be display as default in the portail """
