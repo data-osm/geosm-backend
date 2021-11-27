@@ -59,7 +59,7 @@ class Group (models.Model):
     icon = models.ForeignKey(Icon,on_delete=models.RESTRICT)
     type_group = models.CharField(max_length=50, choices=groupType.choices)
     icon_path = models.FileField(blank=False, null=False, upload_to=get_upload_path_group_icon)
-    order = models.IntegerField(blank=False, null=False)
+    order = models.IntegerField(blank=False, null=False, default=0)
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
 
