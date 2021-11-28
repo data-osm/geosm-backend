@@ -1,0 +1,15 @@
+[general]
+name=QGIS Server Logger
+version=1.3.2
+qgisMinimumVersion=3.4
+description=Log QGIS Server requests to Syslog
+about=Tools for QGIS Server
+author=3Liz
+email=info@3liz.com
+server=True
+tags=server, syslog
+changelog=changelog
+
+homepage=https://github.com/3liz/qgis-logging-plugin
+tracker=https://github.com/3liz/qgis-logging-plugin/issues
+repository=https://github.com/3liz/qgis-logging-plugin
