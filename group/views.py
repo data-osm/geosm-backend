@@ -714,6 +714,10 @@ class DownloadFeaturesInGeometry(APIView):
             extention = '.kml'
             driver = 'KML' 
             content_type='application/vnd.google-earth.kml+xml'
+        elif format == 'csv':
+            extention = '.csv'
+            driver = 'CSV' 
+            content_type='text/csv'
         else:
             extention ='.shp'
             driver = 'ESRI Shapefile' 
