@@ -43,7 +43,7 @@ class CustomStyleHandler():
             # png = File(dataFile)
         else:
             icon:Icon = Icon.objects.get(pk=model.get('icon'))
-            fileName = icon.path.name
+            fileName = icon.path.path
 
         color = model.get('icon_color', None) 
         
