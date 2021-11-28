@@ -34,12 +34,14 @@ services:
     image: 3liz/qgis-map-server:3.16
     volumes: 
         - ./provider/qgis/project:/projects
+        - ./provider/qgis/plugin:/home/qgis/plugin
     ports: 
         - 3000:8080
     environment: 
         - QGSRV_SERVER_WORKERS=4
         - QGSRV_LOGGING_LEVEL=WARNING
         - QGSRV_CACHE_ROOTDIR=/projects
+        - QGSRV_SERVER_PLUGINPATH=/home/qgis/plugin
         - QGSRV_CACHE_STRICT_CHECK=no
         - QGSRV_CACHE_SIZE=10
         - QGSRV_SERVER_CROSS_ORIGIN=yes
@@ -58,5 +60,18 @@ services:
     depends_on:
       - db
 
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.1
+    environment:
+      - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./provider/qgis/plugin:/home/plugin
+    ports:
+      - "9600:9600"
+    depends_on:
+      - elastic
 
-    # docker run -e "ELASTICSEARCH_HOSTS=http://host.docker.internal:9200" -p 5601:5601 kibana:7.12.1
+
+    # docker run -e "ELASTICSEARCH_HOSTS=http://host.docker.internal:9200" -p 5601:5601 kibana:7.10.1

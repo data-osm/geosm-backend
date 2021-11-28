@@ -18,6 +18,7 @@ services:
     container_name: qgis_data_osm
     volumes: 
         - ./provider/qgis/project:/projects
+        - ./provider/qgis/plugins:/home/qgis/plugin
     ports: 
         - 9100:8080
     environment: 
@@ -25,6 +26,7 @@ services:
         - QGSRV_SERVER_TIMEOUT=60
         - QGSRV_LOGGING_LEVEL=WARNING
         - QGSRV_CACHE_ROOTDIR=/projects
+        - QGSRV_SERVER_PLUGINPATH=/home/qgis/plugin
         - QGSRV_CACHE_STRICT_CHECK=no
         - QGSRV_CACHE_SIZE=3000
     networks:
@@ -40,6 +42,19 @@ services:
       - ./elasticdata:/usr/share/elasticsearch/data
     networks:
       - travellist
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.1
+    environment:
+      - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./provider/qgis/plugin:/home/plugin
+    ports:
+      - "9600:9600"
+    depends_on:
+      - elastic
 
 networks:
   travellist:
