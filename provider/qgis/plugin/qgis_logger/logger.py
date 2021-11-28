@@ -8,7 +8,7 @@ import syslog
 from os.path import join
 from time import time
 from urllib.parse import unquote
-
+import datetime
 from qgis.core import Qgis, QgsMessageLog
 from qgis.server import QgsServerFilter 
 
@@ -58,6 +58,7 @@ class SyslogFilter(QgsServerFilter):
         pri = syslog.LOG_NOTICE
         params.update(
             self._tags,
+            RESPONSE_DATE=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             RESPONSE_TIME=ms,
             RESPONSE_STATUS=status)
         log_msg = json.dumps(params)

@@ -20,3 +20,4 @@ icons/AUTRES/*
 seed/*
 settings/.env
 getCustomStyle.py
+qgs_server.log
