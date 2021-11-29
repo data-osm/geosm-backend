@@ -64,7 +64,9 @@ class SyslogFilter(QgsServerFilter):
         log_msg = json.dumps(params)
         syslog.syslog(pri, log_msg)
         try:
-            with open(join(current_file_path,'qgs_server.log'), "a") as myfile:
+            today = datetime.datetime.now()
+            today_str=str(today.day)+'-'+str(today.month)+'-'+str(today.year)
+            with open(join(current_file_path,'qgs_server'+today_str+'.log'), "a") as myfile:
                 myfile.write(log_msg+"\n")
         except Exception as e :
             QgsMessageLog.logMessage("An error happened in Syslog/Flush plugin",str(e),Qgis.Critical)
