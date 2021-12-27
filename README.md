@@ -7,14 +7,14 @@ $ docker-compose -f docker-compose-prod.yaml exec web python manage.py createsup
 ```
 
 ## Load OSM data
-### If the OSM data  are in a foreign databsae
+### Import OSM data in foreign database [import_osm.MD](geosmBackend/DB/import_osm.MD)
+### Link the foreign and the local database
 
-Edit `import_foreign_osm_table.sql` with the connection parameters of the foreign database and execute it :
+Edit [import_foreign_osm_table.sql](import_foreign_osm_table.sql) with the connection parameters of the foreign database and execute it :
 
 ```sh
 $  docker-compose exec --user postgres db psql -d postgres -f /import_foreign_osm_table.sql 
 ```
-
 
 ## Setup elasticsearch
 ```sh
