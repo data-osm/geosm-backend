@@ -14,11 +14,58 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path,include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+
 from rest_framework.routers import DefaultRouter
+from rest_framework import permissions
 # from rest_framework.authtoken.views import obtain_auth_token
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Geosm Backend API",
+      default_version='v1',
+      description="Description de l'API du backend oepn source Geosm",
+      terms_of_service="https://www.google.com/policies/terms/",
+      contact=openapi.Contact(email="contact@dataosm.info"),
+      license=openapi.License(name="BSD License"),
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),
+)
+
+if settings.DEBUG:
+    schema_view = get_schema_view(
+        openapi.Info(
+            title="Geosm Backend API",
+            default_version='v1',
+            description="Description de l'API du backend open source Geosm",
+            terms_of_service="https://www.google.com/policies/terms/",
+            contact=openapi.Contact(email="contact@dataosm.info"),
+            license=openapi.License(name="BSD License"),
+        ),
+        public=True,
+        permission_classes=(permissions.AllowAny,),
+    )
+else:
+    schema_view = get_schema_view(
+        openapi.Info(
+            title="Geosm Backend API",
+            default_version='v1',
+            description="Description de l'API du backend open source Geosm",
+            terms_of_service="https://www.google.com/policies/terms/",
+            contact=openapi.Contact(email="contact@dataosm.info"),
+            license=openapi.License(name="BSD License"),
+        ),
+        url='https://www.dataosm.info',
+        public=True,
+        permission_classes=(permissions.AllowAny,),
+    )
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 
@@ -30,6 +77,11 @@ urlpatterns = [
     path("api/provider/",include("provider.urls")),
     path("api/datasource/",include("osm.urls")),
     path("api/tracking/",include("tracking.urls")),
-    path("api/parameter/",include("parameter.urls"))
+    path("api/parameter/",include("parameter.urls")),
+
+    # Documentation
+    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
