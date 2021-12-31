@@ -24,51 +24,37 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-schema_view = get_schema_view(
-   openapi.Info(
-      title="Geosm Backend API",
-      default_version='v1',
-      description="Description de l'API du backend oepn source Geosm",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@dataosm.info"),
-      license=openapi.License(name="BSD License"),
-   ),
-   public=True,
-   permission_classes=(permissions.AllowAny,),
+swagger_api_info = openapi.Info(
+    title='Data-osm API',
+    default_version='v1',
+    description="""Description de l'API backend du projet [data-osm](https://demo.openstreetmap.fr/map).
+
+L'interface graphique `swagger-ui` de la documentation de l'API est disponible [ici](/swagger).
+L'interface graphique `ReDoc` de la documentation de l'API est disponible [ici](/redoc).
+
+Cette documentation vous permettra de prendre en main les différentes opérations de CRUD de l'aplication.
+    """,
+    terms_of_service='https://www.google.com/policies/terms/',
+    contact=openapi.Contact(email='contact@dataosm.info'),
+    license=openapi.License(name='BSD License', url='https://fr.wikipedia.org/wiki/Licence_BSD'),
 )
+
 
 if settings.DEBUG:
     schema_view = get_schema_view(
-        openapi.Info(
-            title="Geosm Backend API",
-            default_version='v1',
-            description="Description de l'API du backend open source Geosm",
-            terms_of_service="https://www.google.com/policies/terms/",
-            contact=openapi.Contact(email="contact@dataosm.info"),
-            license=openapi.License(name="BSD License"),
-        ),
         public=True,
-        permission_classes=(permissions.AllowAny,),
+        permission_classes=[permissions.AllowAny],
     )
 else:
     schema_view = get_schema_view(
-        openapi.Info(
-            title="Geosm Backend API",
-            default_version='v1',
-            description="Description de l'API du backend open source Geosm",
-            terms_of_service="https://www.google.com/policies/terms/",
-            contact=openapi.Contact(email="contact@dataosm.info"),
-            license=openapi.License(name="BSD License"),
-        ),
-        url='https://www.dataosm.info',
+        url='https://www.dataosm.info/',
         public=True,
-        permission_classes=(permissions.AllowAny,),
+        permission_classes=[permissions.AllowAny],
     )
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
 
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
