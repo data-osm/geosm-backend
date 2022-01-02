@@ -25,17 +25,17 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 swagger_api_info = openapi.Info(
-    title='Data-osm API',
+    title='OSMdata API',
     default_version='v1',
-    description="""Description de l'API backend du projet [data-osm](https://demo.openstreetmap.fr/map).
+    description="""Description de l'API backend du projet [OSMdata](https://demo.openstreetmap.fr/map).
 
 L'interface graphique `swagger-ui` de la documentation de l'API est disponible [ici](/swagger).
 L'interface graphique `ReDoc` de la documentation de l'API est disponible [ici](/redoc).
 
 Cette documentation vous permettra de prendre en main les différentes opérations de CRUD de l'aplication.
     """,
-    terms_of_service='https://www.google.com/policies/terms/',
-    contact=openapi.Contact(email='contact@dataosm.info'),
+    terms_of_service='https://github.com/data-osm/frontend/blob/f24c68a0bc2141181dd7915714feb9b1566a6ab8/LICENSE',
+    contact=openapi.Contact(email=settings.CONTACT_EMAIL),
     license=openapi.License(name='BSD License', url='https://fr.wikipedia.org/wiki/Licence_BSD'),
 )
 
@@ -47,7 +47,7 @@ if settings.DEBUG:
     )
 else:
     schema_view = get_schema_view(
-        url='https://www.dataosm.info/',
+        url=settings.FRONT_URL,
         public=True,
         permission_classes=[permissions.AllowAny],
     )

@@ -6,9 +6,11 @@ environ.Env.read_env()
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-
-CORS_ALLOWED_ORIGINS = ['https://preprod.dataosm.info','https://www.dataosm.info','https://dataosm.info']
+FRONT_URL='https://www.dataosm.info'
+CORS_ALLOWED_ORIGINS = ['https://preprod.dataosm.info',FRONT_URL,'https://dataosm.info']
 ALLOWED_HOSTS=['localhost','127.0.0.1']
+
+CONTACT_EMAIL='team.osmdata@gmail.com'
 
 CORS_ALLOW_METHODS = [
     'DELETE',

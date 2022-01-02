@@ -4,9 +4,10 @@ from datetime import timedelta
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-
-CORS_ALLOWED_ORIGINS = ['http://localhost:4200']
+FRONT_URL='http://localhost:4200'
+CORS_ALLOWED_ORIGINS = [FRONT_URL]
 ALLOWED_HOSTS=['localhost','127.0.0.1']
+CONTACT_EMAIL=''
 
 CORS_ALLOW_METHODS = [
     'DELETE',
