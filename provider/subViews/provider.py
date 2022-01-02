@@ -45,6 +45,38 @@ class ListVectorProviderView(ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         """ Create a provider  """
         return super(ListVectorProviderView, self).post(request, *args, **kwargs)
+    
+
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_204_NO_CONTENT: openapi.Response(
+                description="this should not crash (response object with no schema)"
+            )
+        },
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'provider_vector_ids': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    description='List of provider_vector_id to delete',
+                    items={ 'type':openapi.TYPE_INTEGER },
+                )
+            }
+        ),
+        tags=['Providers'],
+    )
+    def delete(self, request, *args, **kwargs):
+        """ Delete many vector providers """
+        CuserMiddleware.set_user(request.user)
+        try:
+            provider_vector_ids= request.data['provider_vector_ids']
+            vector_providers = Vector.objects.filter(pk__in=provider_vector_ids)
+            vector_providers.delete()
+            return Response(httpResponse(False).__dict__,status=status.HTTP_200_OK)
+        except :
+            traceback.print_exc()
+            return Response(httpResponse(True,'An unexpected error has occurred').__dict__,status=status.HTTP_400_BAD_REQUEST)
+
 
 class VectorProviderDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
     queryset=Vector.objects.all()

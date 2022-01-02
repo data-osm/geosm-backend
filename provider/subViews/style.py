@@ -44,7 +44,7 @@ class ListCustomStyle(MultipleFieldLookupListMixin, ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         """ List all  Custom stykes  """
-        return super(CustomStyleSerializer, self).get(request, *args, **kwargs)
+        return super(ListCustomStyle, self).get(request, *args, **kwargs)
 
 class StyleDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
     queryset=Style.objects.all()
@@ -91,7 +91,7 @@ class ListStyleView( ListCreateAPIView):
         responses={200: styleProviderSerializer()},
         tags=['Styles'],
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request, provider_vector_id,*args, **kwargs):
         """ Create a new style on a provider"""
         op_serializer = styleProviderSerializer(data=request.data)
         CuserMiddleware.set_user(request.user)
@@ -127,9 +127,8 @@ class ListStyleView( ListCreateAPIView):
         responses={200: styleProviderSerializer(many=True)},
         tags=['Styles'],
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request, provider_vector_id, *args, **kwargs):
         """Retrieve all Styles of a provider """
-        provider_vector_id = request.data['custom_style_id']
         styles = get_list_or_404(Style.objects.all(), provider_vector_id=provider_vector_id)
         op_serializer = styleProviderSerializer(instance=styles, many=True)
         return Response(op_serializer.data, status=status.HTTP_200_OK)
