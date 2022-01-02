@@ -6,7 +6,7 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
 from rest_framework.response import Response
-from geosmBackend.cuserViews import (ListCreateAPIView,RetrieveUpdateDestroyAPIView, ListAPIView)
+from geosmBackend.cuserViews import (CreateAPIView, ListCreateAPIView,RetrieveUpdateDestroyAPIView, ListAPIView, EnablePartialUpdateMixin)
 from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Count
@@ -17,57 +17,75 @@ from cairosvg import svg2png
 import tempfile
 from django.core.files import File
 from django.conf import settings
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from ..serializers import VectorProviderSerializer, VectorProviderWithStyleSerializer
 from collections import defaultdict
 import traceback
 
 from ..qgis.customStyle import cluster
 
-class EnablePartialUpdateMixin:
-    """Enable partial updates
-    https://tech.serhatteker.com/post/2020-09/enable-partial-update-drf/
+class ListVectorProviderView(ListCreateAPIView):
+    queryset=Vector.objects.all()
+    serializer_class=VectorProviderSerializer
+    permission_classes=[permissions.IsAuthenticated]
 
-    Override partial kwargs in UpdateModelMixin class
-    https://github.com/encode/django-rest-framework/blob/91916a4db14cd6a06aca13fb9a46fc667f6c0682/rest_framework/mixins.py#L64
-    """
-    def update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
-        return super().update(request, *args, **kwargs)
-        
-
-class vectorProviderView(APIView):
-    """
-        View to list all vector provider, add a vector provider usernames = [user.username for user in User.objects.all()]
-        return Response(usernames)
-    """
-    permission_classes = [permissions.IsAuthenticated]
+    @swagger_auto_schema(
+        responses={200: VectorProviderSerializer(many=True)},
+        tags=['Providers'],
+    )
     def get(self, request, *args, **kwargs):
-        """ get all vector provider """
-        return Response([VectorProviderSerializer(vector).data for vector in Vector.objects.all()],status=status.HTTP_200_OK)
-    
+        """ List all  provider  """
+        return super(ListVectorProviderView, self).get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        responses={200: VectorProviderSerializer()},
+        tags=['Providers'],
+    )
     def post(self, request, *args, **kwargs):
-        """ store a new vector providor """
-        CuserMiddleware.set_user(request.user)
-        vp_serializer = VectorProviderSerializer(data=request.data)
+        """ Create a provider  """
+        return super(ListVectorProviderView, self).post(request, *args, **kwargs)
 
-        if vp_serializer.is_valid():
-            vp_serializer.save()
-            return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class VectorProviderDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
+    queryset=Vector.objects.all()
+    serializer_class=VectorProviderSerializer
+    permission_classes=[permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_204_NO_CONTENT: openapi.Response(
+                description="this should not crash (response object with no schema)"
+            )
+        },
+        tags=['Providers'],
+    )
     def delete(self, request, *args, **kwargs):
-        """ Delete vector providers """
-        CuserMiddleware.set_user(request.user)
-        try:
-            provider_vector_ids= request.data['provider_vector_ids']
-            vector_providers = Vector.objects.filter(pk__in=provider_vector_ids)
-            vector_providers.delete()
-            return Response(httpResponse(False).__dict__,status=status.HTTP_200_OK)
-        except :
-            traceback.print_exc()
-            return Response(httpResponse(True,'An unexpected error has occurred').__dict__,status=status.HTTP_400_BAD_REQUEST)
+        """ Delete a provider  """
+        return super(VectorProviderDetailView, self).delete(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        responses={200: VectorProviderSerializer()},
+        tags=['Providers'],
+    )
+    def patch(self, request, *args, **kwargs):
+        """Partially Update Provider"""
+        return super(VectorProviderDetailView, self).patch(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        responses={200: VectorProviderSerializer()},
+        tags=['Providers'],
+    )
+    def put(self, request, *args, **kwargs):
+        """Update Provider"""
+        return super(VectorProviderDetailView, self).put(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        responses={200: VectorProviderSerializer()},
+        tags=['Providers'],
+    )
+    def get(self, request, *args, **kwargs):
+        """Retrieve a provider"""
+        return super(VectorProviderDetailView, self).get(request, *args, **kwargs)
 
 class searchVectorProvider(APIView):
     """
@@ -75,7 +93,21 @@ class searchVectorProvider(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        responses={200: VectorProviderSerializer(many=True)},
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'search_word': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='The search key word'
+                )
+            }
+        ),
+        tags=['Providers'],
+    )
     def post(self, request, *args, **kwargs):
+        """ Search a vector provider """
         CuserMiddleware.set_user(request.user)
         searchWord = request.data['search_word']
         responseQuerry = []
@@ -84,15 +116,16 @@ class searchVectorProvider(APIView):
 
         return Response(responseQuerry,status=status.HTTP_200_OK)
 
-
-class vectorProviderDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
-    """ View get a vector provider, update or delete it """
-    queryset=Vector.objects.all()
-    serializer_class=VectorProviderSerializer
-    permission_classes=[permissions.IsAuthenticated]
-
 class vectorProviderWithStyleDetailView(ListAPIView):
     """ View get a vector provider with a style """
     queryset=Vector.objects.all()
     serializer_class=VectorProviderWithStyleSerializer
     permission_classes=[permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        responses={200: VectorProviderWithStyleSerializer(many=True)},
+        tags=['Providers'],
+    )
+    def get(self, request, *args, **kwargs):
+        """List all provider with thier style"""
+        return super(vectorProviderWithStyleDetailView, self).get(request, *args, **kwargs)
