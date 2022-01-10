@@ -39,11 +39,12 @@ class ListCustomStyle(MultipleFieldLookupListMixin, ListAPIView):
     model = Custom_style
 
     @swagger_auto_schema(
+        operation_summary='List all  Custom styles',
         responses={200: CustomStyleSerializer(many=True)},
         tags=['Styles'],
     )
     def get(self, request, *args, **kwargs):
-        """ List all  Custom stykes  """
+        """ List all  Custom styles  """
         return super(ListCustomStyle, self).get(request, *args, **kwargs)
 
 class StyleDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
@@ -53,6 +54,7 @@ class StyleDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
     parser_class = [MultiPartParser, FormParser]
 
     @swagger_auto_schema(
+        operation_summary='Delete a Style of a provider',
         responses={
             status.HTTP_204_NO_CONTENT: openapi.Response(
                 description="this should not crash (response object with no schema)"
@@ -65,6 +67,7 @@ class StyleDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
         return super(StyleDetailView, self).delete(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        operation_summary='Partially Update a Style of a provider',
         responses={200: styleProviderSerializer()},
         tags=['Styles'],
     )
@@ -73,6 +76,7 @@ class StyleDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
         return super(StyleDetailView, self).patch(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        operation_summary='Update a Style of a provider',
         responses={200: styleProviderSerializer()},
         tags=['Styles'],
     )
@@ -88,6 +92,7 @@ class ListStyleView( ListCreateAPIView):
     parser_class = [MultiPartParser, FormParser]
 
     @swagger_auto_schema(
+        operation_summary='Create a new style on a provider',
         responses={200: styleProviderSerializer()},
         tags=['Styles'],
     )
@@ -124,6 +129,7 @@ class ListStyleView( ListCreateAPIView):
             return Response(op_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(
+        operation_summary='Retrieve all Styles of a provider',
         responses={200: styleProviderSerializer(many=True)},
         tags=['Styles'],
     )
