@@ -41,7 +41,7 @@ class ListCustomStyle(MultipleFieldLookupListMixin, ListAPIView):
     @swagger_auto_schema(
         operation_summary='List all  Custom styles',
         responses={200: CustomStyleSerializer(many=True)},
-        tags=['Styles'],
+        tags=['Provider style'],
     )
     def get(self, request, *args, **kwargs):
         """ List all  Custom styles  """
@@ -60,7 +60,7 @@ class StyleDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
                 description="this should not crash (response object with no schema)"
             )
         },
-        tags=['Styles'],
+        tags=['Provider style'],
     )
     def delete(self, request, *args, **kwargs):
         """ Delete a Style of a provider  """
@@ -69,7 +69,7 @@ class StyleDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary='Partially Update a Style of a provider',
         responses={200: styleProviderSerializer()},
-        tags=['Styles'],
+        tags=['Provider style'],
     )
     def patch(self, request, *args, **kwargs):
         """Partially Update a Style of a provider """
@@ -78,7 +78,7 @@ class StyleDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary='Update a Style of a provider',
         responses={200: styleProviderSerializer()},
-        tags=['Styles'],
+        tags=['Provider style'],
     )
     def put(self, request, *args, **kwargs):
         """Update a Style of a provider"""
@@ -94,7 +94,7 @@ class ListStyleView( ListCreateAPIView):
     @swagger_auto_schema(
         operation_summary='Create a new style on a provider',
         responses={200: styleProviderSerializer()},
-        tags=['Styles'],
+        tags=['Provider style'],
     )
     def post(self, request, provider_vector_id,*args, **kwargs):
         """ Create a new style on a provider"""
@@ -131,7 +131,7 @@ class ListStyleView( ListCreateAPIView):
     @swagger_auto_schema(
         operation_summary='Retrieve all Styles of a provider',
         responses={200: styleProviderSerializer(many=True)},
-        tags=['Styles'],
+        tags=['Provider style'],
     )
     def get(self, request, provider_vector_id, *args, **kwargs):
         """Retrieve all Styles of a provider """
