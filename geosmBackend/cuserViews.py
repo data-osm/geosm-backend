@@ -1,6 +1,10 @@
 from rest_framework import mixins
 from rest_framework.generics import GenericAPIView
 from cuser.middleware import CuserMiddleware
+from functools import reduce
+from django.db.models import Q
+import operator
+from django.shortcuts import get_list_or_404, get_object_or_404
 
 
 class MultipleFieldLookupMixin(object):
@@ -57,9 +61,9 @@ class RetrieveUpdateDestroyAPIView(mixins.RetrieveModelMixin,
         CuserMiddleware.set_user(request.user)
         return self.update(request, *args, **kwargs)
 
-    def patch(self, request, *args, **kwargs):
-        CuserMiddleware.set_user(request.user)
-        return self.partial_update(request, *args, **kwargs)
+    # def patch(self, request, *args, **kwargs):
+    #     CuserMiddleware.set_user(request.user)
+    #     return self.partial_update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
         CuserMiddleware.set_user(request.user)

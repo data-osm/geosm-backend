@@ -179,7 +179,12 @@ SWAGGER_SETTINGS = {
    'USE_SESSION_AUTH': True,
    'REFETCH_SCHEMA_WITH_AUTH': True,
     'REFETCH_SCHEMA_ON_LOGOUT': True,
-
+    'enabled_methods': [
+        'get',
+        'post',
+        'put',
+        'delete'
+    ],
    'SECURITY_DEFINITIONS': {
       'Basic': {
         'type': 'basic'
