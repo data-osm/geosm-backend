@@ -84,6 +84,14 @@ class StyleDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
         """Update a Style of a provider"""
         return super(StyleDetailView, self).put(request, *args, **kwargs)
 
+    @swagger_auto_schema(
+        operation_summary='Get a Style of a provider',
+        responses={200: styleProviderSerializer()},
+        tags=['Provider style'],
+    )
+    def get(self, request, *args, **kwargs):
+        """Get a Style of a provider"""
+        return super(StyleDetailView, self).get(request, *args, **kwargs)
    
 class ListStyleView( ListCreateAPIView):
     queryset=Style.objects.all()

@@ -26,6 +26,7 @@ from collections import defaultdict
 
 
 class GetOldLayer(APIView):
+    swagger_schema = None
     authentication_classes = []
 
     def post(self, request, *args, **kwargs):
