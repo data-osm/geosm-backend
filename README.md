@@ -7,14 +7,14 @@ $ docker-compose -f docker-compose-prod.yaml exec web python manage.py createsup
 ```
 
 ## Load OSM data
-### If the OSM data  are in a foreign databsae
+### Import OSM data in foreign database [import_osm.MD](geosmBackend/DB/import_osm.MD)
+### Link the foreign and the local database
 
-Edit `import_foreign_osm_table.sql` with the connection parameters of the foreign database and execute it :
+Edit [import_foreign_osm_table.sql](import_foreign_osm_table.sql) with the connection parameters of the foreign database and execute it :
 
 ```sh
 $  docker-compose exec --user postgres db psql -d postgres -f /import_foreign_osm_table.sql 
 ```
-
 
 ## Setup elasticsearch
 ```sh
@@ -27,3 +27,8 @@ Load icons
 ```sh
 $ docker-compose -f docker-compose-prod.yaml exec web python manage.py loaddata --settings=settings.prod  seed/icon.json
 ```
+
+### For kibana use
+https://stackoverflow.com/questions/42385977/accessing-a-docker-container-from-another-container
+
+docker run --network host --name kibana -e "ELASTICSEARCH_HOSTS=http://172.17.0.1:9200" -p 5601:5601 kibana:7.10.1 

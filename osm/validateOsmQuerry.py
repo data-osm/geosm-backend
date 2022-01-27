@@ -31,7 +31,7 @@ class validateOsmQuerry():
         parameters = {'where':AsIs(self.where),'select':AsIs(_formatSelectOfUser(self.select))}
 
         if self.geometryType =='Point':
-            sql_validation = "select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom %(select)s  from planet_osm_point as A where %(where)s union all select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(st_centroid(A.way),4326) as geom %(select)s from planet_osm_polygon as A where %(where)s limit 1" 
+            sql_validation = "select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom %(select)s from planet_osm_point as A where %(where)s union all select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(st_centroid(A.way),4326) as geom %(select)s from planet_osm_polygon as A where %(where)s limit 1" 
             sql = "select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom  %(select)s  from planet_osm_point as A where %(where)s union all select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(st_centroid(A.way),4326) as geom %(select)s from planet_osm_polygon as A where %(where)s" 
         elif self.geometryType == "Polygon":
             sql_validation = "select A.osm_id,A.name,A.amenity,hstore_to_json(A.tags), ST_TRANSFORM(A.way,4326) as geom %(select)s  from planet_osm_polygon as A where %(where)s limit 1" 

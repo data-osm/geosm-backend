@@ -1,7 +1,7 @@
 from typing import List
 from django.http.request import HttpRequest
 from django.shortcuts import render
-from geosmBackend.cuserViews import ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView , ListAPIView, DestroyAPIView, UpdateAPIView
+from geosmBackend.cuserViews import ListCreateAPIView, RetrieveUpdateAPIView,RetrieveUpdateDestroyAPIView, EnablePartialUpdateMixin, CreateAPIView , ListAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework import permissions
 from .serializers import AdminBoundarySerializer, ParameterSerializer, AdminBoundaryCreateSerializer, ParameterCreateSerializer
 from .models import AdminBoundary, Parameter
@@ -13,46 +13,93 @@ from psycopg2.extras import NamedTupleCursor
 from .documents import BoundarysDocument
 from django.shortcuts import get_list_or_404, get_object_or_404
 from group.models import Vector
-# Create your views here.
-class EnablePartialUpdateMixin:
-    """Enable partial updates
-    https://tech.serhatteker.com/post/2020-09/enable-partial-update-drf/
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
-    Override partial kwargs in UpdateModelMixin class
-    https://github.com/encode/django-rest-framework/blob/91916a4db14cd6a06aca13fb9a46fc667f6c0682/rest_framework/mixins.py#L64
-    """
-    def update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
-        return super().update(request, *args, **kwargs)
 
-class AdminBoundaryRetrieveUpdateDestroyView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    queryset=AdminBoundary.objects.all()
-    serializer_class=AdminBoundarySerializer
-
-class AdminBoundaryCreateView(CreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    queryset=AdminBoundary.objects.all()
-    serializer_class=AdminBoundaryCreateSerializer
-
-class ParameterRetrieveUpdateDestroyView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
+class ParameterDetailView(EnablePartialUpdateMixin, RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset=Parameter.objects.all()
     serializer_class=ParameterCreateSerializer
+
+    @swagger_auto_schema(
+        operation_summary='Update parameter of the app',
+        responses={200: ParameterCreateSerializer()},
+        tags=['Parameter'],
+    )
+    def put(self, request, *args, **kwargs):
+        """Update parameter of the app"""
+        return super(ParameterDetailView, self).put(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary='Partially update parameter of the app',
+        responses={200: ParameterCreateSerializer()},
+        tags=['Parameter'],
+    )
+    def patch(self, request, *args, **kwargs):
+        """Partially update parameter of the app"""
+        return super(ParameterDetailView, self).patch(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary='get parameter of the app',
+        responses={200: ParameterCreateSerializer()},
+        tags=['Parameter'],
+    )
+    def get(self, request, *args, **kwargs):
+        """get parameter of the app"""
+        return super(ParameterDetailView, self).get(request, *args, **kwargs)
 
 class ParameterCreateView(CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset=Parameter.objects.all()
     serializer_class=ParameterCreateSerializer
 
+    @swagger_auto_schema(
+        operation_summary='Crete new parameter for app',
+        responses={200: ParameterCreateSerializer()},
+        tags=['Parameter'],
+    )
+    def post(self, request, *args, **kwargs):
+        """Crete new parameter for app"""
+        return super(ParameterCreateView, self).post(request, *args, **kwargs)
+
 class ParameterListView(ListAPIView):
     queryset=Parameter.objects.all()
     serializer_class=ParameterSerializer
     authentication_classes = []
 
+    @swagger_auto_schema(
+        operation_summary='List parameter of the app',
+        responses={200: ParameterSerializer()},
+        tags=['Parameter'],
+    )
+    def get(self, request, *args, **kwargs):
+        """List parameter of the app, there will be always have only one parameter"""
+        return super(ParameterListView, self).get(request, *args, **kwargs)
 
 class ExtentListView(APIView):
     authentication_classes = []
+    @swagger_auto_schema(
+        operation_summary='List all the regions of the app',
+        manual_parameters=[openapi.Parameter('geometry', openapi.IN_QUERY, description="If you want to include st_asgeojson in the response", type=openapi.TYPE_BOOLEAN)],
+        responses={200: openapi.Schema(
+            type=openapi.TYPE_ARRAY,
+            description='',
+            items={
+                'type': openapi.TYPE_OBJECT,
+                'properties':{
+                    'a':{'type':openapi.TYPE_INTEGER, 'description':'xMin'},
+                    'b':{'type':openapi.TYPE_INTEGER, 'description':'YMin'},
+                    'c':{'type':openapi.TYPE_INTEGER, 'description':'xMax'},
+                    'd':{'type':openapi.TYPE_INTEGER, 'description':'yMax'},
+                    'id':{'type':openapi.TYPE_INTEGER, 'description':'id of extent in database'},
+                    'st_asgeojson':{'type':openapi.TYPE_STRING, 'description':'geometry as geojson in text not JSON'},
+                    'name':{'type':openapi.TYPE_STRING, 'description':'Name of the region'},
+                }
+            }
+        )},
+        tags=['Regions of the app'],
+    )
     def get(self, request:HttpRequest, *args, **kwargs):
         try:
             with connection.cursor() as cursor:
@@ -85,7 +132,37 @@ class ExtentListView(APIView):
 
 class GetExtentViewById(APIView):
     authentication_classes=[]
+    @swagger_auto_schema(
+        operation_summary='Retrieve a  region of the app',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='Id of the region to retrieve'
+                )
+            }
+        ),
+        responses={200: openapi.Schema(
+            type=openapi.TYPE_ARRAY,
+            description='',
+            items={
+                'type': openapi.TYPE_OBJECT,
+                'properties':{
+                    'a':{'type':openapi.TYPE_INTEGER, 'description':'xMin'},
+                    'b':{'type':openapi.TYPE_INTEGER, 'description':'YMin'},
+                    'c':{'type':openapi.TYPE_INTEGER, 'description':'xMax'},
+                    'd':{'type':openapi.TYPE_INTEGER, 'description':'yMax'},
+                    'id':{'type':openapi.TYPE_INTEGER, 'description':'id of extent in database'},
+                    'st_asgeojson':{'type':openapi.TYPE_STRING, 'description':'geometry as geojson in text not JSON'},
+                    'name':{'type':openapi.TYPE_STRING, 'description':'Name of the region'},
+                }
+            }
+        )},
+        tags=['Regions of the app'],
+    )
     def post(self, request, *args, **kwargs):
+        """Retrieve a  region of the app"""
         id = request.data['id']
         with connection.cursor() as cursor:
             cursor.execute("select *, min(ST_XMin(st_transform(geom,3857))) as a,min(ST_YMin(st_transform(geom,3857))) as b,max(ST_XMax(st_transform(geom,3857))) as c,max(ST_YMax(st_transform(geom,3857))) as d from public.extent where id="+str(id)+" group by id")
@@ -103,7 +180,29 @@ class GetExtentViewById(APIView):
 
 class ExtenView(APIView):
     authentication_classes = []
+    @swagger_auto_schema(
+        operation_summary='Get the principal region of the app',
+        manual_parameters=[openapi.Parameter('geometry', openapi.IN_QUERY, description="If you want to include st_asgeojson in the response", type=openapi.TYPE_BOOLEAN)],
+        responses={200: openapi.Schema(
+            type=openapi.TYPE_ARRAY,
+            description='',
+            items={
+                'type': openapi.TYPE_OBJECT,
+                'properties':{
+                    'a':{'type':openapi.TYPE_INTEGER, 'description':'xMin'},
+                    'b':{'type':openapi.TYPE_INTEGER, 'description':'YMin'},
+                    'c':{'type':openapi.TYPE_INTEGER, 'description':'xMax'},
+                    'd':{'type':openapi.TYPE_INTEGER, 'description':'yMax'},
+                    'id':{'type':openapi.TYPE_INTEGER, 'description':'id of extent in database'},
+                    'st_asgeojson':{'type':openapi.TYPE_STRING, 'description':'geometry as geojson in text not JSON'},
+                    'name':{'type':openapi.TYPE_STRING, 'description':'Name of the region'},
+                }
+            }
+        )},
+        tags=['Regions of the app'],
+    )
     def get(self, request, *args, **kwargs):
+        '''Get the principal region of the app'''
         try:
             extent_pk = Parameter.objects.first().extent_pk
             
@@ -136,6 +235,36 @@ class ExtenView(APIView):
         
 class SearchBoundary(APIView):
     authentication_classes = []
+    @swagger_auto_schema(
+        operation_summary='Search administrative boundary',
+        responses={200: openapi.Schema(
+            type=openapi.TYPE_ARRAY,
+            description='',
+            items={
+                'type': openapi.TYPE_OBJECT,
+                'properties':{
+                    'adminBoundary':{'type':openapi.TYPE_OBJECT, 'description':'Administrative boundary'},
+                    'feature':{
+                        'type':openapi.TYPE_OBJECT, 
+                        'properties':{
+                            'table_id':{'type':openapi.TYPE_INTEGER, 'description':'id of the administrative boundary in the provider table'},
+                            'name':{'type':openapi.TYPE_STRING, 'description':'name of the administrative boundary'},
+                        }
+                    },
+                }
+            }
+        )},
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'search_word': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='The search key word'
+                )
+            }
+        ),
+        tags=['Administrative boundary'],
+    )
     def post(self, request, *args, **kwargs):
 
         def getAdminBoundaryFeature(table:str, shema:str, id:int):
@@ -192,7 +321,33 @@ class SearchBoundary(APIView):
 
 class GetFeatureAdminBoundary(APIView):
     authentication_classes = []
+    
+    @swagger_auto_schema(
+        operation_summary='Get a feature from an administrative boundary with his geometry',
+        responses={200: openapi.Schema(
+                type= openapi.TYPE_OBJECT,
+                properties={
+                    'table_id':{'type':openapi.TYPE_INTEGER, 'description':'id of the administrative boundary in the provider table'},
+                    'name':{'type':openapi.TYPE_STRING, 'description':'name of the administrative boundary'},
+                }
+        )},
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'vector_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='Provider id where is store the administrative boundary '
+                ),
+                'table_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='id of the administrative boundary in the provider table'
+                )
+            }
+        ),
+        tags=['Administrative boundary'],
+    )
     def post(self, request, *args, **kwargs):
+        '''Get a feature from an administrative boundary with his geometry'''
         def getAdminBoundaryFeatureWithGeometry(table:str, shema:str, id:int):
             with connection.cursor() as cursor:
                 cursor.execute("SELECT osm_id as table_id, name, st_asgeojson(st_transform(geom,3857)) as geometry FROM "+shema+"."+table+" WHERE osm_id ="+ str(id) )
@@ -215,3 +370,53 @@ class GetFeatureAdminBoundary(APIView):
             return Response( feature ,status=status.HTTP_200_OK)
         else:
             return Response({},status=status.HTTP_404_NOT_FOUND)
+
+class AdminBoundaryDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset=AdminBoundary.objects.all()
+    serializer_class=AdminBoundarySerializer
+
+    @swagger_auto_schema(
+        operation_summary='Delete an administrative boundary',
+        responses={
+            status.HTTP_204_NO_CONTENT: openapi.Response(
+                description="this should not crash (response object with no schema)"
+            )
+        },
+        tags=['Administrative boundary'],
+    )
+    def delete(self, request, *args, **kwargs):
+        """ Delete an administrative boundary  """
+        return super(AdminBoundaryDetailView, self).delete(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary='Update an administrative boundary',
+        responses={200: AdminBoundarySerializer()},
+        tags=['Administrative boundary'],
+    )
+    def put(self, request, *args, **kwargs):
+        """Update an administrative boundary"""
+        return super(AdminBoundaryDetailView, self).put(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary='get an administrative boundary',
+        responses={200: AdminBoundarySerializer()},
+        tags=['Administrative boundary'],
+    )
+    def get(self, request, *args, **kwargs):
+        """get an administrative boundary"""
+        return super(AdminBoundaryDetailView, self).get(request, *args, **kwargs)
+
+class AdminBoundaryCreateView(CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset=AdminBoundary.objects.all()
+    serializer_class=AdminBoundaryCreateSerializer
+
+    @swagger_auto_schema(
+        operation_summary='Add an administrative boundary',
+        responses={200: AdminBoundarySerializer()},
+        tags=['Administrative boundary'],
+    )
+    def post(self, request, *args, **kwargs):
+        """Add an administrative boundary"""
+        return super(AdminBoundaryCreateView, self).post(request, *args, **kwargs)

@@ -7,8 +7,12 @@ environ.Env.read_env()
 DEBUG = True
 
 
-CORS_ALLOWED_ORIGINS = ['https://preprod.dataosm.info','https://www.dataosm.info','https://dataosm.info','http://localhost:4200', 'https://portail.dataosm.info','http://portail.dataosm.info','http://demo.openstreetmap.fr','https://demo.openstreetmap.fr']
+FRONT_URL='https://www.dataosm.info'
+CORS_ALLOWED_ORIGINS = ['https://preprod.dataosm.info',FRONT_URL,'https://dataosm.info', 'https://portail.dataosm.info','http://portail.dataosm.info','http://demo.openstreetmap.fr','https://demo.openstreetmap.fr']
+
 ALLOWED_HOSTS=['localhost','127.0.0.1']
+
+CONTACT_EMAIL='team.osmdata@gmail.com'
 
 CORS_ALLOW_METHODS = [
     'DELETE',

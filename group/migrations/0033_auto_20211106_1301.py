@@ -52,12 +52,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='layer_provider_style',
-            name='id',
-            field=models.AutoField(auto_created=True, default=2, primary_key=True, serialize=False, verbose_name='ID'),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='layer_provider_style',
             name='updated_at',
             field=models.DateTimeField(auto_now=True),
         ),
