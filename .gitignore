@@ -21,3 +21,4 @@ seed/*
 settings/.env
 getCustomStyle.py
 provider/qgis/plugin/*.log
+.idea
