@@ -4,10 +4,12 @@ import environ
 env = environ.Env()
 environ.Env.read_env()
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
+
 
 FRONT_URL='https://www.dataosm.info'
-CORS_ALLOWED_ORIGINS = ['https://preprod.dataosm.info',FRONT_URL,'https://dataosm.info']
+CORS_ALLOWED_ORIGINS = ['https://preprod.dataosm.info',FRONT_URL,'https://dataosm.info', 'https://portail.dataosm.info','http://portail.dataosm.info','http://demo.openstreetmap.fr','https://demo.openstreetmap.fr']
+
 ALLOWED_HOSTS=['localhost','127.0.0.1']
 
 CONTACT_EMAIL='team.osmdata@gmail.com'
