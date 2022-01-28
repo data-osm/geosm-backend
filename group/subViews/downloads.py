@@ -205,9 +205,7 @@ class DownloadFeaturesInGeometry(APIView):
             response['Content-Disposition'] = 'attachment; filename="' + nameShapefile + extention + '"'
 
         # Count the number of times the provider is downloaded
-        provider_downloaded = Vector.objects.get(pk=provider_vector_id)
-
-        provider_downloaded.increment_download_number()
+        targetVector.increment_download_number()
 
         tempDir.cleanup()
         return response
