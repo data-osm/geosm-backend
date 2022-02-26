@@ -5,7 +5,7 @@ services:
   web:
     build: .
     container_name: admin_data_osm
-    command: bash -c "python manage.py migrate --settings=settings.preprod && gunicorn --workers=9 --timeout 1800 geosmBackend.wsgi:application --bind 0.0.0.0:8000"
+    command: bash -c "python manage.py migrate --settings=settings.prod && gunicorn --workers=9 --timeout 1800 geosmBackend.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - .:/code
     ports:
