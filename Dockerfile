@@ -30,6 +30,8 @@ RUN python3 -m pip install --upgrade pip
 
 WORKDIR /code
 COPY requirements.txt /code/
+RUN pip3 install --no-cache-dir --force-reinstall cffi
+RUN pip3 install --no-cache-dir cairocffi
 RUN pip3 install -r requirements.txt
 COPY . /code/
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.7 2
