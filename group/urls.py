@@ -44,5 +44,6 @@ urlpatterns = [
 
     path("count",CountFeaturesInGeometry.as_view()),
     url(r'download/$',DownloadFeaturesInGeometry.as_view()),
+    url(r'download/id/$',DownloadFeatureById.as_view()),
 
 ]
