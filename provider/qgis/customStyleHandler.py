@@ -9,6 +9,7 @@ import tempfile
 from django.core.files import File
 from django.conf import settings
 from ..qgis.customStyle import cluster
+from ..qgis.customStyle import point_icon_simple
 from group.models import Icon
 
 # @dataclass
@@ -57,5 +58,26 @@ class CustomStyleHandler():
                 'icon_color':color,
                 'icon':model.get('icon', None),
                 'raduis':10,
+            }
+        )
+
+    def point_icon_simple(self, model:QueryDict)->ResponseCustomStyle:
+        
+        if model.get('fileName', None) is not None and os.path.exists(model.get('fileName')) and os.path.isfile(model.get('fileName')):
+            fileName = model.get('fileName')
+        elif model.get('svg_as_text', None) is not None:
+            f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix='.png')
+            fileName = f.name
+            svg2png(bytestring=model.get('svg_as_text'),write_to=fileName, unsafe=True)
+        else:
+            icon:Icon = Icon.objects.get(pk=model.get('icon'))
+            fileName = icon.path.path
+
+        qml_file = point_icon_simple.getStyle(fileName)
+
+        return ResponseCustomStyle(
+            qml_file=qml_file,
+            parameter={
+                'icon':model.get('icon', None),
             }
         )
