@@ -18,6 +18,9 @@ class Command(BaseCommand):
         try:
             self._addOrUpdateeCluster()
             self._addOrUpdateePointIconSimple()
+            self._addOrUpdatePolygonSimple()
+            self._addOrUpdateeLigneSimple()
+            
             self.stdout.write(self.style.SUCCESS('Successfully add all custom Style' ))
         except Exception as e:
             traceback.print_exc()
@@ -62,3 +65,47 @@ class Command(BaseCommand):
         point_icon_simple.save()
 
         self.stdout.write(self.style.SUCCESS('Successfully add/update Point icon simple ' ))
+
+    def _addOrUpdateeLigneSimple(self):
+
+        line_simple, created = Custom_style.objects.get_or_create(
+            name='Ligne simple',
+            geometry_type='LineString',
+            defaults={
+                'description': "Assign color and with of a line in pixels",
+                'fucntion_name':"line_simple",
+            }
+        )
+        
+        iconPath = join(pathlib.Path(__file__).parent.resolve(),'images/line_simple.png')
+        customStyleDir = join(settings.MEDIA_ROOT,'customStyle')
+        if not exists(customStyleDir):
+            makedirs(customStyleDir)
+        copyfile(iconPath, join(customStyleDir,'line_simple.png'))
+        line_simple.icon.name = join('customStyle','line_simple.png')
+        line_simple.save()
+
+        self.stdout.write(self.style.SUCCESS('Successfully add/update Line simple ' ))
+
+    def _addOrUpdatePolygonSimple(self):
+
+        polygon_simple, created = Custom_style.objects.get_or_create(
+            name='Polygon simple',
+            geometry_type='Polygon',
+            defaults={
+                'description': "Assign color, with and color of stroke of a polygon",
+                'fucntion_name':"polygon_simple",
+            }
+        )
+        
+        iconPath = join(pathlib.Path(__file__).parent.resolve(),'images/polygon_simple.png')
+        customStyleDir = join(settings.MEDIA_ROOT,'customStyle')
+        if not exists(customStyleDir):
+            makedirs(customStyleDir)
+        copyfile(iconPath, join(customStyleDir,'polygon_simple.png'))
+        polygon_simple.icon.name = join('customStyle','polygon_simple.png')
+        polygon_simple.save()
+
+        self.stdout.write(self.style.SUCCESS('Successfully add/update Polygon simple ' ))
+
+    
