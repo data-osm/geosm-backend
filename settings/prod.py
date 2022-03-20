@@ -5,7 +5,8 @@ env = environ.Env()
 environ.Env.read_env()
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = env('SECRET_KEY')
 
 FRONT_URL='https://www.dataosm.info'
 CORS_ALLOWED_ORIGINS = ['https://preprod.dataosm.info',FRONT_URL,'https://dataosm.info', 'https://portail.dataosm.info','http://portail.dataosm.info','http://demo.openstreetmap.fr','https://demo.openstreetmap.fr']

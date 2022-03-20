@@ -9,6 +9,7 @@ from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework import filters
 from cuser.middleware import CuserMiddleware
 from cairosvg import svg2png
 import tempfile
@@ -28,6 +29,9 @@ class ListVectorProviderView(ListCreateAPIView):
     queryset = Vector.objects.all()
     serializer_class = VectorProviderSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['name', 'updated_at']
+    ordering = ['name']
 
     @swagger_auto_schema(
         operation_summary='Returns all providers',

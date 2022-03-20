@@ -123,7 +123,7 @@ class ListStyleView( ListCreateAPIView):
                     del request.data[key]
 
             request.data['qml_file']  = response.qml_file
-            request.data['parameters'] = json.dumps(response.parameter) 
+            request.data['parameters'] = json.dumps(response.parameters) 
 
 
         if op_serializer.is_valid():

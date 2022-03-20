@@ -3,6 +3,8 @@ from datetime import timedelta
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'vr)rd0$p7@*j4-o5rzr!=l&^bwe$g_f51*dmtj6+!g4hoc%!p%'
 
 FRONT_URL='http://localhost:4200'
 CORS_ALLOWED_ORIGINS = [FRONT_URL]
