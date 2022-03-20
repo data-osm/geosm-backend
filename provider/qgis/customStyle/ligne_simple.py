@@ -47,7 +47,7 @@ def getStyle(lineColor:str, lineWidth:int)->File:
             newStyle.readXml(elem)
             if newStyle.isValid():
                 project = QgsProject()
-                tempLayer = QgsVectorLayer("Line", "temporary_points", "memory")
+                tempLayer = QgsVectorLayer("LineString", "temporary_points", "memory")
                 project.addMapLayer(tempLayer)
                 res = tempLayer.styleManager().addStyle("line_simple", newStyle)
                 tempLayer.styleManager().setCurrentStyle("line_simple")
