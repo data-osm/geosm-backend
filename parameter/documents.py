@@ -41,8 +41,8 @@ class BoundarysDocument(Document):
 
 def refreshBoundaryDocument(boundarys):
     try:
-        BoundarysTempDocument.delete()
-    except:
+        Index('boundary_temp').delete()
+    except Exception as e:
         pass
     BoundarysTempDocument.init()
 
@@ -53,7 +53,8 @@ def refreshBoundaryDocument(boundarys):
             vector:Vector =  boundary.vector
             with connection.cursor() as cursor:
                 cursor.execute("select osm_id, name from "+vector.shema+"."+vector.table )
-                for item in cursor.fetchall():
+                features = cursor.fetchall()
+                for item in features:
                     elasticDoc = BoundarysTempDocument(meta={'id': str(item[0])+'_'+str(boundary.admin_boundary_id)}, name=item[1], admin_boundary_id=boundary.admin_boundary_id)
                     elasticDoc.save()
 
