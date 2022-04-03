@@ -188,3 +188,23 @@ def removeLayer(pathToQgisProject:str, layerName:str)->OperationResponse:
         # traceback.print_exc()
         response.error = True
         response.msg = "An unexpected error has occurred"
+
+def saveQMLtoGeoPackage(gpkgFile:str, qmlFile:str):
+    """Save QML to geopackage as default style
+
+    Args:
+        gpkgFile (str): gpkg file path
+        qmlFile (str): qml file path
+
+    Raises:
+        Exception: _description_
+    """
+    layer = QgsVectorLayer(gpkgFile,'layer',"ogr")
+    mess, res = layer.loadNamedStyle(qmlFile)
+    if res != True:
+        raise Exception(mess)
+    try:
+        layer.deleteStyleFromDatabase('1')
+    except Exception as e:
+        pass
+    res = layer.saveStyleToDatabase('default','',True,'')

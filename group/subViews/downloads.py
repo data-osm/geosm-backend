@@ -6,6 +6,8 @@ from django.shortcuts import render
 from rest_framework.exceptions import NotAuthenticated
 from django.db import connection, transaction
 
+from provider.qgis.manageVectorLayer import saveQMLtoGeoPackage
+
 # Create your views here.
 from ..models import Map, Group, Sub, Layer, Default_map, Layer_provider_style, Tags, Metadata, Base_map
 from rest_framework.response import Response
@@ -20,7 +22,7 @@ from django.http import HttpResponse, StreamingHttpResponse
 from cuser.middleware import CuserMiddleware
 from uuid import uuid4
 
-from provider.models import Vector
+from provider.models import Vector, Style
 from provider.serializers import VectorProviderSerializer
 
 from ..serializers import SubWithGroupSerializer, BaseMapSerializer, TagsIconSerializer, IconSerializer, MapSerializer, \
@@ -109,14 +111,12 @@ class DownloadFeatureById(APIView):
     @swagger_auto_schema(
         operation_summary='Download a feature from a provider by id  ',
         responses={200: 'this should not crash (response object with no schema)'},
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'provider_vector_id': {'type': openapi.TYPE_INTEGER},
-                'feature_id': {'type': openapi.TYPE_INTEGER},
-                'driver': {'type': openapi.TYPE_STRING, 'description':'The format'},
-            }
-        ),
+       manual_parameters=[
+            openapi.Parameter('provider_vector_id', openapi.IN_QUERY, description="vector id we want to download", type=openapi.TYPE_INTEGER, required=True),
+            openapi.Parameter('feature_id', openapi.IN_QUERY, description="id of the feature to download", type=openapi.TYPE_INTEGER, required=True),
+            openapi.Parameter('driver', openapi.IN_QUERY, description='The format, default is "shp"', type=openapi.TYPE_STRING,required=False),
+            openapi.Parameter('provider_style_id', openapi.IN_QUERY, description='style of vector we want to download', type=openapi.TYPE_INTEGER,required=False),
+        ],
         tags=['Download data'],
     )
 
@@ -137,6 +137,12 @@ class DownloadFeatureById(APIView):
             format: str = request.GET['driver']
         except:
             format = 'shp'
+
+        try:
+            provider_style_id: int = request.GET['provider_style_id']
+            style:Style = Style.objects.filter(pk=provider_style_id).filter(provider_vector_id=provider_vector_id).get()
+        except:
+            style = None
 
         ogrParams = getOgrDriver(format)
         extention = ogrParams['extention']
@@ -163,7 +169,7 @@ class DownloadFeatureById(APIView):
         outShapefile = join(directory_for_files, nameShapefile + extention)
         outDriver = ogr.GetDriverByName(driver)
         outDataSource = outDriver.CreateDataSource(outShapefile)
-        outDataSource.CopyLayer(layer, 'name of the layer', [])
+        outDataSource.CopyLayer(layer, nameShapefile, [])
         outDataSource.SyncToDisk()
 
         if format == 'shp':
@@ -172,6 +178,8 @@ class DownloadFeatureById(APIView):
                 for root, dirs, files in walk(directory_for_files):
                     for file in files:
                         zipObj.write(join(root, file), relpath(join(root, file), join(directory_for_files)))
+                if style is not None:
+                    zipObj.write(join(settings.MEDIA_ROOT,style.qml_file.path),nameShapefile+'.qml')
 
             response = StreamingHttpResponse(FileWrapper(temp), content_type=content_type)
             response['Content-Disposition'] = 'attachment; filename="' + nameShapefile + '.zip"'
@@ -180,6 +188,8 @@ class DownloadFeatureById(APIView):
             temp.seek(0)
 
         else:
+            if format == 'gpkg' and style is not None:
+                saveQMLtoGeoPackage(outShapefile, join(settings.MEDIA_ROOT,style.qml_file.path))
             response = StreamingHttpResponse(open(outShapefile, 'rb'), content_type=content_type)
             response['Content-Disposition'] = 'attachment; filename="' + nameShapefile + extention + '"'
 
@@ -194,6 +204,13 @@ class DownloadFeaturesInGeometry(APIView):
 
     @swagger_auto_schema(
         operation_summary='Download features of a provider',
+        manual_parameters=[
+            openapi.Parameter('provider_vector_id', openapi.IN_QUERY, description=" boundary vector id", type=openapi.TYPE_INTEGER, required=False),
+            openapi.Parameter('table_id', openapi.IN_QUERY, description="id of the boundary in his vector table", type=openapi.TYPE_INTEGER, required=False),
+            openapi.Parameter('provider_vector_id_target', openapi.IN_QUERY, description="vector id we want to download", type=openapi.TYPE_INTEGER, required=True),
+            openapi.Parameter('provider_style_id_target', openapi.IN_QUERY, description='style of vector we want to download', type=openapi.TYPE_INTEGER,required=False),
+            openapi.Parameter('driver', openapi.IN_QUERY, description='The format, default is "shp"', type=openapi.TYPE_STRING,required=False),
+        ],
         responses={200: 'this should not crash (response object with no schema)'},
         tags=['Download data'],
     )
@@ -218,6 +235,12 @@ class DownloadFeaturesInGeometry(APIView):
             format: str = request.GET['driver']
         except:
             format = 'shp'
+
+        try:
+            provider_style_id_target: int = request.GET['provider_style_id_target']
+            style:Style = Style.objects.filter(pk=provider_style_id_target).filter(provider_vector_id=provider_vector_id_target).get()
+        except:
+            style = None
 
         ogrParams = getOgrDriver(format)
         extention = ogrParams['extention']
@@ -248,7 +271,7 @@ class DownloadFeaturesInGeometry(APIView):
         outShapefile = join(directory_for_files, nameShapefile + extention)
         outDriver = ogr.GetDriverByName(driver)
         outDataSource = outDriver.CreateDataSource(outShapefile)
-        outDataSource.CopyLayer(layer, 'name of the layer', [])
+        outDataSource.CopyLayer(layer, nameShapefile, [])
         outDataSource.SyncToDisk()
 
         if format == 'shp':
@@ -257,14 +280,17 @@ class DownloadFeaturesInGeometry(APIView):
                 for root, dirs, files in walk(directory_for_files):
                     for file in files:
                         zipObj.write(join(root, file), relpath(join(root, file), join(directory_for_files)))
+                if style is not None:
+                    zipObj.write(join(settings.MEDIA_ROOT,style.qml_file.path),nameShapefile+'.qml')
 
             response = StreamingHttpResponse(FileWrapper(temp), content_type=content_type)
             response['Content-Disposition'] = 'attachment; filename="' + nameShapefile + '.zip"'
             response['Content-Length'] = temp.tell()
 
             temp.seek(0)
-
         else:
+            if format == 'gpkg' and style is not None:
+                saveQMLtoGeoPackage(outShapefile, join(settings.MEDIA_ROOT,style.qml_file.path))
             response = StreamingHttpResponse(open(outShapefile, 'rb'), content_type=content_type)
             response['Content-Disposition'] = 'attachment; filename="' + nameShapefile + extention + '"'
 
