@@ -1,5 +1,5 @@
 from .models import Vector, Style
-from osm.models import Querry
+# from osm.models import Querry
 from django.core.exceptions import ObjectDoesNotExist
 from typing import NamedTuple
 from django.db.models import Count, Q
@@ -10,7 +10,7 @@ from .qgis.manageVectorLayer import addVectorLayerFomPostgis, removeLayer
 from .qgis.manageStyle import getQMLStyleOfLayer
 from django.conf import settings
 from os.path import join
-from geosmBackend.type import OperationResponse, AddVectorLayerResponse, GetQMLStyleOfLayerResponse
+from geosmBackend.type import OperationResponse, AddVectorLayerResponse, GetQMLStyleOfLayerResponse, QuerryDefinition
 from django.core.files import File
 from django.core.files.base import ContentFile
 
@@ -52,7 +52,7 @@ class manageOsmDataSource():
             return response
 
 
-    def updateDataSource(self, osm_querry:Querry)->OperationResponse:
+    def updateDataSource(self, osm_querry:QuerryDefinition)->OperationResponse:
         """ update an osm datsource """
 
         response=OperationResponse(
@@ -60,7 +60,7 @@ class manageOsmDataSource():
             msg="",
             description="",
         )
-        self.osm_querry:Querry = osm_querry
+        self.osm_querry:QuerryDefinition = osm_querry
         self._getTableAndSchema()
 
         createOrReplaceTableResponse = self._createOrReplaceTable()
@@ -73,7 +73,7 @@ class manageOsmDataSource():
 
         return createOrReplaceTableResponse
 
-    def createDataSource(self, osm_querry:Querry)->AddVectorLayerResponse:
+    def createDataSource(self, osm_querry:QuerryDefinition)->AddVectorLayerResponse:
         """ create an osm datsource, after add it to an QGIS project """
 
         response=AddVectorLayerResponse(
@@ -84,7 +84,7 @@ class manageOsmDataSource():
             layerName="",
         )
 
-        self.osm_querry:Querry = osm_querry
+        self.osm_querry:QuerryDefinition = osm_querry
         self._getTableAndSchema()
         
         createOrReplaceTableResponse = self._createOrReplaceTable()

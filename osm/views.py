@@ -8,7 +8,6 @@ import traceback
 from .validateOsmQuerry import validateOsmQuerry
 from .models import Querry
 from provider.models import Vector
-from provider.manageOsmDataSource import manageOsmDataSource
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser

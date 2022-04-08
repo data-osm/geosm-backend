@@ -42,3 +42,13 @@ class GetQMLStyleOfLayerResponse:
     description:str
     qmlPath:str
     qmlContent:str
+
+@dataclass
+class QuerryDefinition():
+    select:str
+    where:str
+    sql:str
+    provider_vector_id:int
+    auto_update:bool
+    created_at:str
+    updated_at:str
