@@ -44,11 +44,15 @@ class GetQMLStyleOfLayerResponse:
     qmlContent:str
 
 @dataclass
-class QuerryDefinition():
-    select:str
-    where:str
+class SimpleQuerryDefinition():
+    connection:str
     sql:str
     provider_vector_id:int
     auto_update:bool
     created_at:str
     updated_at:str
+@dataclass
+class QuerryDefinition(SimpleQuerryDefinition):
+    select:str
+    where:str
+

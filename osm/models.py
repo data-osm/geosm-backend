@@ -7,7 +7,7 @@ from osm.validateOsmQuerry import validateOsmQuerry
 from django.core.exceptions import ObjectDoesNotExist
 import traceback
 from tracking_fields.decorators import track
-from .subModels.Querry import Querry
+from .subModels.Querry import Querry, SimpleQuerry
 
 
 class Struct:
