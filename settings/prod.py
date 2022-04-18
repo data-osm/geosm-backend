@@ -33,6 +33,14 @@ DATABASES = {
         'PASSWORD': env('DATABASE_PASS'),
         'HOST': '172.17.0.1',
         'PORT': '5432',
+    },
+    'datasud': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME':  env('DATABASE_DATASUD_NAME'),
+        'USER':  env('DATABASE_DATASUD_USER'),
+        'PASSWORD':  env('DATABASE_DATASUD_PASS'),
+        'HOST':  env('DATABASE_DATASUD_HOST'),
+        'PORT':  env('DATABASE_DATASUD_PORT'),
     }
 }
 
