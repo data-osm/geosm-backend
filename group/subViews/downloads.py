@@ -4,7 +4,7 @@ from django.db.backends.utils import CursorWrapper
 from django.http.request import QueryDict
 from django.shortcuts import render
 from rest_framework.exceptions import NotAuthenticated
-from django.db import connection, transaction
+from django.db import connections, transaction
 
 from provider.qgis.manageVectorLayer import saveQMLtoGeoPackage
 
@@ -46,7 +46,7 @@ from zipfile import ZipFile
 from os import walk, remove
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from osm.models import Querry, SimpleQuerry
 
 class CountFeaturesInGeometry(APIView):
     authentication_classes = []
@@ -150,14 +150,23 @@ class DownloadFeatureById(APIView):
         content_type = ogrParams['content_type']
 
         provider: Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id)
+        try:
+            source =get_object_or_404(Querry.objects.all(), provider_vector_id=provider_vector_id)
+        except:
+            pass
+        try:
+            source =get_object_or_404(SimpleQuerry.objects.all(), provider_vector_id=provider_vector_id)
+        except:
+            pass
+
         datasource: DataSource = ogr.Open(
-            "PG:host=" + settings.DATABASES['default']['HOST'] + " port=" + settings.DATABASES['default'][
-                'PORT'] + " dbname=" + settings.DATABASES['default']['NAME'] + " user=" + settings.DATABASES['default'][
-                'USER'] + " password=" + settings.DATABASES['default']['PASSWORD'], 0)
+            "PG:host=" + settings.DATABASES[source.connection]['HOST'] + " port=" + settings.DATABASES[source.connection][
+                'PORT'] + " dbname=" + settings.DATABASES[source.connection]['NAME'] + " user=" + settings.DATABASES[source.connection][
+                'USER'] + " password=" + settings.DATABASES[source.connection]['PASSWORD'], 0)
 
         layer: OgrLayer = datasource.ExecuteSQL(
                 "SELECT * FROM " + provider.shema + "." + provider.table + " where osm_id="+str(feature_id))
-
+        connection = connections[source.connection]
         with connection.cursor() as cursor:
             cursor.execute("SELECT name FROM " + provider.shema + "." + provider.table+ " where osm_id="+str(feature_id) )
             nameShapefile = provider.name + ' - ' +str(cursor.fetchone()[0])
@@ -189,7 +198,11 @@ class DownloadFeatureById(APIView):
 
         else:
             if format == 'gpkg' and style is not None:
-                saveQMLtoGeoPackage(outShapefile, join(settings.MEDIA_ROOT,style.qml_file.path))
+                try:
+                    saveQMLtoGeoPackage(outShapefile, join(settings.MEDIA_ROOT,style.qml_file.path))
+                except:
+                    pass
+                
             response = StreamingHttpResponse(open(outShapefile, 'rb'), content_type=content_type)
             response['Content-Disposition'] = 'attachment; filename="' + nameShapefile + extention + '"'
 
@@ -248,11 +261,20 @@ class DownloadFeaturesInGeometry(APIView):
         content_type = ogrParams['content_type']
 
         targetVector: Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id_target)
-        datasource: DataSource = ogr.Open(
-            "PG:host=" + settings.DATABASES['default']['HOST'] + " port=" + settings.DATABASES['default'][
-                'PORT'] + " dbname=" + settings.DATABASES['default']['NAME'] + " user=" + settings.DATABASES['default'][
-                'USER'] + " password=" + settings.DATABASES['default']['PASSWORD'], 0)
+        try:
+            source =get_object_or_404(Querry.objects.all(), provider_vector_id=provider_vector_id_target)
+        except:
+            pass
+        try:
+            source =get_object_or_404(SimpleQuerry.objects.all(), provider_vector_id=provider_vector_id_target)
+        except:
+            pass
 
+        datasource: DataSource = ogr.Open(
+            "PG:host=" + settings.DATABASES[source.connection]['HOST'] + " port=" + settings.DATABASES[source.connection][
+                'PORT'] + " dbname=" + settings.DATABASES[source.connection]['NAME'] + " user=" + settings.DATABASES[source.connection][
+                'USER'] + " password=" + settings.DATABASES[source.connection]['PASSWORD'], 0)
+        
         if provider_vector_id is not None:
             boundaryVector: Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id)
             layer: OgrLayer = datasource.ExecuteSQL(
@@ -261,7 +283,7 @@ class DownloadFeaturesInGeometry(APIView):
             nameShapefile = targetVector.name + ' - ' + boundaryVector.name
         else:
             layer: OgrLayer = datasource.ExecuteSQL(
-                "SELECT A.* FROM " + targetVector.shema + "." + targetVector.table + " AS A ")
+                "SELECT * FROM " + targetVector.shema + "." + targetVector.table )
             nameShapefile = targetVector.name
 
         tempDir = tempfile.TemporaryDirectory(dir=settings.TEMP_URL)
@@ -290,10 +312,12 @@ class DownloadFeaturesInGeometry(APIView):
             temp.seek(0)
         else:
             if format == 'gpkg' and style is not None:
-                saveQMLtoGeoPackage(outShapefile, join(settings.MEDIA_ROOT,style.qml_file.path))
+                try:
+                    saveQMLtoGeoPackage(outShapefile, join(settings.MEDIA_ROOT,style.qml_file.path))
+                except:
+                    pass
             response = StreamingHttpResponse(open(outShapefile, 'rb'), content_type=content_type)
             response['Content-Disposition'] = 'attachment; filename="' + nameShapefile + extention + '"'
-
         # Count the number of times the provider is downloaded
         targetVector.increment_download_number()
 

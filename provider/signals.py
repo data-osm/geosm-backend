@@ -1,7 +1,6 @@
 from .models import Vector, Style
 from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
-from .manageOsmDataSource import manageOsmDataSource
 
 @receiver(pre_save, sender=Vector)
 def updateStateVectorProvider(sender, instance:Vector, **kwargs):

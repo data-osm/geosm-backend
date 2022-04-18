@@ -1,16 +1,16 @@
 from .models import Vector, Style
-from osm.models import Querry
+# from osm.models import Querry
 from django.core.exceptions import ObjectDoesNotExist
-from typing import NamedTuple
+from typing import NamedTuple, Union
 from django.db.models import Count, Q
 import re
-from django.db import connection, Error
+from django.db import connections, Error
 from psycopg2.extensions import AsIs
 from .qgis.manageVectorLayer import addVectorLayerFomPostgis, removeLayer
 from .qgis.manageStyle import getQMLStyleOfLayer
 from django.conf import settings
 from os.path import join
-from geosmBackend.type import OperationResponse, AddVectorLayerResponse, GetQMLStyleOfLayerResponse
+from geosmBackend.type import OperationResponse, AddVectorLayerResponse, SimpleQuerryDefinition
 from django.core.files import File
 from django.core.files.base import ContentFile
 
@@ -26,8 +26,9 @@ class TableAndSchema(NamedTuple):
 
 class manageOsmDataSource():
     """ create or delete before creating a table with an osm querry """
-    def __init__(self, provider_vector:Vector):
+    def __init__(self, provider_vector:Vector, osm_querry:SimpleQuerryDefinition):
         self.provider_vector:Vector = provider_vector
+        self.osm_querry:SimpleQuerryDefinition = osm_querry
 
     def deleteDataSource(self)->OperationResponse:
         """ Delete and osm datasource by droping his table """
@@ -40,6 +41,7 @@ class manageOsmDataSource():
         self._getTableAndSchema()
 
         try:
+            connection = connections[self.osm_querry.connection]
             with connection.cursor() as cursor:
                 cursor.execute("DROP TABLE IF EXISTS "+self.tableAndShema.shema+"."+self.tableAndShema.table)
                 response.error = False
@@ -52,7 +54,7 @@ class manageOsmDataSource():
             return response
 
 
-    def updateDataSource(self, osm_querry:Querry)->OperationResponse:
+    def updateDataSource(self)->OperationResponse:
         """ update an osm datsource """
 
         response=OperationResponse(
@@ -60,7 +62,7 @@ class manageOsmDataSource():
             msg="",
             description="",
         )
-        self.osm_querry:Querry = osm_querry
+
         self._getTableAndSchema()
 
         createOrReplaceTableResponse = self._createOrReplaceTable()
@@ -73,7 +75,8 @@ class manageOsmDataSource():
 
         return createOrReplaceTableResponse
 
-    def createDataSource(self, osm_querry:Querry)->AddVectorLayerResponse:
+    # def createOsmDataSource()
+    def createDataSource(self)->AddVectorLayerResponse:
         """ create an osm datsource, after add it to an QGIS project """
 
         response=AddVectorLayerResponse(
@@ -84,20 +87,18 @@ class manageOsmDataSource():
             layerName="",
         )
 
-        self.osm_querry:Querry = osm_querry
         self._getTableAndSchema()
         
         createOrReplaceTableResponse = self._createOrReplaceTable()
-
         if createOrReplaceTableResponse.error == False:
             qgis_project = 'projet'+'_'+str(int(Vector.objects.count()/5))+'.qgs'
             
             createOSMDataSourceResponse =  addVectorLayerFomPostgis(
-                DATABASES['default']['HOST'],
-                DATABASES['default']['PORT'],
-                DATABASES['default']['NAME'],
-                DATABASES['default']['USER'],
-                DATABASES['default']['PASSWORD'],
+                DATABASES[self.osm_querry.connection]['HOST'],
+                DATABASES[self.osm_querry.connection]['PORT'],
+                DATABASES[self.osm_querry.connection]['NAME'],
+                DATABASES[self.osm_querry.connection]['USER'],
+                DATABASES[self.osm_querry.connection]['PASSWORD'],
                 self.provider_vector.shema,
                 self.provider_vector.table,
                 'geom',
@@ -105,7 +106,6 @@ class manageOsmDataSource():
                 self.provider_vector.table,
                 qgis_project
             )
-
             if createOSMDataSourceResponse.error == False:
                 if createOrReplaceTableResponse.data['extent']:
                     self.provider_vector.extent = createOrReplaceTableResponse.data['extent']
@@ -166,7 +166,7 @@ class manageOsmDataSource():
 
     def _createOrReplaceTable(self) -> OperationResponse:
         """
-            Create a table in a shema of replace it with new osm querry:
+            Create a table in a shema or replace it with new osm querry:
             -  If the schema does not exist, create it
             - drop the table if exist
             - create table as the osm querry sql
@@ -182,7 +182,7 @@ class manageOsmDataSource():
                 'count':0
             }
         )
-
+        connection = connections[self.osm_querry.connection]
         with connection.cursor() as cursor:
             cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '"+self.tableAndShema.shema+"'")
            

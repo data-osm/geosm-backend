@@ -29,6 +29,14 @@ DATABASES = {
         'PASSWORD': 'postgres',
         'HOST': 'db',
         'PORT': '5432',
+    },
+    'datasud': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'pas_sig',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'host.docker.internal',
+        'PORT': '5432',
     }
 }
 

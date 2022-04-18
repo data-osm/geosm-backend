@@ -35,12 +35,16 @@ class protocolCartoChoice(models.TextChoices):
     wms = 'wms'
     wfs = 'wfs'
 
+class VectorSourceChoice(models.TextChoices):
+    osm = 'osm'
+    querry = 'querry'
 
 @track('name', 'url_server', 'id_server', 'path_qgis', 'table', 'count')
 class Vector(models.Model):
     """ model of a vector provider : data is store in a shema and table """
     provider_vector_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50, null=True, default=None, unique=True)
+    source = models.TextField(max_length=15, null=True, blank=True, choices=VectorSourceChoice.choices)
     table = models.TextField(max_length=15, null=True, default=None)
     """ the table where data are store """
     shema = models.TextField(max_length=15, null=True, default=None)
