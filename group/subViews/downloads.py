@@ -1,4 +1,5 @@
 from io import BytesIO
+import re
 from typing import List
 from django.db.backends.utils import CursorWrapper
 from django.http.request import QueryDict
@@ -290,6 +291,7 @@ class DownloadFeaturesInGeometry(APIView):
         directory_for_files = tempDir.name
         Path(directory_for_files).mkdir(parents=True, exist_ok=True)
 
+        nameShapefile = re.sub(r'[^A-Za-z0-9 ]+', '', nameShapefile)
         outShapefile = join(directory_for_files, nameShapefile + extention)
         outDriver = ogr.GetDriverByName(driver)
         outDataSource = outDriver.CreateDataSource(outShapefile)
