@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.db.models import Count
 from django.core.files import File
 from django.conf import settings
-
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
@@ -29,9 +29,10 @@ class ListVectorProviderView(ListCreateAPIView):
     queryset = Vector.objects.all()
     serializer_class = VectorProviderSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['name', 'updated_at']
-    ordering = ['name']
+    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
+    ordering_fields = '__all__'
+    # ordering = ['name']
+    # filterset_fields = ['geometry_type']
 
     @swagger_auto_schema(
         operation_summary='Returns all providers',

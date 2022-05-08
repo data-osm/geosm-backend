@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Union
 from django.contrib.gis.db import models
 from django.db import transaction
+from geosmBackend.exceptions import appException
 from geosmBackend.type import AddVectorLayerResponse
 from osm.utils import geometryHelper
 from group.models import Layer, Vector
@@ -48,11 +49,11 @@ class Querry(models.Model):
                     responseManageDataSource:AddVectorLayerResponse = manageOsmDataSource(self.provider_vector_id, self).createDataSource()
                 
                 if responseManageDataSource.error:
-                    raise Exception(str(responseManageDataSource.msg)+' : '+str(responseManageDataSource.description))
+                    raise appException(str(responseManageDataSource.msg)+' : '+str(responseManageDataSource.description))
                 self.provider_vector_id.source ='osm'
                 self.provider_vector_id.save()
         else:
-            raise Exception(validation['msg']+' : '+validation['description'])
+            raise appException(validation['msg']+' : '+validation['description'])
 
     def delete(self, *args, **kwargs):
         if self.provider_vector_id.path_qgis and self.provider_vector_id.id_server:
@@ -94,7 +95,7 @@ class SimpleQuerry(models.Model):
     sql = models.TextField(blank=False, null=False)
     """ the full querry """
     provider_vector_id = models.OneToOneField(Vector,on_delete=models.CASCADE,primary_key=True)
-    auto_update = models.BooleanField(default=False)
+    auto_update = models.BooleanField(default=True)
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
 
@@ -102,18 +103,16 @@ class SimpleQuerry(models.Model):
         validation = _isSimpleQuerryValidate(self)
         if validation == True:
             if self.created_at is not None:
-                print(1,"====================")
                 responseManageDataSource:AddVectorLayerResponse = manageOsmDataSource(self.provider_vector_id, self).updateDataSource()
             else:
-                print(2,"====================")
                 responseManageDataSource:AddVectorLayerResponse = manageOsmDataSource(self.provider_vector_id, self).createDataSource()
             if responseManageDataSource.error:
-                raise Exception(str(responseManageDataSource.msg)+' : '+str(responseManageDataSource.description))
+                raise appException(str(responseManageDataSource.msg)+' : '+str(responseManageDataSource.description))
             self.provider_vector_id.source='querry'
             self.provider_vector_id.save()
             super(SimpleQuerry,self).save(*args, **kwargs)
         else:
-            raise Exception(validation)
+            raise appException(validation)
 
     def delete(self, *args, **kwargs):
         if self.provider_vector_id.path_qgis and self.provider_vector_id.id_server:
