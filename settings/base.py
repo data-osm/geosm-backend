@@ -57,6 +57,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'EXCEPTION_HANDLER': 'geosmBackend.custom_exception_handler.custom_exception_handler'
 }
 
 MIDDLEWARE = [
