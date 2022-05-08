@@ -95,7 +95,7 @@ class SimpleQuerry(models.Model):
     sql = models.TextField(blank=False, null=False)
     """ the full querry """
     provider_vector_id = models.OneToOneField(Vector,on_delete=models.CASCADE,primary_key=True)
-    auto_update = models.BooleanField(default=False)
+    auto_update = models.BooleanField(default=True)
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
 
@@ -103,10 +103,8 @@ class SimpleQuerry(models.Model):
         validation = _isSimpleQuerryValidate(self)
         if validation == True:
             if self.created_at is not None:
-                print(1,"====================")
                 responseManageDataSource:AddVectorLayerResponse = manageOsmDataSource(self.provider_vector_id, self).updateDataSource()
             else:
-                print(2,"====================")
                 responseManageDataSource:AddVectorLayerResponse = manageOsmDataSource(self.provider_vector_id, self).createDataSource()
             if responseManageDataSource.error:
                 raise appException(str(responseManageDataSource.msg)+' : '+str(responseManageDataSource.description))
