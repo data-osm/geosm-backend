@@ -90,14 +90,24 @@ class CountFeaturesInGeometry(APIView):
         if provider_vector_id is not None:
             boundaryVector: Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id)
 
-            def countFeatyure_(cursor: CursorWrapper, vector: Vector):
-                cursor.execute(
-                    "SELECT count(A.osm_id) as count FROM " + vector.shema + "." + vector.table + " AS A INNER JOIN  " + boundaryVector.shema + "." + boundaryVector.table + " AS B  ON ST_Intersects(st_transform(A.geom,3857),st_transform(B.geom,3857)) WHERE B.osm_id=" + str(
-                        table_id))
-                return cursor.fetchone()[0]
+            def countFeatyure_( vector: Vector):
+                try:
+                    source =get_object_or_404(Querry.objects.all(), provider_vector_id=vector.provider_vector_id)
+                except:
+                    pass
+                try:
+                    source =get_object_or_404(SimpleQuerry.objects.all(), provider_vector_id=vector.provider_vector_id)
+                except:
+                    pass
 
-            with connection.cursor() as cursor:
-                return Response([{'count': countFeatyure_(cursor, lp.vp_id),
+                connection = connections[source.connection]
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT count(A.osm_id) as count FROM " + vector.shema + "." + vector.table + " AS A INNER JOIN  " + boundaryVector.shema + "." + boundaryVector.table + " AS B  ON ST_Intersects(st_transform(A.geom,3857),st_transform(B.geom,3857)) WHERE B.osm_id=" + str(
+                            table_id))
+                    return cursor.fetchone()[0]
+
+            return Response([{'count': countFeatyure_(lp.vp_id),
                                   'vector': VectorProviderSerializer(lp.vp_id).data, 'layer_id': lp.layer_id.layer_id,
                                   'layer_name': lp.layer_id.name} for lp in layer_provider_styles],
                                 status=status.HTTP_200_OK)
