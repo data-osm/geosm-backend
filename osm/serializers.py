@@ -1,4 +1,4 @@
-from .models import Querry, SimpleQuerry
+from .models import Querry, SimpleQuerry, sigFile
 from rest_framework import serializers
 
 
@@ -21,4 +21,11 @@ class SimpleQuerrySerializer(serializers.ModelSerializer):
         model = SimpleQuerry
         fields = "__all__"
 
+class SigFileSerializer(serializers.ModelSerializer):
+    """
+        sig file serializer
+    """
+    class Meta:
+        model = sigFile
+        fields = "__all__"
 

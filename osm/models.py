@@ -8,6 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 import traceback
 from tracking_fields.decorators import track
 from .subModels.Querry import Querry, SimpleQuerry
+from .subModels.sigFile import *
 
 
 class Struct:
