@@ -85,6 +85,8 @@ class Vector(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     download_number = models.IntegerField(default=0)
+    primary_key_field = models.CharField(max_length=50, null=False, default='osm_id')
+    """ primary key field of the table """
 
     class Meta:
         unique_together = ('id_server', 'path_qgis',)

@@ -79,6 +79,7 @@ class ManageProviderFromSource():
                     self.provider_vector.extent = tableCreatedResponse.data.extent
                 self.provider_vector.count = tableCreatedResponse.data.count
                 
+                self.provider_vector.primary_key_field = tableCreatedResponse.primaryKey
                 self.provider_vector.path_qgis = qgis_project
                 self.provider_vector.url_server = OSMDATA['url_qgis_server_prefix']+qgis_project
                 self.provider_vector.id_server = createOSMDataSourceResponse.layerName

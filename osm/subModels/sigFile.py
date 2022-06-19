@@ -42,11 +42,10 @@ class sigFile(models.Model):
         connexion = connections[self.connection]
         engine = create_engine('postgresql://'+DATABASES[self.connection]['USER']+':'+DATABASES[self.connection]['PASSWORD']+'@'+DATABASES[self.connection]['HOST']+':'+DATABASES[self.connection]['PORT']+'/'+DATABASES[self.connection]['NAME'])
         gpdSource = gpd.read_file(self.file)
-        gpdSource.rename_geometry('geom')
 
         tableAndShema = getTableAndSchema(self.provider_vector_id, 'sigfile')
         createSchemaIfNotExist(tableAndShema.shema, connexion)
-        if self.pk:
+        if self.created_at is not None:
             dropTableIfExist(tableAndShema.shema, tableAndShema.table, connexion)
 
         gpdSource.to_postgis(name=tableAndShema.table, con=engine, index=True ,schema=tableAndShema.shema, index_label="id")
@@ -57,12 +56,13 @@ class sigFile(models.Model):
             msg="",
             description="",
             data=TableMetadata(extent=None, count=0 ),
-            geometryField='geometry',
+            geometryField='geom',
             primaryKey='id'
         )
 
         with connexion.cursor() as cursor:
-                cursor.execute("select min(ST_XMin(st_transform(geometry,4326))) as l,min(ST_YMin(st_transform(geometry,4326))) as b,max(ST_XMax(st_transform(geometry,4326))) as r,max(ST_YMax(st_transform(geometry,4326))) as t, count(*) as count from "+tableAndShema.shema+"."+tableAndShema.table)
+                cursor.execute("alter TABLE "+tableAndShema.shema+"."+tableAndShema.table+" rename column geometry to geom;")
+                cursor.execute("select min(ST_XMin(st_transform(geom,4326))) as l,min(ST_YMin(st_transform(geom,4326))) as b,max(ST_XMax(st_transform(geom,4326))) as r,max(ST_YMax(st_transform(geom,4326))) as t, count(*) as count from "+tableAndShema.shema+"."+tableAndShema.table)
                 responseExtent = cursor.fetchall()[0]
                 response.data.extent=[
                     responseExtent[0],
@@ -85,13 +85,9 @@ class sigFile(models.Model):
 
         manageProviderFromSource = ManageProviderFromSource(self.provider_vector_id)
 
-        # print(manageProviderFromSource.createProviderInQGIS(response, self.connection),self.pk,"manageProviderFromSource.createProviderInQGIS(response, self.connection)manageProviderFromSource.createProviderInQGIS(response, self.connection)")
-        manageProviderFromSource.createProviderInQGIS(response, self.connection)
-
-        # if self.pk:
-        #     manageProviderFromSource.updateProvider(response)
-        # else:
-        #     print(manageProviderFromSource.createProviderInQGIS(response, self.connection),"manageProviderFromSource.createProviderInQGIS(response, self.connection)manageProviderFromSource.createProviderInQGIS(response, self.connection)")
-        #     manageProviderFromSource.createProviderInQGIS(response, self.connection)
+        if self.created_at is not None:
+            manageProviderFromSource.updateProvider(response)
+        else:
+            manageProviderFromSource.createProviderInQGIS(response, self.connection)
 
         super(sigFile, self).save(*args, **kwargs)
