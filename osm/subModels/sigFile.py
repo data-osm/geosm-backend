@@ -42,10 +42,27 @@ class sigFile(models.Model):
         connexion = connections[self.connection]
         engine = create_engine('postgresql://'+DATABASES[self.connection]['USER']+':'+DATABASES[self.connection]['PASSWORD']+'@'+DATABASES[self.connection]['HOST']+':'+DATABASES[self.connection]['PORT']+'/'+DATABASES[self.connection]['NAME'])
         gpdSource = gpd.read_file(self.file)
+        geometryTypesSource = gpdSource.geom_type.unique()
+        if len(gpdSource.geom_type.unique()) > 1:
+            raise appException("Veillez déposer un fichier de même type géométrique; Votre fichier en a plusieurs "+";".join(geometryTypesSource))
+
+        if isinstance(gpdSource["geometry"][0], Polygon) or isinstance(gpdSource["geometry"][0], MultiPolygon):
+            self.provider_vector_id.geometry_type = 'Polygon'
+        elif isinstance(gpdSource["geometry"][0], Point) or isinstance(gpdSource["geometry"][0], MultiPoint):
+            self.provider_vector_id.geometry_type = 'Point'
+        elif isinstance(gpdSource["geometry"][0], LineString) or isinstance(gpdSource["geometry"][0], MultiLineString):
+            self.provider_vector_id.geometry_type = 'LineString'
 
         tableAndShema = getTableAndSchema(self.provider_vector_id, 'sigfile')
+
         createSchemaIfNotExist(tableAndShema.shema, connexion)
+
         if self.created_at is not None:
+            df = gpd.GeoDataFrame.from_postgis("SELECT  * FROM "+tableAndShema.shema+"."+tableAndShema.table, engine, geom_col="geom") 
+            geometryTypeTable = df.geom_type.unique() 
+            if  geometryTypesSource[0] != geometryTypeTable[0] :
+                raise appException("Veillez déposer un fichier de même type géométrique; Votre fichier est de type "+str(geometryTypesSource[0])+" alors que la source est de type "+str(geometryTypeTable[0]))
+
             dropTableIfExist(tableAndShema.shema, tableAndShema.table, connexion)
 
         gpdSource.to_postgis(name=tableAndShema.table, con=engine, index=True ,schema=tableAndShema.shema, index_label="id")
@@ -72,15 +89,11 @@ class sigFile(models.Model):
                 ]
                 response.data.count= int(responseExtent[4])
 
-        if isinstance(gpdSource["geometry"][0], Polygon) or isinstance(gpdSource["geometry"][0], MultiPolygon):
-            self.provider_vector_id.geometry_type = 'Polygon'
-        elif isinstance(gpdSource["geometry"][0], Point) or isinstance(gpdSource["geometry"][0], MultiPoint):
-            self.provider_vector_id.geometry_type = 'Point'
-        elif isinstance(gpdSource["geometry"][0], LineString) or isinstance(gpdSource["geometry"][0], MultiLineString):
-            self.provider_vector_id.geometry_type = 'LineString'
+        
 
         self.provider_vector_id.table = tableAndShema.table
         self.provider_vector_id.shema = tableAndShema.shema
+        self.provider_vector_id.source='sigfile'
         self.provider_vector_id.save()
 
         manageProviderFromSource = ManageProviderFromSource(self.provider_vector_id)

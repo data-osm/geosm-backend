@@ -43,6 +43,17 @@ class ManageProviderFromSource():
 
         return tableCreatedResponse
 
+    def removeLayerFromQgis(self):
+        """ Remove provider from QGIS project """
+        qgis_project = self.provider_vector.path_qgis
+       
+        response = removeLayer(qgis_project,self.provider_vector.id_server)
+    
+        if response.error :
+            raise Exception(response)
+        
+        return response
+
     def createProviderInQGIS(self, tableCreatedResponse:TableCreatedResponse, connectionName:str)->AddVectorLayerResponse:
         """ add it to an QGIS project """
 

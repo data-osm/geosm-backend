@@ -8,6 +8,8 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.contrib.postgres.fields import ArrayField
 
+from geosmBackend.exceptions import appException
+
 from .qgis.manageStyle import addStyleQMLFromStringToLayer, removeStyle, updateStyle, getImageFromSymbologieOfLayer
 from tracking_fields.decorators import track
 from group.subModels.icon import Icon
@@ -28,6 +30,7 @@ class geometryType(models.TextChoices):
     Polygon = 'Polygon'
     Point = 'Point'
     LineString = 'LineString'
+    null = "null"
 
 
 class protocolCartoChoice(models.TextChoices):
@@ -38,6 +41,7 @@ class protocolCartoChoice(models.TextChoices):
 class VectorSourceChoice(models.TextChoices):
     osm = 'osm'
     querry = 'querry'
+    sigfile = 'sigfile'
 
 @track('name', 'url_server', 'id_server', 'path_qgis', 'table', 'count')
 class Vector(models.Model):
@@ -176,7 +180,7 @@ class Style(models.Model):
                                                   previousStyle.name, self.name, qml_content)
 
                 if responseUpdateStyle.error:
-                    raise Exception(responseUpdateStyle.msg + " : " + str(responseUpdateStyle.description))
+                    raise appException(responseUpdateStyle.msg + " : " + str(responseUpdateStyle.description))
 
                 Path(os.path.join(settings.MEDIA_ROOT, 'pictoQgis')).mkdir(parents=True, exist_ok=True)
                 if os.path.exists(self.pictogram.name):
@@ -203,7 +207,7 @@ class Style(models.Model):
                                                             self.provider_vector_id.path_qgis, self.name, qml_content,
                                                             tmp_file)
             if responseAddStyle.error:
-                raise Exception(responseAddStyle.msg + " : " + str(responseAddStyle.description))
+                raise appException(responseAddStyle.msg + " : " + str(responseAddStyle.description))
             Path(os.path.join(settings.MEDIA_ROOT, 'pictoQgis')).mkdir(parents=True, exist_ok=True)
             pictoPath = os.path.join('pictoQgis', str(uuid.uuid4()) + '.png')
             path = os.path.join(settings.MEDIA_ROOT, pictoPath)
@@ -219,5 +223,5 @@ class Style(models.Model):
         responseRemoveStyle = removeStyle(self.provider_vector_id.id_server, self.provider_vector_id.path_qgis,
                                           self.name)
         if responseRemoveStyle.error:
-            raise Exception(responseRemoveStyle.msg + " : " + str(responseRemoveStyle.description))
+            raise appException(responseRemoveStyle.msg + " : " + str(responseRemoveStyle.description))
         super(Style, self).delete(*args, **kwargs)
