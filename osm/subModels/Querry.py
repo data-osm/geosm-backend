@@ -39,26 +39,32 @@ class Querry(models.Model):
 
     def save(self, *args, **kwargs):
         validation = _isOsmQuerryValidate(self)
+        newOne = self.created_at is None
         if validation['error'] == False:
             self.sql = validation['sql']
-            with transaction.atomic():
-                super(Querry,self).save(*args, **kwargs)
-                if self.sql is not None:
-                    responseManageDataSource:AddVectorLayerResponse = manageOsmDataSource(self.provider_vector_id, self).updateDataSource()
-                else:
-                    responseManageDataSource:AddVectorLayerResponse = manageOsmDataSource(self.provider_vector_id, self).createDataSource()
-                
-                if responseManageDataSource.error:
-                    raise appException(str(responseManageDataSource.msg)+' : '+str(responseManageDataSource.description))
-                self.provider_vector_id.source ='osm'
-                self.provider_vector_id.save()
+            super(Querry,self).save(*args, **kwargs)
+            
+            if newOne:
+                responseManageDataSource:AddVectorLayerResponse = manageOsmDataSource(self.provider_vector_id, self).createDataSource()
+            else:
+                responseManageDataSource:AddVectorLayerResponse = manageOsmDataSource(self.provider_vector_id, self).updateDataSource()
+            if responseManageDataSource.error:
+                self.delete()
+                raise appException(str(responseManageDataSource.msg)+' : '+str(responseManageDataSource.description))
+            self.provider_vector_id.source ='osm'
+            self.provider_vector_id.save()
         else:
+            self.delete()
             raise appException(validation['msg']+' : '+validation['description'])
 
     def delete(self, *args, **kwargs):
-        if self.provider_vector_id.path_qgis and self.provider_vector_id.id_server:
-            if removeLayer(self.provider_vector_id.path_qgis,self.provider_vector_id.id_server).error == False:
-                manageOsmDataSource(self.provider_vector_id, self).deleteDataSource()
+        try:
+            if self.provider_vector_id.path_qgis and self.provider_vector_id.id_server:
+                if removeLayer(self.provider_vector_id.path_qgis,self.provider_vector_id.id_server).error == False:
+                    manageOsmDataSource(self.provider_vector_id, self).deleteDataSource()
+        except:
+            pass
+        
         super(Querry, self).delete(*args, **kwargs)
 
 def _isOsmQuerryValidate(osmQuerry:Querry) ->dict:
