@@ -33,7 +33,7 @@ services:
       retries: 5
     
   qgis-server:
-    image: 3liz/qgis-map-server:3.16
+    image: 3liz/qgis-map-server:3.22
     volumes: 
         - ./provider/qgis/project:/projects
         - ./provider/qgis/plugin:/home/qgis/plugin
@@ -47,6 +47,7 @@ services:
         - QGSRV_CACHE_STRICT_CHECK=no
         - QGSRV_CACHE_SIZE=10
         - QGSRV_SERVER_CROSS_ORIGIN=yes
+        - QGSRV_DISABLE_GETPRINT=yes
     depends_on:
       - db
       
