@@ -6,6 +6,7 @@ from django.http.request import QueryDict
 from django.shortcuts import render
 from rest_framework.exceptions import NotAuthenticated
 from django.db import connections, transaction
+from osm.subModels.sigFile import sigFile
 
 from provider.qgis.manageVectorLayer import saveQMLtoGeoPackage
 
@@ -99,11 +100,15 @@ class CountFeaturesInGeometry(APIView):
                     source =get_object_or_404(SimpleQuerry.objects.all(), provider_vector_id=vector.provider_vector_id)
                 except:
                     pass
+                try:
+                    source =get_object_or_404(sigFile.objects.all(), provider_vector_id=vector.provider_vector_id)
+                except:
+                    pass
 
                 connection = connections[source.connection]
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT count(A.osm_id) as count FROM " + vector.shema + "." + vector.table + " AS A INNER JOIN  " + boundaryVector.shema + "." + boundaryVector.table + " AS B  ON ST_Intersects(st_transform(A.geom,3857),st_transform(B.geom,3857)) WHERE B.osm_id=" + str(
+                        "SELECT count(A."+vector.primary_key_field+") as count FROM " + vector.shema + "." + vector.table + " AS A INNER JOIN  " + boundaryVector.shema + "." + boundaryVector.table + " AS B  ON ST_Intersects(st_transform(A.geom,3857),st_transform(B.geom,3857)) WHERE B."+boundaryVector.primary_key_field+"=" + str(
                             table_id))
                     return cursor.fetchone()[0]
 
@@ -170,17 +175,29 @@ class DownloadFeatureById(APIView):
         except:
             pass
 
+        try:
+            source =get_object_or_404(sigFile.objects.all(), provider_vector_id=provider_vector_id)
+        except:
+            pass
+
+
         datasource: DataSource = ogr.Open(
             "PG:host=" + settings.DATABASES[source.connection]['HOST'] + " port=" + settings.DATABASES[source.connection][
                 'PORT'] + " dbname=" + settings.DATABASES[source.connection]['NAME'] + " user=" + settings.DATABASES[source.connection][
                 'USER'] + " password=" + settings.DATABASES[source.connection]['PASSWORD'], 0)
 
         layer: OgrLayer = datasource.ExecuteSQL(
-                "SELECT * FROM " + provider.shema + "." + provider.table + " where osm_id="+str(feature_id))
+                "SELECT * FROM " + provider.shema + "." + provider.table + " where "+provider.primary_key_field+"="+str(feature_id))
         connection = connections[source.connection]
         with connection.cursor() as cursor:
-            cursor.execute("SELECT name FROM " + provider.shema + "." + provider.table+ " where osm_id="+str(feature_id) )
-            nameShapefile = provider.name + ' - ' +str(cursor.fetchone()[0])
+            name_feature = ''
+            try:
+                cursor.execute("SELECT name FROM " + provider.shema + "." + provider.table+ " where "+provider.primary_key_field+"="+str(feature_id) )
+                name_feature = cursor.fetchone()[0]
+            except:
+                pass
+            
+            nameShapefile = provider.name + ' - ' +str(name_feature)
 
         tempDir = tempfile.TemporaryDirectory(dir=settings.TEMP_URL)
         directory_for_files = tempDir.name
@@ -281,6 +298,11 @@ class DownloadFeaturesInGeometry(APIView):
         except:
             pass
 
+        try:
+            source =get_object_or_404(sigFile.objects.all(), provider_vector_id=provider_vector_id_target)
+        except:
+            pass
+
         datasource: DataSource = ogr.Open(
             "PG:host=" + settings.DATABASES[source.connection]['HOST'] + " port=" + settings.DATABASES[source.connection][
                 'PORT'] + " dbname=" + settings.DATABASES[source.connection]['NAME'] + " user=" + settings.DATABASES[source.connection][
@@ -289,7 +311,7 @@ class DownloadFeaturesInGeometry(APIView):
         if provider_vector_id is not None:
             boundaryVector: Vector = get_object_or_404(Vector.objects.all(), pk=provider_vector_id)
             layer: OgrLayer = datasource.ExecuteSQL(
-                "SELECT A.* FROM " + targetVector.shema + "." + targetVector.table + " AS A INNER JOIN  " + boundaryVector.shema + "." + boundaryVector.table + " AS B  ON ST_Intersects(st_transform(A.geom,3857),st_transform(B.geom,3857)) WHERE B.osm_id=" + str(
+                "SELECT A.* FROM " + targetVector.shema + "." + targetVector.table + " AS A INNER JOIN  " + boundaryVector.shema + "." + boundaryVector.table + " AS B  ON ST_Intersects(st_transform(A.geom,3857),st_transform(B.geom,3857)) WHERE B."+boundaryVector.primary_key_field+"=" + str(
                     table_id))
             nameShapefile = targetVector.name + ' - ' + boundaryVector.name
         else:

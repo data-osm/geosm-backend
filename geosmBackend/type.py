@@ -8,7 +8,7 @@ class OperationResponse:
     msg:str
     """ message if there is error """
     description:str
-    data:Any=None
+    data:Any
 
 @dataclass
 class httpResponse:
@@ -56,3 +56,13 @@ class QuerryDefinition(SimpleQuerryDefinition):
     select:str
     where:str
 
+@dataclass
+class TableMetadata():
+    extent:Any
+    count:int
+    
+@dataclass
+class TableCreatedResponse(OperationResponse):
+    geometryField:str
+    primaryKey:str
+    data:TableMetadata

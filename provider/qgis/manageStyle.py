@@ -97,7 +97,7 @@ def removeStyle(layerName:str, pathToQgisProject:str, styleName:str )->Operation
         OperationResponse
     """
 
-    response = OperationResponse(error=False,msg='',description='')
+    response = OperationResponse(error=False,msg='',description='',data=None)
 
     QGISProject = _getProjectInstance(pathToQgisProject)
 
@@ -138,7 +138,7 @@ def updateStyle(layerName:str, pathToQgisProject:str, styleName:str, newStyleNam
         OperationResponse
     """
 
-    response = OperationResponse(error=False,msg='',description='')
+    response = OperationResponse(error=False,msg='',description='',data=None)
 
     QGISProject = _getProjectInstance(pathToQgisProject)
 
@@ -204,7 +204,7 @@ def _addStyleToLayer(layerName:str, pathToQgisProject:str, styleName:str, QML:st
         OperationResponse
     """    
 
-    response = OperationResponse(error=False,msg='',description='')
+    response = OperationResponse(error=False,msg='',description='',data=None)
 
     QGISProject = _getProjectInstance(pathToQgisProject)
 
@@ -282,7 +282,7 @@ def addStyleQMLFromFileToLayer(layerName:str, pathToQgisProject:str, styleName:s
         OperationResponse
     """  
 
-    response = OperationResponse(error=False,msg='',description='')
+    response = OperationResponse(error=False,msg='',description='',data=None)
 
     if os.path.exists(QMLPath) and os.path.isfile(QMLPath) :
         qFile= QFile(QMLPath)
@@ -315,7 +315,7 @@ def getImageFromSymbologieOfLayer(layerName:str, pathToQgisProject:str, styleNam
         Get the symbology(legend) of a layer at a specify style
         return the path to the png picture
     '''
-    response = OperationResponse(error=False,msg='',description='')
+    response = OperationResponse(error=False,msg='',description='',data=None)
 
     try:
         QGISProject = _getProjectInstance(pathToQgisProject)

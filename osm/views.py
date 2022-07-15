@@ -7,6 +7,7 @@ from django.conf import settings
 import traceback
 from .validateOsmQuerry import validateOsmQuerry
 from .subModels.Querry import Querry, SimpleQuerry
+from .subModels.sigFile import sigFile
 from provider.models import Vector
 from rest_framework import viewsets
 from rest_framework import permissions
@@ -17,7 +18,7 @@ from rest_framework.views import APIView
 from geosmBackend.type import httpResponse
 from cuser.middleware import CuserMiddleware
 from drf_yasg.utils import swagger_auto_schema
-from .serializers import osmQuerrySerializer, SimpleQuerrySerializer
+from .serializers import osmQuerrySerializer, SimpleQuerrySerializer, SigFileSerializer
 from collections import defaultdict
 from drf_yasg import openapi
 
@@ -131,6 +132,57 @@ class osmQuerryView(APIView):
 
         else:
             return Response(op_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CreateSigFileView(CreateAPIView):
+    queryset = sigFile.objects.all()
+    serializer_class = SigFileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    # authentication_classes = []
+
+    @swagger_auto_schema(
+        operation_summary='Store a new SIG file',
+        responses={200: SigFileSerializer()},
+        tags=['SIG Dataset'],
+    )
+    def post(self, request, *args, **kwargs):
+        """ Create an SIG dataset  """
+        return super(CreateSigFileView, self).post(request, *args, **kwargs)
+
+class SigFileVieuwDetail(RetrieveUpdateDestroyAPIView):
+    queryset=sigFile.objects.all()
+    serializer_class=SigFileSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary='Delete a SIG file',
+        responses={
+            status.HTTP_204_NO_CONTENT: openapi.Response(
+                description="this should not crash (response object with no schema)"
+            )
+        },
+        tags=['SIG Dataset'],
+    )
+    def delete(self, request, *args, **kwargs):
+        """ Delete a SIG dataset  """
+        return super(SigFileVieuwDetail, self).delete(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary='Retrieve a SIG dataset',
+        responses={200: SigFileSerializer()},
+        tags=['SIG Dataset'],
+    )
+    def get(self, request, *args, **kwargs):
+        """Retrieve a SIG dataset"""
+        return super(SigFileVieuwDetail, self).get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary='Update a SIG dataset',
+        responses={200: SigFileSerializer()},
+        tags=['SIG Dataset'],
+    )
+    def put(self, request, *args, **kwargs):
+        """Update a SIG dataset"""
+        return super(SigFileVieuwDetail, self).put(request, *args, **kwargs)
 
 class ListConnection(APIView):
     permission_classes = [permissions.IsAuthenticated]
