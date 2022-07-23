@@ -14,7 +14,7 @@ services:
       - travellist
     
   qgis-server:
-    image: 3liz/qgis-map-server:3.16
+    image: 3liz/qgis-map-server:3.22
     container_name: qgis_data_osm
     volumes: 
         - ./provider/qgis/project:/projects
@@ -29,6 +29,8 @@ services:
         - QGSRV_SERVER_PLUGINPATH=/home/qgis/plugin
         - QGSRV_CACHE_STRICT_CHECK=no
         - QGSRV_CACHE_SIZE=3000
+        - QGSRV_SERVER_CROSS_ORIGIN=yes
+        - QGSRV_DISABLE_GETPRINT=yes
     networks:
         - travellist
 

@@ -170,6 +170,7 @@ def removeLayer(pathToQgisProject:str, layerName:str)->OperationResponse:
         error=False,
         msg="",
         description="",
+        data=None
     )
 
     QGISProject = _getProjectInstance(pathToQgisProject)

@@ -1,16 +1,18 @@
+from dataclasses import dataclass
+
+from numpy import number
 from .models import Vector, Style
 # from osm.models import Querry
 from django.core.exceptions import ObjectDoesNotExist
-from typing import NamedTuple, Union
+from typing import Any, NamedTuple, Union
 from django.db.models import Count, Q
 import re
-from django.db import connections, Error
-from psycopg2.extensions import AsIs
+from django.db import connections, Error, ConnectionProxy
 from .qgis.manageVectorLayer import addVectorLayerFomPostgis, removeLayer
 from .qgis.manageStyle import getQMLStyleOfLayer
 from django.conf import settings
 from os.path import join
-from geosmBackend.type import OperationResponse, AddVectorLayerResponse, SimpleQuerryDefinition
+from geosmBackend.type import OperationResponse, AddVectorLayerResponse, SimpleQuerryDefinition, TableCreatedResponse, TableMetadata
 from django.core.files import File
 from django.core.files.base import ContentFile
 
@@ -24,60 +26,36 @@ class TableAndSchema(NamedTuple):
     shema:str
 
 
-class manageOsmDataSource():
-    """ create or delete before creating a table with an osm querry """
-    def __init__(self, provider_vector:Vector, osm_querry:SimpleQuerryDefinition):
+
+class ManageProviderFromSource():
+    def __init__(self, provider_vector:Vector):
         self.provider_vector:Vector = provider_vector
-        self.osm_querry:SimpleQuerryDefinition = osm_querry
+        self.tableAndShema = self._getTableAndSchema()
 
-    def deleteDataSource(self)->OperationResponse:
-        """ Delete and osm datasource by droping his table """
-        response=OperationResponse(
-            error=False,
-            msg="",
-            description="",
-        )
-
-        self._getTableAndSchema()
-
-        try:
-            connection = connections[self.osm_querry.connection]
-            with connection.cursor() as cursor:
-                cursor.execute("DROP TABLE IF EXISTS "+self.tableAndShema.shema+"."+self.tableAndShema.table)
-                response.error = False
-                return response
-        except Error as errorIdentifier :
-            traceback.print_exc()
-            response.error = True
-            response.msg = ' Can not drop the table '
-            response.description = str(errorIdentifier)
-            return response
-
-
-    def updateDataSource(self)->OperationResponse:
+    def updateProvider(self, tableCreatedResponse:TableCreatedResponse)->TableCreatedResponse:
         """ update an osm datsource """
 
-        response=OperationResponse(
-            error=False,
-            msg="",
-            description="",
-        )
-
-        self._getTableAndSchema()
-
-        createOrReplaceTableResponse = self._createOrReplaceTable()
-
-        if createOrReplaceTableResponse.error == False:
-            if createOrReplaceTableResponse.data['extent']:
-                self.provider_vector.extent = createOrReplaceTableResponse.data['extent']
-            self.provider_vector.count = createOrReplaceTableResponse.data['count']
+        if tableCreatedResponse.error == False:
+            if tableCreatedResponse.data.extent:
+                self.provider_vector.extent = tableCreatedResponse.data.extent
+            self.provider_vector.count = tableCreatedResponse.data.count
             self.provider_vector.save()
 
-        return createOrReplaceTableResponse
+        return tableCreatedResponse
 
-    # def createOsmDataSource()
-    def createDataSource(self)->AddVectorLayerResponse:
-        """ create an osm datsource, after add it to an QGIS project """
+    def removeLayerFromQgis(self):
+        """ Remove provider from QGIS project """
+        qgis_project = self.provider_vector.path_qgis
+       
+        response = removeLayer(qgis_project,self.provider_vector.id_server)
+    
+        if response.error :
+            raise Exception(response)
+        
+        return response
+
+    def createProviderInQGIS(self, tableCreatedResponse:TableCreatedResponse, connectionName:str)->AddVectorLayerResponse:
+        """ add it to an QGIS project """
 
         response=AddVectorLayerResponse(
             error=False,
@@ -86,31 +64,33 @@ class manageOsmDataSource():
             pathProject="",
             layerName="",
         )
-
-        self._getTableAndSchema()
         
-        createOrReplaceTableResponse = self._createOrReplaceTable()
-        if createOrReplaceTableResponse.error == False:
+        if tableCreatedResponse.error == False:
             qgis_project = 'projet'+'_'+str(int(Vector.objects.count()/5))+'.qgs'
             
             createOSMDataSourceResponse =  addVectorLayerFomPostgis(
-                DATABASES[self.osm_querry.connection]['HOST'],
-                DATABASES[self.osm_querry.connection]['PORT'],
-                DATABASES[self.osm_querry.connection]['NAME'],
-                DATABASES[self.osm_querry.connection]['USER'],
-                DATABASES[self.osm_querry.connection]['PASSWORD'],
+                DATABASES[connectionName]['HOST'],
+                DATABASES[connectionName]['PORT'],
+                DATABASES[connectionName]['NAME'],
+                DATABASES[connectionName]['USER'],
+                DATABASES[connectionName]['PASSWORD'],
                 self.provider_vector.shema,
                 self.provider_vector.table,
-                'geom',
-                'osm_id',
+                tableCreatedResponse.geometryField,
+                tableCreatedResponse.primaryKey,
                 self.provider_vector.table,
                 qgis_project
             )
-            if createOSMDataSourceResponse.error == False:
-                if createOrReplaceTableResponse.data['extent']:
-                    self.provider_vector.extent = createOrReplaceTableResponse.data['extent']
-                self.provider_vector.count = createOrReplaceTableResponse.data['count']
 
+            if createOSMDataSourceResponse.error :
+                raise Exception (createOSMDataSourceResponse)
+
+            if createOSMDataSourceResponse.error == False:
+                if tableCreatedResponse.data.extent:
+                    self.provider_vector.extent = tableCreatedResponse.data.extent
+                self.provider_vector.count = tableCreatedResponse.data.count
+                
+                self.provider_vector.primary_key_field = tableCreatedResponse.primaryKey
                 self.provider_vector.path_qgis = qgis_project
                 self.provider_vector.url_server = OSMDATA['url_qgis_server_prefix']+qgis_project
                 self.provider_vector.id_server = createOSMDataSourceResponse.layerName
@@ -126,7 +106,8 @@ class manageOsmDataSource():
                     )
                     default_style.save()
                 except Exception as e :
-                        print(str(e),'error')
+                    traceback.print_exc()
+                    print(str(e),'error')
                         
                 
 
@@ -134,37 +115,61 @@ class manageOsmDataSource():
 
         else:
             response.error = True
-            response.msg = createOrReplaceTableResponse.msg
-            response.description = createOrReplaceTableResponse.description
-            return response
+            response.msg = tableCreatedResponse.msg
+            response.description = tableCreatedResponse.description
+            raise Exception (response)
     
+  
+
     def _getTableAndSchema(self) ->TableAndSchema:
         """ 
             Get table or shema of the table of this vector provider in databse
             will check if table and shema already exist in the vector provider properties and return them
             If they not exist, will create them randomnly
         """
-        shema = None
-        table = None
-        if self.provider_vector.shema:
-            shema = self.provider_vector.shema
-        else:
-            shema = 'osm_tables'
+        return getTableAndSchema(self.provider_vector)
 
-        if self.provider_vector.table:
-            table = self.provider_vector.table
-        else:
-            table = re.sub('[^A-Za-z0-9]+', '', self.provider_vector.name).lower()
-            i= 0
+class manageQuerryProvider(ManageProviderFromSource):
+    """ create or delete before creating a table with an osm querry """
+    def __init__(self, provider_vector:Vector, osm_querry:SimpleQuerryDefinition):
+        super().__init__(provider_vector)
+        self.osm_querry:SimpleQuerryDefinition = osm_querry
 
-            while Vector.objects.annotate( num_table=Count('table',filter=Q(table=table) ) )[0].num_table != 0:
-                table = re.sub('[^A-Za-z0-9]+', '', self.provider_vector.name).lower()+'_'+str(i)
-                i += 1 
 
-        self.tableAndShema:TableAndSchema = TableAndSchema(table, shema)
-        return self.tableAndShema
+    def updateQuerryProvider(self)->OperationResponse:
+        """ update an osm datsource """
+        
+        return self.updateProvider(self._createOrReplaceTable())
 
-    def _createOrReplaceTable(self) -> OperationResponse:
+    def deleteQuerryDataSource(self)->OperationResponse:
+        """ Delete and osm datasource by droping his table """
+        response=OperationResponse(
+            error=False,
+            msg="",
+            description="",
+            data=None
+        )
+
+
+        try:
+            connection = connections[self.osm_querry.connection]
+            with connection.cursor() as cursor:
+                cursor.execute("DROP TABLE IF EXISTS "+self.tableAndShema.shema+"."+self.tableAndShema.table)
+                response.error = False
+                return response
+        except Error as errorIdentifier :
+            traceback.print_exc()
+            response.error = True
+            response.msg = ' Can not drop the table '
+            response.description = str(errorIdentifier)
+            return response
+
+    # def createOsmDataSource()
+    def creatQuerryeDataSource(self)->AddVectorLayerResponse:
+        """ create an osm datsource, after add it to an QGIS project """
+        return self.createProviderInQGIS(self._createOrReplaceTable(), self.osm_querry.connection)
+
+    def _createOrReplaceTable(self) -> TableCreatedResponse:
         """
             Create a table in a shema or replace it with new osm querry:
             -  If the schema does not exist, create it
@@ -173,25 +178,19 @@ class manageOsmDataSource():
             - update table, shema, extent, total area, total lenght and count of the vector provider
         """
 
-        response=OperationResponse(
+        response=TableCreatedResponse(
             error=False,
             msg="",
             description="",
-            data={
-                'extent':None,
-                'count':0
-            }
+            data=TableMetadata(extent=None, number=None),
+            geometryField='geom',
+            primaryKey='osm_id'
         )
         connection = connections[self.osm_querry.connection]
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '"+self.tableAndShema.shema+"'")
-           
-            if cursor.rowcount == 0:
-                cursor.execute("CREATE SCHEMA "+self.tableAndShema.shema)
 
-        with connection.cursor() as cursor:
-                cursor.execute("DROP TABLE IF EXISTS "+self.tableAndShema.shema+'.'+self.tableAndShema.table)
-
+        createSchemaIfNotExist(self.tableAndShema.shema, connection)
+        dropTableIfExist(self.tableAndShema.shema,self.tableAndShema.table, connection)
+     
         try:
             with connection.cursor() as cursor:
                 cursor.execute("CREATE TABLE  "+self.tableAndShema.shema+"."+self.tableAndShema.table+" AS "+self.osm_querry.sql)
@@ -202,14 +201,14 @@ class manageOsmDataSource():
             with connection.cursor() as cursor:
                 cursor.execute("select min(ST_XMin(geom)) as l,min(ST_YMin(geom)) as b,max(ST_XMax(geom)) as r,max(ST_YMax(geom)) as t, count(*) as count from "+self.tableAndShema.shema+"."+self.tableAndShema.table)
                 responseExtent = cursor.fetchall()[0]
-                response.data['extent']=[
+                response.data.extent=[
                     responseExtent[0],
                     responseExtent[1],
                     responseExtent[2],
                     responseExtent[3]
                 ]
                
-                response.data['count']= int(responseExtent[4])
+                response.data.count= int(responseExtent[4])
 
         except Error as errorIdentifier :
             response.error = True
@@ -222,3 +221,51 @@ class manageOsmDataSource():
         self.provider_vector.save()
 
         return  response
+
+
+def getTableAndSchema(provider_vector:Vector,shema='osm_tables') ->TableAndSchema:
+        """ 
+            Get table or shema of the table of this vector provider in databse
+            will check if table and shema already exist in the vector provider properties and return them
+            If they not exist, will create them randomnly
+        """
+        table = None
+        if provider_vector.shema:
+            shema = provider_vector.shema
+
+        if provider_vector.table:
+            table = provider_vector.table
+        else:
+            table = re.sub('[^A-Za-z0-9]+', '', provider_vector.name).lower()
+            i= 0
+
+            while Vector.objects.annotate( num_table=Count('table',filter=Q(table=table) ) )[0].num_table != 0:
+                table = re.sub('[^A-Za-z0-9]+', '', provider_vector.name).lower()+'_'+str(i)
+                i += 1 
+
+        tableAndShema:TableAndSchema = TableAndSchema(table, shema)
+        return tableAndShema
+
+def createSchemaIfNotExist(shema:str, connection:ConnectionProxy):
+    """
+    Create a schema in database if not exist
+
+    Args:
+        shema (str): name of the schema
+        connection (_type_): connextion to the database
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '"+shema+"'")
+        if cursor.rowcount == 0:
+            cursor.execute("CREATE SCHEMA "+shema)
+
+def dropTableIfExist(schema:str, table:str, connection:ConnectionProxy):
+    """Drop table if exists
+
+    Args:
+        schema (str): _description_
+        table (str): _description_
+        connection (ConnectionProxy): _description_
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("DROP TABLE IF EXISTS "+schema+'.'+table)
