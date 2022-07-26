@@ -213,7 +213,7 @@ class SubVieuwDetail(RetrieveUpdateDestroyAPIView):
     )
     def put(self, request, *args, **kwargs):
         """Update a SubGroup"""
-        return super(SubVieuwDetail, self).get(request, *args, **kwargs)
+        return super(SubVieuwDetail, self).put(request, *args, **kwargs)
 
 class SubWithGroupDetail(RetrieveAPIView):
     queryset=Sub.objects.all()

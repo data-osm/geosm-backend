@@ -61,7 +61,8 @@ class Querry(models.Model):
         try:
             if self.provider_vector_id.path_qgis and self.provider_vector_id.id_server:
                 if removeLayer(self.provider_vector_id.path_qgis,self.provider_vector_id.id_server).error == False:
-                    manageOsmDataSource(self.provider_vector_id, self).deleteDataSource()
+                    # manageQuerryProvider(self.provider_vector_id, self).deleteDataSource()
+                    pass
         except:
             pass
 

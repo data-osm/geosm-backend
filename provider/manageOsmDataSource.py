@@ -34,17 +34,17 @@ class ManageProviderFromSource():
 
     def updateProvider(self, tableCreatedResponse:TableCreatedResponse)->TableCreatedResponse:
         """ update an osm datsource """
-
+        print(1, 'iiiiiiiiiiiiiiiiiiiiiiiid==========')
         if tableCreatedResponse.error == False:
             if tableCreatedResponse.data.extent:
                 self.provider_vector.extent = tableCreatedResponse.data.extent
             self.provider_vector.count = tableCreatedResponse.data.count
             self.provider_vector.save()
-
+        print(2, 'iiiiiiiiiiiiiiiiiiiiiiiid==========')
         return tableCreatedResponse
 
     def removeLayerFromQgis(self):
-        """ Remove provider from QGIS project """
+        """ Remove provider from QGIS project """ 
         qgis_project = self.provider_vector.path_qgis
        
         response = removeLayer(qgis_project,self.provider_vector.id_server)
@@ -182,7 +182,7 @@ class manageQuerryProvider(ManageProviderFromSource):
             error=False,
             msg="",
             description="",
-            data=TableMetadata(extent=None, number=None),
+            data=TableMetadata(extent=None, count=None),
             geometryField='geom',
             primaryKey='osm_id'
         )
