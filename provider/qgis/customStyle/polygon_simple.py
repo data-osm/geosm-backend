@@ -10,7 +10,7 @@ from qgis.PyQt.QtCore import QFile, QIODevice
 from qgis.PyQt.QtGui import QColor
 import uuid
 
-from qgis.core import QgsSimpleFillSymbolLayer, QgsFillSymbol, QgsMapLayerStyle, QgsRenderContext, QgsVectorLayer, QgsSingleSymbolRenderer, QgsProject, QgsApplication
+from qgis.core import QgsSimpleFillSymbolLayer, QgsFillSymbol, QgsMapLayerStyle, QgsRenderContext, QgsVectorLayer, QgsSingleSymbolRenderer, QgsProject
 
 import tempfile
 from django.conf import settings
@@ -19,9 +19,7 @@ from django.core.files import File
 DATABASES = settings.DATABASES
 OSMDATA = settings.OSMDATA
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
-QgsApplication.setPrefixPath("/usr/", True)
-qgs = QgsApplication([], False)
+
 
 def getStyle(fillColor:str, strokeColor:str, strokeWidth:int)->File:
     """get a qml file of a line  simple style
@@ -30,7 +28,7 @@ def getStyle(fillColor:str, strokeColor:str, strokeWidth:int)->File:
      stroke color
  
     """
-    qgs.initQgis()
+    qgs = settings.QGS
     QMLPath=join(OSMDATA["qml_default_path"],'polygon_simple.qml')
 
 

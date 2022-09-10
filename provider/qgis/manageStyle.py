@@ -2,7 +2,7 @@ import os
 from os.path import join
 
 from django.core.files.base import File
-from qgis.core import QgsVectorLayer,QgsRenderContext, QgsCategorizedSymbolRenderer, QgsProject, QgsApplication, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings, QgsMapLayerStyle
+from qgis.core import QgsVectorLayer,QgsRenderContext, QgsCategorizedSymbolRenderer, QgsProject, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings, QgsMapLayerStyle
 import traceback
 from dataclasses import dataclass
 import tempfile
@@ -15,9 +15,7 @@ from qgis.utils import iface
 
 log = logging.getLogger(__name__)
 OSMDATA = settings.OSMDATA
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
-QgsApplication.setPrefixPath("/usr/", True)
-qgs = QgsApplication([], False)
+
 
 project_qgis_path = OSMDATA['project_qgis_path']
 
@@ -33,7 +31,7 @@ def _getProjectInstance(pathToQgisProject:str)->QgsProject:
     """
 
     try:
-        qgs.initQgis()
+        qgs = settings.QGS 
         project = QgsProject()
         project.read(join(project_qgis_path, pathToQgisProject))
         return project

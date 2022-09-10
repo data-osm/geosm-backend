@@ -1,14 +1,12 @@
 import os
 from os.path import join
-from qgis.core import QgsVectorLayer, QgsProject, QgsApplication, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings
+from qgis.core import QgsVectorLayer, QgsProject, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings
 import traceback
 from geosmBackend.type import OperationResponse, AddVectorLayerResponse
 from django.conf import settings
 from dataclasses import dataclass
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
-QgsApplication.setPrefixPath("/usr/", True)
-qgs = QgsApplication([], False)
+
 
 OSMDATA = settings.OSMDATA
 project_qgis_path = OSMDATA['project_qgis_path']
@@ -26,7 +24,7 @@ def _getProjectInstance(pathToQgisProject:str)->QgsProject:
     """
 
     try:
-        qgs.initQgis()
+        qgs = settings.QGS 
         project = QgsProject()
         project.read(join(project_qgis_path, pathToQgisProject))
         return project

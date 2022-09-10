@@ -10,7 +10,7 @@ from qgis.PyQt.QtCore import QFile, QIODevice
 from qgis.PyQt.QtGui import QColor
 import uuid
 
-from qgis.core import QgsSvgMarkerSymbolLayer, QgsSimpleMarkerSymbolLayer, QgsMapLayerStyle, QgsRenderContext, QgsVectorLayer, QgsSingleSymbolRenderer, QgsProject, QgsApplication
+from qgis.core import QgsSvgMarkerSymbolLayer, QgsSimpleMarkerSymbolLayer, QgsMapLayerStyle, QgsRenderContext, QgsVectorLayer, QgsSingleSymbolRenderer, QgsProject
 
 import tempfile
 from django.conf import settings
@@ -19,15 +19,13 @@ from django.core.files import File
 DATABASES = settings.DATABASES
 OSMDATA = settings.OSMDATA
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
-QgsApplication.setPrefixPath("/usr/", True)
-qgs = QgsApplication([], False)
+
 
 def getStyle(svgEncoded:str)->File:
     """get a qml file of point icon simple style. With the icon svgEncoded 
  
     """
-    qgs.initQgis()
+    qgs = settings.QGS 
     QMLPath=join(OSMDATA["qml_default_path"],'point_icon_simple.qml')
 
     img_svg_encoded = _getEncodedImg(svgEncoded)

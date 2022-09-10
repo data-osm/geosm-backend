@@ -10,7 +10,7 @@ from qgis.PyQt.QtCore import QFile, QIODevice
 from qgis.PyQt.QtGui import QColor
 import uuid
 
-from qgis.core import QgsSvgMarkerSymbolLayer, QgsSimpleMarkerSymbolLayer, QgsMapLayerStyle, QgsRenderContext, QgsVectorLayer, QgsPointClusterRenderer, QgsProject, QgsApplication
+from qgis.core import QgsSvgMarkerSymbolLayer, QgsSimpleMarkerSymbolLayer, QgsMapLayerStyle, QgsRenderContext, QgsVectorLayer, QgsPointClusterRenderer, QgsProject
 
 import tempfile
 from django.conf import settings
@@ -19,15 +19,13 @@ from django.core.files import File
 DATABASES = settings.DATABASES
 OSMDATA = settings.OSMDATA
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
-QgsApplication.setPrefixPath("/usr/", True)
-qgs = QgsApplication([], False)
+
 
 def getStyle(svgEncoded:str, color:str)->File:
     """get a qml file of cluster style. With the icon svgEncoded and the color (hexagonal) of the background 
  
     """
-    qgs.initQgis()
+    qgs = settings.QGS 
     QMLPath=join(OSMDATA["qml_default_path"],'custom-cluster.qml')
 
     img_svg_encoded = _getEncodedImg(svgEncoded)
