@@ -35,7 +35,7 @@ At this step your project is ready. To import OSM DATA, jump to Load OSM DATA se
 Edit [import_foreign_osm_table.sql](import_foreign_osm_table.sql) with the connection parameters of the foreign database and execute it :
 
 ```sh
-$  docker-compose exec --user postgres db psql -d postgres -f /import_foreign_osm_table.sql 
+$  docker-compose -f docker-compose-prod.yaml exec --user postgres db psql -d postgres -f /import_foreign_osm_table.sql 
 ```
 
 
@@ -52,3 +52,14 @@ pg_dump --clean --exclude-schema osm_tables --exclude-schema sigfile --exclude-t
 icons/pictoQgis/
 icons/Autres/
 icons/sig-file/
+
+## Maintenance 
+
+To regenerate a layer 
+```sh
+$ docker-compose -f docker-compose-prod.yaml exec web python manage.py  reGenerateQgisProject <vector_id_of_the_layer>  --settings=settings.prod  
+```
+To regenerate all layers (can take much time)
+```sh
+$ docker-compose -f docker-compose-prod.yaml exec web python manage.py  reGenerateQgisProject --settings=settings.prod  
+```

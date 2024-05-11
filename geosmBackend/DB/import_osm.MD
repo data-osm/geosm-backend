@@ -12,3 +12,6 @@ $ osm2pgsql --cache 10000 --number-processes 5 --extra-attributes --slim -G -c -
 $ chmod +x ../create_index.sh
 $ ../create_index.sh
 ```
+To update the map: 
+- get the state at a particcar date and time : wget "https://replicate-sequences.osm.mazdermind.de/?"`date -u +"%Y-%m-%d"`"T00:00:00Z" -O $WORKOSM_DIR/state.txt
+- baseUrl in cnfiguration file : https://planet.openstreetmap.org/replication/minute/
