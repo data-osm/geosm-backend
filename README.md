@@ -1,6 +1,9 @@
 ## Duplicate DATA OSM
 
 1) create an environment file .env in settings folder as .env.sample
+
+For dev purpose use `docker-compose-dev.yaml`, for prod use `docker-compose-prod.yaml`
+
 2) build and pull docker images 
 ```sh
 $ docker-compose -f docker-compose-prod.yaml build
