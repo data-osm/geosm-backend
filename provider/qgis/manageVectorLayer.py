@@ -1,209 +1,238 @@
-import os
 from os.path import join
-from qgis.core import QgsVectorLayer, QgsProject, QgsDataSourceUri, QgsCredentials, QgsProviderRegistry, QgsSettings
+from qgis.core import (
+    QgsVectorLayer,
+    QgsProject,
+    QgsDataSourceUri,
+)
 import traceback
 from geosmBackend.type import OperationResponse, AddVectorLayerResponse
 from django.conf import settings
-from dataclasses import dataclass
 
+from utils.exeption import ExplicitException, SimpleException
+
+
+class addVectorLayerFromPostgisException(ExplicitException):
+    pass
+
+
+class RemoveVectorLayerFromQgisException(SimpleException):
+    pass
+
+
+class SaveQMLtoGeoPackageException(ExplicitException):
+    pass
 
 
 OSMDATA = settings.OSMDATA
-project_qgis_path = OSMDATA['project_qgis_path']
+project_qgis_path = OSMDATA["project_qgis_path"]
 
 
-def _getProjectInstance(pathToQgisProject:str)->QgsProject:
-    """ 
-        Get project instance of an existing or not existing qgis project
-        
-        :param pathToQgisProject: the absolute path of the project
-        :rparam pathToQgisProject: str
+def _get_project_instance(path_to_qgis_project: str) -> QgsProject:
+    """
+    Get project instance of an existing or not existing qgis project
 
-        :return: QGIS project instance
-        :rtype: QgsProject
+    :param path_to_qgis_project: the absolute path of the project
+    :rparam path_to_qgis_project: str
+
+    :return: QGIS project instance
+    :rtype: QgsProject
     """
 
     try:
-        qgs = settings.QGS 
         project = QgsProject()
-        project.read(join(project_qgis_path, pathToQgisProject))
+        project.read(join(project_qgis_path, path_to_qgis_project))
         return project
-
-    except:
+    except Exception:
         traceback.print_exc()
         return None
 
-def _makeVectorLayerAvaibleOnWfs(project:QgsProject, vectorLayer:QgsVectorLayer )->bool:
+
+def _make_vector_layer_available_on_wfs(
+    project: QgsProject, vector_layer: QgsVectorLayer
+) -> bool:
     """
-        Make a QgsVectorLayer avaible on WFS by adding it to WFSLayers entry
+    Make a QgsVectorLayer avaible on WFS by adding it to WFSLayers entry
 
-        :param project: the QGIS project instance
-        :rparam project: QgsProject
+    :param project: the QGIS project instance
+    :rparam project: QgsProject
 
-        :param vectorLayer: the layer to make avaible on WFS
-        :rparam vectorLayer: QgsVectorLayer
+    :param vector_layer: the layer to make avaible on WFS
+    :rparam vector_layer: QgsVectorLayer
 
-        :return: 
-        :rtype: bool
+    :return:
+    :rtype: bool
 
     """
 
-    if type(vectorLayer) == QgsVectorLayer and vectorLayer.isValid():
-        WFSLayers = project.readListEntry('WFSLayers','')
-        WFSLayersList = list(WFSLayers)[0]
-        WFSLayersList.append(u'%s' % vectorLayer.id())
-        project.writeEntry('WFSLayers', '',  WFSLayersList) 
-        project.writeEntry('WMSAddWktGeometry', '',  'true') 
+    if type(vector_layer) == QgsVectorLayer and vector_layer.isValid():
+        wfs_layers = project.readListEntry("WFSLayers", "")
+        wfs_layers_list = list(wfs_layers)[0]
+        wfs_layers_list.append("%s" % vector_layer.id())
+        project.writeEntry("WFSLayers", "", wfs_layers_list)
+        project.writeEntry("WMSAddWktGeometry", "", "true")
 
         return True
     else:
         return False
 
-def addVectorLayerFomPostgis(host:str, port:str, database:str, user:str, password:str, schema:str, table:str, geometryColumn:str, primaryKeyColumn:str, layerName:str, pathToQgisProject:str ) -> AddVectorLayerResponse:
+
+def add_vector_layer_from_postgis(
+    host: str,
+    port: str,
+    database: str,
+    user: str,
+    password: str,
+    schema: str,
+    table: str,
+    geometry_column: str,
+    primary_key_column: str,
+    layer_name: str,
+    path_to_qgis_project: str,
+) -> AddVectorLayerResponse:
     """
-        Add a new layer in an existing or not existing QGIS project. The layer is from a postgres database
+    Add a new layer in an existing or not existing QGIS project. The layer is from a postgres database
 
-        :param host: host of the databse
-        :rparam host: str
+    :param host: host of the databse
+    :rparam host: str
 
-        :param port: port of the databse
-        :rparam port: str
+    :param port: port of the databse
+    :rparam port: str
 
-        :param database: name of the databse
-        :rparam database: str
+    :param database: name of the databse
+    :rparam database: str
 
-        :param user: user of the databse
-        :rparam user: str
+    :param user: user of the databse
+    :rparam user: str
 
-        :param password: password of the databse
-        :rparam password: str
+    :param password: password of the databse
+    :rparam password: str
 
-        :param schema: schema of the table in database
-        :rparam schema: str
-        
+    :param schema: schema of the table in database
+    :rparam schema: str
 
-        :param table: table of the layer in databse
-        :rparam table: str
 
-        :param geometryColumn: geometryColumn of the table
-        :rparam geometryColumn: str
+    :param table: table of the layer in databse
+    :rparam table: str
 
-        :param primaryKeyColumn: primary key of the table
-        :rparam primaryKeyColumn: str
+    :param geometry_column: geometry_column of the table
+    :rparam geometry_column: str
 
-        :param layerName: Name of the layer in the QGIS project
-        :rparam layerName: str
+    :param primary_key_column: primary key of the table
+    :rparam primary_key_column: str
 
-        :param pathToQgisProject: the absolute path of the project
-        :rparam pathToQgisProject: str
+    :param layer_name: Name of the layer in the QGIS project
+    :rparam layer_name: str
 
-        :rreturn AddVectorLayerResponse
+    :param path_to_qgis_project: the absolute path of the project
+    :rparam path_to_qgis_project: str
+
+    :rreturn AddVectorLayerResponse
+
+    Raise:
+        addVectorLayerFromPostgisException
 
     """
-    response=AddVectorLayerResponse(
+    response = AddVectorLayerResponse(
         error=False,
         msg="",
         description="",
-        pathProject="",
-        layerName="",
+        path_project="",
+        layer_name="",
     )
 
-    QGISProject = _getProjectInstance(pathToQgisProject)
-    try:
-    
-        if QGISProject:
-            uri = QgsDataSourceUri()
-            # table="bar"
-            uri.setConnection(host, port, database, user, password)
-            # conn = QgsProviderRegistry.instance().providerMetadata('postgres').createConnection(uri.uri(False),{})
-            # print(conn.tables(schema))
-       
-            uri.setDataSource(schema, table , geometryColumn, "",primaryKeyColumn)
-            if len(QGISProject.mapLayersByName(layerName)) > 0 :
-                layerName = layerName+'_'+str(len(QGISProject.mapLayersByName(layerName))+1)
-                
-            vectorLayer = QgsVectorLayer(uri.uri(False), layerName, "postgres")
+    QGISProject = _get_project_instance(path_to_qgis_project)
 
-            if vectorLayer.isValid():
-                if QGISProject.addMapLayer(vectorLayer) is not None:
-                    if _makeVectorLayerAvaibleOnWfs(QGISProject, vectorLayer):
-                        response.error = QGISProject.write() != True
-                        response.pathProject = pathToQgisProject
-                        response.layerName = layerName
-                    else:
-                        response.error = True
-                        response.msg = " Impossible to make layer avaible on WFS"
+    if QGISProject:
+        uri = QgsDataSourceUri()
+        # table="bar"
+        uri.setConnection(host, port, database, user, password)
+        # conn = QgsProviderRegistry.instance().providerMetadata('postgres').createConnection(uri.uri(False),{})
+        # print(conn.tables(schema))
+
+        uri.setDataSource(schema, table, geometry_column, "", primary_key_column)
+        if len(QGISProject.mapLayersByName(layer_name)) > 0:
+            layer_name = (
+                layer_name + "_" + str(len(QGISProject.mapLayersByName(layer_name)) + 1)
+            )
+
+        vector_layer = QgsVectorLayer(uri.uri(False), layer_name, "postgres")
+
+        if vector_layer.isValid():
+            if QGISProject.addMapLayer(vector_layer) is not None:
+                if _make_vector_layer_available_on_wfs(QGISProject, vector_layer):
+                    response.error = QGISProject.write() is not True
+                    response.pathProject = path_to_qgis_project
+                    response.layer_name = layer_name
                 else:
-                    response.error = True
-                    response.msg = " Impossible to add layer to the project"
+                    raise addVectorLayerFromPostgisException(
+                        msg=f"Impossible to make layer {layer_name} in project {path_to_qgis_project} available on WFS",
+                        description="",
+                    )
             else:
-                response.error = True
-                response.msg = " The layer is not valid"
-                response.description=uri.uri()
+                raise addVectorLayerFromPostgisException(
+                    msg=f"Impossible to add layer {layer_name} to project {path_to_qgis_project} ",
+                    description="",
+                )
         else:
-            response.error = True
-            response.msg = "Impossible to load the project"
-
-    except :
-        traceback.print_exc()
-        response.error = True
-        response.msg = "An unexpected error has occurred"
+            raise addVectorLayerFromPostgisException(
+                msg=f"The layer {layer_name} is not valid in project {path_to_qgis_project}",
+                description="",
+            )
+    else:
+        raise addVectorLayerFromPostgisException(
+            msg=f"Impossible to load  project {path_to_qgis_project} ", description=""
+        )
 
     return response
 
-def removeLayer(pathToQgisProject:str, layerName:str)->OperationResponse:
-    """Remove all layers with have a specific layername in a QGIS project
+
+def remove_layer(path_to_qgis_project: str, layer_name: str) -> OperationResponse:
+    """Remove all layers with have a specific layer name in a QGIS project
     Todo:
         remove layer in wfsList
 
     Args:
-        pathToQgisProject (str): path to the QGIS project
-        layerName (str): name of the layer to remove
+        path_to_qgis_project (str): path to the QGIS project
+        layer_name (str): name of the layer to remove
 
     Returns:
         OperationResponse
+    Raise :
+        RemoveVectorLayerFromQgisException
 
     """
-    response=OperationResponse(
-        error=False,
-        msg="",
-        description="",
-        data=None
-    )
+    response = OperationResponse(error=False, msg="", description="", data=None)
 
-    QGISProject = _getProjectInstance(pathToQgisProject)
-    try:
-        if QGISProject:
-            while len(QGISProject.mapLayersByName(layerName)) != 0 :
-                QGISProject.removeMapLayer(QGISProject.mapLayersByName(layerName)[0])
-            
-            response.error = QGISProject.write() != True
-            return response
+    qgis_project = _get_project_instance(path_to_qgis_project)
+    if qgis_project:
+        while len(qgis_project.mapLayersByName(layer_name)) != 0:
+            qgis_project.removeMapLayer(qgis_project.mapLayersByName(layer_name)[0])
 
-        else:
-            response.error = True
-            response.msg = "Impossible to load the project"
-    except:
-        # traceback.print_exc()
-        response.error = True
-        response.msg = "An unexpected error has occurred"
+        response.error = qgis_project.write() is not True
+        return response
 
-def saveQMLtoGeoPackage(gpkgFile:str, qmlFile:str):
+    else:
+        raise RemoveVectorLayerFromQgisException(
+            msg=f"Failed to load the project {path_to_qgis_project}"
+        )
+
+
+def save_qml_to_geo_package(gpkg_file: str, qml_file: str):
     """Save QML to geopackage as default style
 
     Args:
-        gpkgFile (str): gpkg file path
-        qmlFile (str): qml file path
+        gpkg_file (str): gpkg file path
+        qml_file (str): qml file path
 
     Raises:
-        Exception: _description_
+        SaveQMLtoGeoPackageException
     """
-    layer = QgsVectorLayer(gpkgFile,'layer',"ogr")
-    mess, res = layer.loadNamedStyle(qmlFile)
-    if res != True:
-        raise Exception(mess)
+    layer = QgsVectorLayer(gpkg_file, "layer", "ogr")
+    mess, res = layer.loadNamedStyle(qml_file)
+    if res is not True:
+        raise SaveQMLtoGeoPackageException(msg=mess, description="")
     try:
-        layer.deleteStyleFromDatabase('1')
-    except Exception as e:
+        layer.deleteStyleFromDatabase("1")
+    except Exception:
         pass
-    res = layer.saveStyleToDatabase('default','',True,'')
+    res = layer.saveStyleToDatabase("default", "", True, "")

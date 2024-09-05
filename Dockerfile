@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM debian:bookworm
 
 ENV PYTHONUNBUFFERED=1
 
@@ -10,28 +10,28 @@ RUN apt-get update && apt-get install -y \
     wget \
     gnupg2 \
     python3-pip \
+    python3-venv \
+    libgdal-dev \
     software-properties-common
 
 
-RUN wget -O - https://qgis.org/downloads/qgis-2021.gpg.key | gpg --import
-RUN gpg --fingerprint 46B5721DBBD2996A
-RUN gpg --export --armor 46B5721DBBD2996A | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import
-RUN chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg
-
-RUN apt-add-repository 'deb https://qgis.org/debian-ltr buster main'
-
-RUN apt-get update && apt-get install -y \
+WORKDIR /etc/apt/keyrings
+RUN wget -O /etc/apt/keyrings/qgis-archive-keyring.gpg https://download.qgis.org/downloads/qgis-archive-keyring.gpg 
+RUN echo "deb [signed-by=/etc/apt/keyrings/qgis-archive-keyring.gpg] https://qgis.org/debian-ltr bookworm main" | tee /etc/apt/sources.list.d/qgis.list
+RUN apt update  && apt install -y \
     qgis \
     python3-qgis
 
 RUN mkdir /code
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 20
+# Since python 3.11, one can not install package without be in venv
+ENV PIP_BREAK_SYSTEM_PACKAGES 1
 
-RUN python3 -m pip install --upgrade pip
-
+COPY ./requirements-lock.txt /code/
+COPY ./entrypoint.sh /code/
 WORKDIR /code
-COPY requirements.txt /code/
-RUN pip3 install --no-cache-dir --force-reinstall cffi
-RUN pip3 install --no-cache-dir cairocffi
-RUN pip3 install -r requirements.txt
-COPY . /code/
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.7 2
+ENTRYPOINT [ "/code/entrypoint.sh" ]
+
+# COPY ./requirements.txt /code/
+# RUN pip install --upgrade pip
+# RUN pip install -r requirements.txt

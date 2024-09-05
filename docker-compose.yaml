@@ -4,34 +4,18 @@ services:
     
   web:
     build: .
-    command: bash -c "python manage.py migrate  --settings=settings.dev && python manage.py runserver --settings=settings.dev  0.0.0.0:8000"
+    # command: sleep infinity
+    # command: bash -c "python manage.py migrate  --settings=settings.dev && python manage.py runserver --settings=settings.dev  0.0.0.0:8000"
     volumes:
       - .:/code
     ports:
       - "8000:8000"
-    depends_on:
-      - db
     restart: on-failure
-
-  db:
-    build:
-      context: .
-      dockerfile: Dockerfile_DB
-    volumes:
-      - ./pgdata:/var/lib/postgresql/data
-      - ./import_foreign_osm_table.sql:/import_foreign_osm_table.sql
-    ports:
-      - 5434:5432
+    networks:
+        - travellist
     environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5432"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    
+      - ENV=dev
+
   qgis-server:
     image: 3liz/qgis-map-server:3.22
     volumes: 
@@ -41,40 +25,42 @@ services:
         - 3000:8080
     environment: 
         - QGSRV_SERVER_WORKERS=4
-        - QGSRV_LOGGING_LEVEL=WARNING
+        - QGSRV_LOGGING_LEVEL=DEBUG
         - QGSRV_CACHE_ROOTDIR=/projects
         - QGSRV_SERVER_PLUGINPATH=/home/qgis/plugin
         - QGSRV_CACHE_STRICT_CHECK=no
         - QGSRV_CACHE_SIZE=10
         - QGSRV_SERVER_CROSS_ORIGIN=yes
         - QGSRV_DISABLE_GETPRINT=yes
-    depends_on:
-      - db
+    networks:
+        - travellist
+   
       
-  elastic:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    volumes:
-      - ./elasticdata:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-    depends_on:
-      - db
+  # elastic:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+  #   environment:
+  #     - discovery.type=single-node
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #   volumes:
+  #     - ./elasticdata:/usr/share/elasticsearch/data
+  #   ports:
+  #     - "9200:9200"
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.10.1
-    environment:
-      - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
-    volumes:
-      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./logstash/pipeline:/usr/share/logstash/pipeline
-      - ./provider/qgis/plugin:/home/plugin
-    ports:
-      - "9600:9600"
-    depends_on:
-      - elastic
+  # logstash:
+  #   image: docker.elastic.co/logstash/logstash:7.10.1
+  #   environment:
+  #     - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
+  #   volumes:
+  #     - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+  #     - ./logstash/pipeline:/usr/share/logstash/pipeline
+  #     - ./provider/qgis/plugin:/home/plugin
+  #   ports:
+  #     - "9600:9600"
+  #   depends_on:
+  #     - elastic
 
+networks:
+  travellist:
+    driver: bridge
 
     # docker run -e "ELASTICSEARCH_HOSTS=http://host.docker.internal:9200" -p 5601:5601 kibana:7.10.1
