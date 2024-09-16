@@ -1,167 +1,164 @@
-from ..models import Map, Group, Sub, Layer, Default_map, Layer_provider_style, Tags, Metadata, Base_map
-from genericIcon.models import Picto
-from genericIcon.managePicto import createPicto, updatePicto, ImageBox
 from ..subModels.icon import Icon, TagsIcon
-from rest_framework import viewsets
-from rest_framework import permissions
+from rest_framework import permissions, filters, generics
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
-from geosmBackend.cuserViews import ListCreateAPIView,RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView , ListAPIView, MultipleFieldLookupMixin, EnablePartialUpdateMixin, MultipleFieldLookupListMixin
+from geosmBackend.cuserViews import (
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework import status
-from django.shortcuts import get_list_or_404, get_object_or_404
+from django.shortcuts import get_object_or_404
 
-from cuser.middleware import CuserMiddleware
-from uuid import uuid4
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from ..serializers import SubWithGroupSerializer, BaseMapSerializer ,TagsIconSerializer, IconSerializer, MapSerializer, DefaultMapSerializer, GroupSerializer, SubSerializer, SubWithLayersSerializer,  LayerSerializer, LayerProviderStyleSerializer, TagsSerializer, MetadataSerializer
+from ..serializers import (
+    TagsIconSerializer,
+    IconSerializer,
+)
 from collections import defaultdict
 
 
-class IconDetailView(EnablePartialUpdateMixin, RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateDestroyIconView(RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    queryset=Icon.objects.all()
-    serializer_class=IconSerializer
+    queryset = Icon.objects.all()
+    serializer_class = IconSerializer
 
     @swagger_auto_schema(
-        operation_summary='Retrieve an icon',
+        operation_summary="Retrieve an icon",
         responses={200: IconSerializer()},
-        tags=['Icons'],
+        tags=["Icons"],
     )
     def get(self, request, *args, **kwargs):
-        """ Retrieve an icon  """
-        return super(IconDetailView, self).get(request, *args, **kwargs)
+        """Retrieve an icon"""
+        return super(RetrieveUpdateDestroyIconView, self).get(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_summary='Update an icon',
+        operation_summary="Update an icon",
         responses={200: IconSerializer()},
-        tags=['Icons'],
+        tags=["Icons"],
     )
     def put(self, request, pk):
-        """ update an icon """
+        """update an icon"""
         icon = get_object_or_404(Icon.objects.all(), pk=pk)
         vp_serializer = IconSerializer(instance=icon, data=request.data, partial=True)
 
         if vp_serializer.is_valid():
-            if 'tags' in request.data:
-                vp_serializer.validated_data['tags'] =  request.data['tags']
+            if "tags" in request.data:
+                vp_serializer.validated_data["tags"] = request.data["tags"]
             vp_serializer.save()
             return Response(vp_serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(
-        operation_summary='Delete an icon',
+        operation_summary="Delete an icon",
         responses={
             status.HTTP_204_NO_CONTENT: openapi.Response(
                 description="this should not crash (response object with no schema)"
             )
         },
-        tags=['Icons'],
+        tags=["Icons"],
     )
     def delete(self, request, *args, **kwargs):
-        """ Delete an icon  """
-        return super(IconDetailView, self).delete(request, *args, **kwargs)
+        """Delete an icon"""
+        return super(RetrieveUpdateDestroyIconView, self).delete(
+            request, *args, **kwargs
+        )
 
-class IconListView(ListCreateAPIView):
+
+class ListCreateIconView(ListCreateAPIView):
     """
-        View to list icons by group
+    View to list icons by group
     """
+
     permission_classes = [permissions.IsAuthenticated]
     parser_class = (FileUploadParser,)
-    queryset=Icon.objects.all()
-    serializer_class=IconSerializer
+    queryset = Icon.objects.all()
+    serializer_class = IconSerializer
 
     @swagger_auto_schema(
-        operation_summary='list icons by group',
+        operation_summary="list icons by group",
         responses={200: IconSerializer(many=True)},
-        tags=['Icons'],
+        tags=["Icons"],
     )
     def get(self, request, *args, **kwargs):
         groups = defaultdict(list)
         for icon in Icon.objects.all():
             groups[icon.category].append(IconSerializer(icon).data)
 
-        return Response(groups,status=status.HTTP_200_OK)
+        return Response(groups, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_summary='Create a new icon',
+        operation_summary="Create a new icon",
         responses={200: IconSerializer()},
-        tags=['Icons'],
+        tags=["Icons"],
     )
     def post(self, request, *args, **kwargs):
-      CuserMiddleware.set_user(request.user)
-      file_serializer = IconSerializer(data=request.data)
-      if file_serializer.is_valid():
-          if 'tags' in request.data:
-            file_serializer.validated_data['tags'] =  request.data['tags']
-          file_serializer.save()
-          return Response(file_serializer.data, status=status.HTTP_201_CREATED)
-      else:
-          return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        file_serializer = IconSerializer(data=request.data)
+        if file_serializer.is_valid():
+            if "tags" in request.data:
+                file_serializer.validated_data["tags"] = request.data["tags"]
+            file_serializer.save()
+            return Response(file_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class searchIconsTags(APIView):
+class searchIconsTags(generics.ListAPIView):
     """
-        View to search tags
+    View to search tags
     """
+
     permission_classes = [permissions.IsAuthenticated]
+    queryset = TagsIcon.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["name"]
+    serializer_class = TagsIconSerializer
 
     @swagger_auto_schema(
-        operation_summary='Search icons by keywords',
+        operation_summary="Search icons by keywords",
         responses={200: TagsIconSerializer(many=True)},
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'search_word': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='The search key word'
+                "search": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="The search key word"
                 )
-            }
+            },
         ),
-        tags=['Icons'],
+        tags=["Icons"],
     )
-    def post(self, request, *args, **kwargs):
-        searchWord = request.data['search_word']
-        responseQuerry = []
-        for tag in TagsIcon.objects.raw("SELECT * FROM group_tagsicon WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 "):
-            responseQuerry.append(TagsIconSerializer(tag).data)
-        return Response(responseQuerry,status=status.HTTP_200_OK)
+    def get(self, request, *args, **kwargs):
+        return super(searchIconsTags, self).get(request, *args, **kwargs)
 
 
-class SearchIcon(APIView):
+class SearchIcon(generics.ListAPIView):
     """
-        View to search icon
+    View to search icon
     """
+
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Icon.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["name", "tags__name"]
+    serializer_class = IconSerializer
 
     @swagger_auto_schema(
-        operation_summary='Search icons by name',
+        operation_summary="Search icons by name",
         responses={200: IconSerializer(many=True)},
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'search_word': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='The search key word'
+                "search": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="The search key word"
                 )
-            }
+            },
         ),
-        tags=['Icons'],
+        tags=["Icons"],
     )
-    def post(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         """
-            View to search icon
-        """ 
-        searchWord = request.data['search_word']
-        responseQuerry = []
-
-        for icon in Icon.objects.raw("SELECT * FROM group_icon WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 "):
-            responseQuerry.append(IconSerializer(icon).data)
-
-        for icon  in Icon.objects.filter(tags__in=TagsIcon.objects.raw("SELECT id FROM group_tagsicon WHERE strpos(unaccent(lower(name)),unaccent(lower('"+searchWord+"')))>0 Limit 20 ")) :
-            responseQuerry.append(IconSerializer(icon).data)
-
-        return Response(responseQuerry,status=status.HTTP_200_OK)
+        View to search icon
+        """
+        return super(SearchIcon, self).get(request, *args, **kwargs)

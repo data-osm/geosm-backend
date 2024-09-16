@@ -1,6 +1,9 @@
 ## Duplicate DATA OSM
 
 1) create an environment file .env in settings folder as .env.sample
+
+For dev purpose use `docker-compose-dev.yaml`, for prod use `docker-compose-prod.yaml`
+
 2) build and pull docker images 
 ```sh
 $ docker-compose -f docker-compose-prod.yaml build
@@ -29,8 +32,10 @@ At this step your project is ready. To import OSM DATA, jump to Load OSM DATA se
 
 
 ## Load OSM data
-### Import OSM data in foreign database [import_osm.MD](geosmBackend/DB/import_osm.MD)
-### Link the foreign and the local database
+
+### Import OSM data in  database [import_osm.MD](geosmBackend/DB/import_osm.MD)
+
+### Link a foreign database containing osm data with our database
 
 Edit [import_foreign_osm_table.sql](import_foreign_osm_table.sql) with the connection parameters of the foreign database and execute it :
 
@@ -46,9 +51,13 @@ docker run --network host --name kibana -e "ELASTICSEARCH_HOSTS=http://172.17.0.
 
 ## Backup database and files: 
 
-pg_dump --clean --exclude-schema osm_tables --exclude-schema sigfile --exclude-table 'planet_osm*' --no-acl --no-owner -d <database_name> -U <database_user> -W  | gzip >  /path/to_store/data_osm_dump_$(date '+%Y-%m-%d_%H_%M_%S').sql.gz
+### Dabase
+pg_dump --clean --exclude-schema osm_tables --exclude-schema sigfile --exclude-table 'planet_osm*' --no-acl --no-owner -d <database_name> -U <database_user>  -h <database_host> -W  | gzip >  /path/to_store/data_osm_dump_$(date '+%Y-%m-%d_%H_%M_%S').sql.gz
 
-
+### Files to backup
+icons/group/
+icons/layer/
+icons/picto/
 icons/pictoQgis/
 icons/Autres/
 icons/sig-file/
