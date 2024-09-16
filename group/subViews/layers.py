@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from group.subModels.icon import Icon
 from ..models import (
     Group,
@@ -28,6 +29,8 @@ from ..serializers import (
     GroupSerializer,
     LayerSerializer,
     LayerProviderStyleSerializer,
+    ListCreateLayerQueryParamsDeserializer,
+    SetPrincipalLayerDeserializer,
     TagsSerializer,
 )
 
@@ -158,11 +161,11 @@ class RetrieveUpdateDestroyLayerView(RetrieveUpdateDestroyAPIView):
         )
 
 
-class ListCreateLayerView(MultipleFieldLookupListMixin, ListCreateAPIView):
+class ListCreateLayerView(ListCreateAPIView):
     queryset = Layer.objects.all()
     serializer_class = LayerSerializer
     permission_classes = [permissions.IsAuthenticated]
-    lookup_fields = ["sub"]
+    lookup_fields = ["sub", "sub__group", "principal"]
     model = Layer
 
     @swagger_auto_schema(
@@ -172,7 +175,21 @@ class ListCreateLayerView(MultipleFieldLookupListMixin, ListCreateAPIView):
     )
     def get(self, request, *args, **kwargs):
         """Retrieve all layers"""
-        return super(ListCreateLayerView, self).get(request, *args, **kwargs)
+        query_params_deserializer = ListCreateLayerQueryParamsDeserializer(
+            data=self.request.query_params
+        )
+        query_params_deserializer.is_valid(raise_exception=True)
+        validated_data = query_params_deserializer.validated_data
+        queryset = self.get_queryset()
+        if validated_data.get("principal", None) is None:
+            validated_data.pop("principal")
+        print(validated_data, "--" * 99)
+        queryset = queryset.filter(**validated_data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+        # return queryset
+        # return super(ListCreateLayerView, self).get(request, *args, **kwargs)
 
     @swagger_auto_schema(
         operation_summary="Create a new layer",
@@ -440,3 +457,25 @@ class searchLayer(APIView):
             LayerSerializer(Layer.objects.filter(pk__in=pks), many=True).data,
             status=status.HTTP_200_OK,
         )
+
+
+class SetPrincipalLayer(APIView):
+    """Update the principal Layer"""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Define the principal Layer",
+        request_body=SetPrincipalLayerDeserializer,
+        responses={200: ""},
+        tags=["Layer"],
+    )
+    def post(self, request, pk):
+        instance: Layer = get_object_or_404(Layer.objects.all(), pk=pk)
+
+        deserializer = SetPrincipalLayerDeserializer(data=request.data)
+        deserializer.is_valid(raise_exception=True)
+
+        instance.principal = deserializer.validated_data["principal"]
+        instance.save()
+        return Response({}, status=status.HTTP_200_OK)

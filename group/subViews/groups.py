@@ -288,3 +288,24 @@ class SubViewListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         """Create a new subGroup"""
         return super(SubViewListCreate, self).post(request, *args, **kwargs)
+
+
+class SetPrincipalGroup(APIView):
+    """Update the principal group"""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Define the principal group",
+        responses={200: ""},
+        tags=["Group"],
+    )
+    def post(self, request, pk):
+        instance: Group = get_object_or_404(Group.objects.all(), pk=pk)
+        for group in Group.objects.exclude(pk=pk).all():
+            group.principal = False
+            group.save()
+
+        instance.principal = True
+        instance.save()
+        return Response({}, status=status.HTTP_200_OK)

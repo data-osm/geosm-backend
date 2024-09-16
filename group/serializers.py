@@ -89,6 +89,7 @@ class GroupSerializer(serializers.ModelSerializer):
             "type_group",
             "map_id",
             "group_id",
+            "principal",
             "icon_path",
             "icon_id",
             "order",
@@ -146,6 +147,7 @@ class LayerSerializer(serializers.ModelSerializer):
             "metadata_cap",
             "share",
             "sub",
+            "principal",
             "created_at",
             "updated_at",
             "providers",
@@ -255,3 +257,13 @@ class MetadataSerializer(serializers.ModelSerializer):
         else:
             metadata.save()
             return metadata
+
+
+class SetPrincipalLayerDeserializer(serializers.Serializer):
+    principal = serializers.BooleanField()
+
+
+class ListCreateLayerQueryParamsDeserializer(serializers.Serializer):
+    principal = serializers.BooleanField(required=False, allow_null=True)
+    sub__group = serializers.IntegerField(required=False)
+    sub = serializers.IntegerField(required=False)

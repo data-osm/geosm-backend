@@ -52,6 +52,7 @@ class Group(models.Model):
     icon_path = models.FileField(
         blank=False, null=False, upload_to=get_upload_path_group_icon
     )
+    principal = models.BooleanField(default=False)
     order = models.IntegerField(blank=False, null=False, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -104,6 +105,7 @@ class Layer(models.Model):
     metadata_cap = models.BooleanField(default=True)
     share = models.BooleanField(default=True)
     sub = models.ForeignKey(Sub, on_delete=models.CASCADE)
+    principal = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

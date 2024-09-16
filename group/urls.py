@@ -28,6 +28,7 @@ urlpatterns = [
     path("", groupsViews.ListCreateGroupView.as_view()),
     path("group/reorder", groupsViews.UpdateOrderGroup.as_view()),
     path("group/<int:pk>", groupsViews.RetrieveUpdateDestroyGroupView.as_view()),
+    path("group/<int:pk>/set-principal", groupsViews.SetPrincipalGroup.as_view()),
     path("sub", groupsViews.SubViewListCreate.as_view()),
     path("sub/layers", groupsViews.ListSubWithLayersView.as_view()),
     path("sub/group/<int:pk>", groupsViews.RetrieveSubWithGroup.as_view()),
@@ -36,6 +37,7 @@ urlpatterns = [
     path("layer/search", layersViews.searchLayer.as_view()),
     path("layer/old", layersViews.GetOldLayer.as_view()),
     path("layer/<int:pk>", layersViews.RetrieveUpdateDestroyLayerView.as_view()),
+    path("layer/<int:pk>/set-principal", layersViews.SetPrincipalLayer.as_view()),
     path("layer/provider", layersViews.ListCreateLayerProviderStyleView.as_view()),
     path(
         "layer/provider/<int:pk>",
