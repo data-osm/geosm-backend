@@ -164,7 +164,8 @@ class RetrieveUpdateDestroyLayerView(RetrieveUpdateDestroyAPIView):
 class ListCreateLayerView(ListCreateAPIView):
     queryset = Layer.objects.all()
     serializer_class = LayerSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = []
+    authentication_classes = []
     lookup_fields = ["sub", "sub__group", "principal"]
     model = Layer
 

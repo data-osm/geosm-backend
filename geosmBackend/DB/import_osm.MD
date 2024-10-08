@@ -15,5 +15,7 @@ $ ../create_index.sh <database_name>
 ```
 
 ### To keep update the OSM data: 
+More information here : https://github.com/Magellium/magosm_db
+
 - get the state at a particular date and time : wget "https://replicate-sequences.osm.mazdermind.de/?"`date -u +"%Y-%m-%d"`"T00:00:00Z" -O $WORKOSM_DIR/state.txt
 - baseUrl in configuration file : https://planet.openstreetmap.org/replication/minute/
