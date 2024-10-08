@@ -36,15 +36,17 @@ services:
         - travellist
    
       
-  # elastic:
-  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
-  #   environment:
-  #     - discovery.type=single-node
-  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-  #   volumes:
-  #     - ./elasticdata:/usr/share/elasticsearch/data
-  #   ports:
-  #     - "9200:9200"
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - ./elasticdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - travellist
 
   # logstash:
   #   image: docker.elastic.co/logstash/logstash:7.10.1

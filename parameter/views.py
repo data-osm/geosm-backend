@@ -390,14 +390,40 @@ class SearchBoundary(APIView):
         searchQuerry = request.data["search_word"]
         search = BoundarysDocument.search()
         esResponse = search.from_dict(
-            {"query": {"bool": {"should": [{"match": {"name": searchQuerry}}]}}}
+            {
+                "query": {
+                    "bool": {
+                        "should": [
+                            {
+                                "multi_match": {
+                                    "boost": 4,
+                                    "query": searchQuerry,
+                                    "type": "best_fields",
+                                    "fuzziness": 2,
+                                    "fields": ["name", "name._2gram", "name._3gram"],
+                                }
+                            },
+                            {
+                                "multi_match": {
+                                    "boost": 4,
+                                    "query": searchQuerry,
+                                    "type": "best_fields",
+                                    "fuzziness": 2,
+                                    "fields": ["ref", "ref._2gram", "ref._3gram"],
+                                }
+                            },
+                        ]
+                    }
+                }
+            }
         )
+
         pks = []
+
         for result in esResponse:
             if result.meta.index == "boundary":
                 pks.append(result.meta.id)
         response = []
-        # [print(result.meta,'================')for result in esResponse]
         for id in set(pks):
             adminBoundary_id = int(id.split("_")[1])
             table_id = int(id.split("_")[0])
