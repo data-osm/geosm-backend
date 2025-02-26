@@ -23,7 +23,7 @@ from provider.manageOsmDataSource import (
 from provider.qgis.manageVectorLayer import remove_layer
 from django.db import Error, connections, connection
 from django.db.utils import DEFAULT_DB_ALIAS
-import geopandas as gpd
+import geopandas
 from shapely.geometry import (
     Polygon,
     LineString,
@@ -65,7 +65,6 @@ class sigFile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-
         connexion = connections[self.connection]
         engine = create_engine(
             "postgresql://"
@@ -79,7 +78,8 @@ class sigFile(models.Model):
             + "/"
             + DATABASES[self.connection]["NAME"]
         )
-        gpdSource = gpd.read_file(self.file)
+
+        gpdSource: geopandas.GeoDataFrame = geopandas.read_file(self.file)
         geometryTypesSource = gpdSource.geom_type.unique()
         if len(gpdSource.geom_type.unique()) > 1:
             raise appException(
@@ -105,7 +105,7 @@ class sigFile(models.Model):
         create_schema_if_not_exist(tableAndShema.shema, connexion)
 
         if self.created_at is not None:
-            df = gpd.GeoDataFrame.from_postgis(
+            df = geopandas.GeoDataFrame.from_postgis(
                 "SELECT  * FROM " + tableAndShema.shema + "." + tableAndShema.table,
                 engine,
                 geom_col="geom",
@@ -119,7 +119,7 @@ class sigFile(models.Model):
                     + str(geometryTypeTable[0])
                 )
 
-            drop_table_if_exist(tableAndShema.shema, tableAndShema.table, connexion)
+        drop_table_if_exist(tableAndShema.shema, tableAndShema.table, connexion)
 
         gpdSource.to_postgis(
             name=tableAndShema.table,
@@ -127,16 +127,17 @@ class sigFile(models.Model):
             index=True,
             schema=tableAndShema.shema,
             index_label="id",
+            # if_exists="replace",
         )
-        engine.dispose()
 
+        engine.dispose()
         response = TableCreatedResponse(
             error=False,
             msg="",
             description="",
             data=TableMetadata(extent=None, count=0),
-            geometryField="geom",
-            primaryKey="id",
+            geometry_field="geom",
+            primary_key="id",
         )
 
         with connexion.cursor() as cursor:

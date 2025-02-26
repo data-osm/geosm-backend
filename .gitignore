@@ -25,3 +25,5 @@ provider/qgis/plugin/*.log
 icons/sig-file/*
 
 venv/
+logstash-sync/
+tracking/*log

@@ -27,8 +27,10 @@ from drf_yasg import openapi
 from ..documents import LayerDocument
 from ..serializers import (
     GroupSerializer,
+    LayerCreateDeserializer,
     LayerSerializer,
     LayerProviderStyleSerializer,
+    LayerUpdateDeserializer,
     ListCreateLayerQueryParamsDeserializer,
     SetPrincipalLayerDeserializer,
     TagsSerializer,
@@ -91,20 +93,22 @@ class RetrieveUpdateDestroyLayerView(RetrieveUpdateDestroyAPIView):
     )
     def put(self, request, pk, format=None):
         """update layer"""
-        vp_serializer = LayerSerializer(self.get_object(), data=request.data)
-        query_dict = QueryDict("", mutable=True)
-        query_dict.update(self.request.data)
-        if query_dict.get("svg_as_text", None) is not None:
+
+        layer = get_object_or_404(Layer.objects.all(), pk=pk)
+        deserializer = LayerUpdateDeserializer(data=request.data)
+        deserializer.is_valid(raise_exception=True)
+        data: dict = deserializer.validated_data  # type: ignore
+
+        if data.get("svg_as_text", None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix=".png")
             fileName = f.name
             svg2png(
                 bytestring=request.data["svg_as_text"], write_to=fileName, unsafe=True
             )
-            del request.data["svg_as_text"]
             dataFile = open(fileName, "rb")
-            request.data["cercle_icon"] = File(dataFile)
+            cercle_icon = File(dataFile)
 
-        if query_dict.get("svg_as_text_square", None) is not None:
+        if data.get("svg_as_text_square", None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix=".png")
             fileName = f.name
             svg2png(
@@ -112,29 +116,30 @@ class RetrieveUpdateDestroyLayerView(RetrieveUpdateDestroyAPIView):
                 write_to=fileName,
                 unsafe=True,
             )
-            del request.data["svg_as_text_square"]
             dataFile = open(fileName, "rb")
-            request.data["square_icon"] = File(dataFile)
+            square_icon = File(dataFile)
 
         if (
             "icon" in request.data
-            and query_dict.get("svg_as_text", None) is None
-            and query_dict.get("svg_as_text_square", None) is None
+            and data.get("svg_as_text", None) is None
+            and data.get("svg_as_text_square", None) is None
         ):
             icon: Icon = Icon.objects.get(pk=request.data["icon"])
-            request.data["cercle_icon"] = icon.path
-            request.data["square_icon"] = icon.path
-            try:
-                del request.data["svg_as_text_square"]
-                del request.data["svg_as_text"]
-            except Exception:
-                pass
+            cercle_icon = icon.path
+            square_icon = icon.path
 
-        if vp_serializer.is_valid():
-            vp_serializer.save()
-            return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        layer.name = data["name"]
+        layer.protocol_carto = data["protocol_carto"]
+        layer.color = data["color"]
+        layer.icon_color = data["icon_color"]
+        layer.icon = data["icon"]
+        layer.icon_background = data["icon_background"]
+        layer.cercle_icon = cercle_icon  # type: ignore
+        layer.square_icon = square_icon  # type: ignore
+
+        layer.save()
+
+        return Response(LayerSerializer(layer).data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_summary="Retrieve a layer",
@@ -177,7 +182,7 @@ class ListCreateLayerView(ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         """Retrieve all layers"""
         query_params_deserializer = ListCreateLayerQueryParamsDeserializer(
-            data=self.request.query_params
+            data=self.request.query_params  # type: ignore
         )
         query_params_deserializer.is_valid(raise_exception=True)
         validated_data = query_params_deserializer.validated_data
@@ -199,21 +204,21 @@ class ListCreateLayerView(ListCreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         """Create a new layer"""
-        vp_serializer = LayerSerializer(data=request.data)
+        deserializer = LayerCreateDeserializer(data=request.data)
+        deserializer.is_valid(raise_exception=True)
 
-        query_dict = QueryDict("", mutable=True)
-        query_dict.update(self.request.data)
-        if query_dict.get("svg_as_text", None) is not None:
+        data: dict = deserializer.validated_data  # type: ignore
+
+        if data.get("svg_as_text", None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix=".png")
             fileName = f.name
             svg2png(
                 bytestring=request.data["svg_as_text"], write_to=fileName, unsafe=True
             )
-            del request.data["svg_as_text"]
             dataFile = open(fileName, "rb")
-            request.data["cercle_icon"] = File(dataFile)
+            cercle_icon = File(dataFile)
 
-        if query_dict.get("svg_as_text_square", None) is not None:
+        if data.get("svg_as_text_square", None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix=".png")
             fileName = f.name
             svg2png(
@@ -221,29 +226,31 @@ class ListCreateLayerView(ListCreateAPIView):
                 write_to=fileName,
                 unsafe=True,
             )
-            del request.data["svg_as_text_square"]
             dataFile = open(fileName, "rb")
-            request.data["square_icon"] = File(dataFile)
+            square_icon = File(dataFile)
 
         if (
             "icon" in request.data
-            and query_dict.get("svg_as_text", None) is None
-            and query_dict.get("svg_as_text_square", None) is None
+            and data.get("svg_as_text", None) is None
+            and data.get("svg_as_text_square", None) is None
         ):
             icon: Icon = Icon.objects.get(pk=request.data["icon"])
-            request.data["cercle_icon"] = icon.path
-            request.data["square_icon"] = icon.path
-            try:
-                del request.data["svg_as_text_square"]
-                del request.data["svg_as_text"]
-            except Exception:
-                pass
+            cercle_icon = icon.path
+            square_icon = icon.path
 
-        if vp_serializer.is_valid():
-            vp_serializer.save()
-            return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        layer = Layer.objects.create(
+            name=data["name"],
+            protocol_carto=data["protocol_carto"],
+            color=data["color"],
+            icon_color=data["icon_color"],
+            icon=data["icon"],
+            icon_background=data["icon_background"],
+            cercle_icon=cercle_icon,
+            square_icon=square_icon,
+            sub=data["sub"],
+        )
+
+        return Response(LayerSerializer(layer).data, status=status.HTTP_201_CREATED)
 
 
 class RetrieveUpdateDestroyLayerProviderStyleView(RetrieveUpdateDestroyAPIView):

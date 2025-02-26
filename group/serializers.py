@@ -1,3 +1,4 @@
+from utils import choices
 from utils.serializers import MediaUrlField
 from .models import (
     Map,
@@ -95,15 +96,27 @@ class GroupSerializer(serializers.ModelSerializer):
             "order",
         )
 
-    def create(self, validate_data):
+    # def create(self, validate_data):
 
-        if "map_id" in validate_data:
-            map = validate_data.pop("map_id")
-            group = Group.objects.create(map=map, **validate_data)
-            group.map_set.add(map)
-        else:
-            group = Group.objects.create(**validate_data)
-        return group
+    #     if "map_id" in validate_data:
+    #         map = validate_data.pop("map_id")
+    #         group = Group.objects.create(map=map, **validate_data)
+    #         group.map_set.add(map)
+    #     else:
+    #         group = Group.objects.create(**validate_data)
+    #     return group
+
+
+class GroupUpdateDeserializer(serializers.Serializer):
+    icon_id = serializers.PrimaryKeyRelatedField(queryset=Icon.objects.all())
+    color = serializers.CharField()
+    name = serializers.CharField()
+    svg_as_text = serializers.CharField()
+    type_group = serializers.ChoiceField(choices=choices.groupType)
+
+
+class GroupCreateDeserializer(GroupUpdateDeserializer):
+    map_id = serializers.PrimaryKeyRelatedField(queryset=Map.objects.all())
 
 
 class LayerProviderStyleSerializer(serializers.ModelSerializer):
@@ -157,6 +170,21 @@ class LayerSerializer(serializers.ModelSerializer):
         return LayerProviderStyleSerializer(
             Layer_provider_style.objects.filter(layer_id=instance.pk), many=True
         ).data
+
+
+class LayerUpdateDeserializer(serializers.Serializer):
+    icon_color = serializers.CharField()
+    icon_background = serializers.BooleanField()
+    icon = serializers.PrimaryKeyRelatedField(queryset=Icon.objects.all())
+    color = serializers.CharField()
+    name = serializers.CharField()
+    protocol_carto = serializers.ChoiceField(choices=choices.ProviderType)
+    svg_as_text = serializers.CharField(allow_null=True, required=False)
+    svg_as_text_square = serializers.CharField(allow_null=True, required=False)
+
+
+class LayerCreateDeserializer(LayerUpdateDeserializer):
+    sub = serializers.PrimaryKeyRelatedField(queryset=Sub.objects.all())
 
 
 class SubWithLayersSerializer(serializers.ModelSerializer):
@@ -231,7 +259,7 @@ class MetadataSerializer(serializers.ModelSerializer):
                 if tag.exists() is False:
                     metadata.tags.create(name=api_tag["name"])
                 else:
-                    metadata.tags.add(tag.first().pk)
+                    metadata.tags.add(tag.first().pk)  # type: ignore
         else:
             metadata = Metadata.objects.create(**validate_data)
         return metadata
@@ -251,7 +279,7 @@ class MetadataSerializer(serializers.ModelSerializer):
                 if tag.exists() is False:
                     metadata.tags.create(name=api_tag["name"])
                 else:
-                    metadata.tags.add(tag.first().pk)
+                    metadata.tags.add(tag.first().pk)  # type: ignore
             metadata.save()
             return metadata
         else:

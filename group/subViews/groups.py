@@ -1,3 +1,4 @@
+from django.db import transaction
 from group.subModels.icon import Icon
 from ..models import (
     Group,
@@ -23,6 +24,8 @@ from django.core.files import File
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from ..serializers import (
+    GroupCreateDeserializer,
+    GroupUpdateDeserializer,
     SubWithGroupSerializer,
     MapSerializer,
     GroupSerializer,
@@ -84,32 +87,34 @@ class RetrieveUpdateDestroyGroupView(RetrieveUpdateDestroyAPIView):
     def put(self, request, pk):
         """update a new group"""
         group = get_object_or_404(Group.objects.all(), pk=pk)
-        vp_serializer = GroupSerializer(instance=group, data=request.data, partial=True)
-        query_dict = QueryDict("", mutable=True)
-        query_dict.update(self.request.data)
-        if query_dict.get("svg_as_text", None) is not None:
+
+        deserializer = GroupUpdateDeserializer(data=request.data)
+        deserializer.is_valid(raise_exception=True)
+
+        data: dict = deserializer.validated_data  # type: ignore
+
+        if data.get("svg_as_text", None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix=".png")
             fileName = f.name
             svg2png(
                 bytestring=request.data["svg_as_text"], write_to=fileName, unsafe=True
             )
-            del request.data["svg_as_text"]
             dataFile = open(fileName, "rb")
-            request.data["icon_path"] = File(dataFile)
+            icon_path = File(dataFile)
 
-        if "icon_id" in request.data and query_dict.get("svg_as_text", None) is None:
+        if "icon_id" in data and data.get("svg_as_text", None) is None:
             icon: Icon = Icon.objects.get(pk=request.data["icon_id"])
-            request.data["icon_path"] = icon.path
-            try:
-                del request.data["svg_as_text"]
-            except Exception:
-                pass
+            icon_path = icon.path
 
-        if vp_serializer.is_valid():
-            vp_serializer.save()
-            return Response(vp_serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        group.name = data["name"]
+        group.type_group = data["type_group"]
+        group.icon_path = icon_path  # type: ignore
+        group.icon = data["icon_id"]
+        group.color = data["color"]
+
+        group.save()
+
+        return Response(GroupSerializer(group).data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_summary="Delete a group",
@@ -164,33 +169,35 @@ class ListCreateGroupView(MultipleFieldLookupListMixin, ListCreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         """Add a new group"""
-        vp_serializer = GroupSerializer(data=request.data)
-        query_dict = QueryDict("", mutable=True)
-        query_dict.update(self.request.data)
+        deserializer = GroupCreateDeserializer(data=request.data)
+        deserializer.is_valid(raise_exception=True)
 
-        if query_dict.get("svg_as_text", None) is not None:
+        data: dict = deserializer.validated_data  # type: ignore
+
+        if data.get("svg_as_text", None) is not None:
             f = tempfile.NamedTemporaryFile(dir=settings.TEMP_URL, suffix=".png")
             fileName = f.name
             svg2png(
                 bytestring=request.data["svg_as_text"], write_to=fileName, unsafe=True
             )
-            del request.data["svg_as_text"]
             dataFile = open(fileName, "rb")
-            request.data["icon_path"] = File(dataFile)
+            icon_path = File(dataFile)
 
-        if "icon_id" in request.data and query_dict.get("svg_as_text", None) is None:
-            icon: Icon = Icon.objects.get(pk=request.data["icon_id"])
-            request.data["icon_path"] = icon.path
-            try:
-                del request.data["svg_as_text"]
-            except Exception:
-                pass
+        if "icon_id" in data and data.get("svg_as_text", None) is None:
+            icon: Icon = data.get("icon_id")  # type: ignore
+            icon_path = icon.path
 
-        if vp_serializer.is_valid():
-            vp_serializer.save()
-            return Response(vp_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(vp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            group = Group.objects.create(
+                name=data.get("name"),
+                type_group=data.get("type_group"),
+                icon_path=icon_path,
+                icon=data.get("icon_id"),
+                color=data.get("color"),
+            )
+            group.map_set.add(data.get("map_id"))  # type: ignore
+
+        return Response(GroupSerializer(group).data, status=status.HTTP_201_CREATED)
 
 
 class RetrieveUpdateDestroySubView(RetrieveUpdateDestroyAPIView):
