@@ -16,5 +16,8 @@ drf-yasg
 gunicorn
 django-filter
 geoalchemy
-sqlalchemy
-geopandas
+pandas==2.1.4 
+geopandas==0.13.2 
+sqlalchemy==1.4.36
+shapely==1.8.5
+sqlalchemy==1.4.36

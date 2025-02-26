@@ -10,9 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
-from pathlib import Path
-from datetime import timedelta
 import os
+from pathlib import Path
+
 from qgis.core import QgsApplication
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "provider",
     "group",
     "parameter",
+    "tracking",
 ]
 
 REST_FRAMEWORK = {
