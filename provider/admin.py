@@ -20,7 +20,44 @@ class VectorAdmin(admin.ModelAdmin):
         "id_server",
         "path_qgis",
         "state",
+        "created_at",
+        "updated_at",
+    )
+    fieldsets = (
+        (
+            "Infos générales",
+            {
+                "fields": (
+                    "name",
+                    "type",
+                    "state",
+                    "geometry_type",
+                    "download_number",
+                    "download_logs_count",
+                )
+            },
+        ),
+        (
+            "Serveur cartographique",
+            {
+                "fields": (
+                    "url_server",
+                    "id_server",
+                    "path_qgis",
+                )
+            },
+        ),
+        ("Téléchargement", {"fields": ("download_logs",)}),
+        ("Logs", {"fields": ("created_at", "updated_at")}),
+    )
+
+    readonly_fields = (
+        "type",
+        "state",
+        "geometry_type",
         "download_logs",
+        "download_logs_count",
+        "download_number",
         "created_at",
         "updated_at",
     )
@@ -48,10 +85,10 @@ class VectorAdmin(admin.ModelAdmin):
         """
         row_tpl = "<tr><td>{total}</td><td>{date}</td></tr>"
         rows = ""
-        for log in obj.get_download_logs():
+        for log in list(obj.get_download_logs()):
             rows += row_tpl.format(
                 total=log["total_amount"],
-                date=log["updated_on"],
+                date=log["date"],
             )
 
         return mark_safe(base.format(rows=rows))
