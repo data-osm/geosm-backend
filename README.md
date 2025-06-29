@@ -47,7 +47,7 @@ $  docker-compose -f docker-compose-prod.yaml exec --user postgres db psql -d po
 ### For kibana use
 https://stackoverflow.com/questions/42385977/accessing-a-docker-container-from-another-container
 
-docker run --network host --name kibana -e "ELASTICSEARCH_HOSTS=http://172.17.0.1:9200" -p 5601:5601 kibana:7.10.1 
+docker run --network host --name kibana -e "ELASTICSEARCH_HOSTS=http://127.0.0.1:9200" -p 5601:5601 kibana:7.17.0
 
 ## Backup database and files: 
 

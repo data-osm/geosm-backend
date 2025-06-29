@@ -1,6 +1,8 @@
-from .base import *
 from datetime import timedelta
+
 import environ
+
+from .base import *
 
 env = environ.Env()
 environ.Env.read_env()
@@ -10,8 +12,8 @@ DEBUG = True
 SECRET_KEY = "vr)rd0$p7@*j4-o5rzr!=l&^bwe$g_f51*dmtj6+!g4hoc%!p%"
 
 FRONT_URL = "http://localhost:4200"
-CORS_ALLOWED_ORIGINS = [FRONT_URL]
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+CORS_ALLOWED_ORIGINS = [FRONT_URL, "http://192.168.1.188:4200"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.188"]
 CONTACT_EMAIL = ""
 
 CORS_ALLOW_METHODS = [
