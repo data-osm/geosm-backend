@@ -10,7 +10,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models.functions import TruncDate
+from django.db.models.functions import Coalesce, JSONObject, TruncDate
 from django.forms import ValidationError
 from tracking_fields.decorators import track
 from tracking_fields.models import UPDATE, TrackedFieldModification, TrackingEvent
@@ -29,12 +29,14 @@ from .qgis.manageStyle import (
 class VectorQuerySet(models.QuerySet):
     def with_download_logs_count(self):
         return self.annotate(
-            download_logs_count=models.functions.Coalesce(
+            download_logs_count=Coalesce(
                 models.Subquery(
                     TrackedFieldModification.objects.filter(
                         field="download_number",
                         event__in=TrackingEvent.objects.filter(
-                            object_id=models.OuterRef("provider_vector_id"),
+                            object_id=models.OuterRef(
+                                models.OuterRef("provider_vector_id")
+                            ),
                             object_content_type=ContentType.objects.get_for_model(
                                 self.model
                             ),
@@ -121,10 +123,10 @@ class Vector(models.Model):
             .annotate(total_amount=models.Count("pk"))
             .values(cnt=models.Count("*"))
             .values_list(
-                models.functions.JSONObject(
-                    total_amount=models.F("total_amount"),
-                    date=models.F("updated_on"),
-                )
+                JSONObject(
+                    total_amount=models.F("total_amount"), date=models.F("updated_on")
+                ),
+                flat=True,
             )
         )
 
