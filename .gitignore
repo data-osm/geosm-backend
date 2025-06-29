@@ -23,6 +23,7 @@ getCustomStyle.py
 provider/qgis/plugin/*.log
 .idea
 icons/sig-file/*
+staticfiles
 
 venv/
 logstash-sync/

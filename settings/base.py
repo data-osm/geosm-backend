@@ -160,7 +160,7 @@ AUTH_USER_MODEL = "account.User"
 MEDIA_URL = "/icons/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "icons")
 TEMP_URL = os.path.join(MEDIA_ROOT, "temp")
-
+STATIC_ROOT = BASE_DIR / "staticfiles"
 # Swagger settings
 SWAGGER_SETTINGS = {
     "DEFAULT_INFO": "geosmBackend.urls.swagger_api_info",

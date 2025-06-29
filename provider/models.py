@@ -1,33 +1,62 @@
-from django.conf import settings
-from django.contrib.gis.db import models
-import re
 import os
+import re
 import uuid
-from django.core.files.base import ContentFile
-from django.db import transaction
-from django.contrib.postgres.fields import ArrayField
-from django.forms import ValidationError
+from pathlib import Path
 
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.db import models
+from django.contrib.postgres.fields import ArrayField
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.db import transaction
+from django.db.models.functions import TruncDate
+from django.forms import ValidationError
+from tracking_fields.decorators import track
+from tracking_fields.models import UPDATE, TrackedFieldModification, TrackingEvent
+
+from group.subModels.icon import Icon
 from utils.choices import ProviderState, ProviderType, VectorSourceType, geometryType
 
 from .qgis.manageStyle import (
     add_style_qml_from_string_to_layer,
+    get_thumbnail_from_style_of_layer,
     remove_style,
     update_style,
-    get_thumbnail_from_style_of_layer,
 )
-from tracking_fields.decorators import track
-from group.subModels.icon import Icon
-from pathlib import Path
-from django.core.files.storage import default_storage
 
 
-# Create your models here.
+class VectorQuerySet(models.QuerySet):
+    def with_download_logs_count(self):
+        return self.annotate(
+            download_logs_count=models.functions.Coalesce(
+                models.Subquery(
+                    TrackedFieldModification.objects.filter(
+                        field="download_number",
+                        event__in=TrackingEvent.objects.filter(
+                            object_id=models.OuterRef("provider_vector_id"),
+                            object_content_type=ContentType.objects.get_for_model(
+                                self.model
+                            ),
+                            action=UPDATE,
+                        ).values_list("pk", flat=True),
+                    )
+                    .values("field")
+                    .annotate(cnt=models.Count("*"))
+                    .values("cnt")[:1]
+                ),
+                0,
+            )
+        )
 
 
-@track("name", "url_server", "id_server", "path_qgis", "table", "count")
+@track(
+    "name", "url_server", "id_server", "path_qgis", "table", "count", "download_number"
+)
 class Vector(models.Model):
     """model of a vector provider. it represent a data and is store in a schema and table"""
+
+    objects = VectorQuerySet.as_manager()
 
     provider_vector_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50, null=True, default=None, unique=True)
@@ -76,6 +105,28 @@ class Vector(models.Model):
     def increment_download_number(self):
         self.download_number += 1
         self.save()
+
+    def get_download_logs(self):
+        return (
+            TrackedFieldModification.objects.filter(
+                field="download_number",
+                event__in=TrackingEvent.objects.filter(
+                    object_id=self.provider_vector_id,
+                    object_content_type=ContentType.objects.get_for_model(self),
+                    action=UPDATE,
+                ).values_list("pk", flat=True),
+            )
+            .annotate(updated_on=TruncDate("event__date"))
+            .values("updated_on")
+            .annotate(total_amount=models.Count("pk"))
+            .values(cnt=models.Count("*"))
+            .values_list(
+                models.functions.JSONObject(
+                    total_amount=models.F("total_amount"),
+                    date=models.F("updated_on"),
+                )
+            )
+        )
 
 
 class External(models.Model):
@@ -151,7 +202,6 @@ class Style(models.Model):
         self.name = re.sub("[^A-Za-z0-9]+", "", self.name)
 
         if self.pk:
-
             previous_style = Style.objects.get(pk=self.pk)
             self.name = previous_style.name
             if previous_style.qml_file != self.qml_file:
@@ -194,7 +244,6 @@ class Style(models.Model):
                 self.pictogram.name = path
 
         else:
-
             self.qml_file.open(mode="rb")
             qml_content = self.qml_file.read()
             if isinstance(qml_content, str) is False:
