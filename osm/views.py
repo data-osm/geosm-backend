@@ -1,31 +1,21 @@
-from django.shortcuts import render
-from rest_framework import status
-from django.db.models import Count
-from django.shortcuts import get_list_or_404, get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist
+from cuser.middleware import CuserMiddleware
 from django.conf import settings
-import traceback
-from .validateOsmQuerry import validateOsmQuerry
+from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from geosmBackend.cuserViews import (
+    CreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
+from geosmBackend.type import httpResponse
+
+from .serializers import SigFileSerializer, SimpleQuerrySerializer, osmQuerrySerializer
 from .subModels.Querry import Querry, SimpleQuerry
 from .subModels.sigFile import sigFile
-from provider.models import Vector
-from rest_framework import viewsets
-from rest_framework import permissions
-from rest_framework.parsers import FileUploadParser
-from rest_framework.response import Response
-from geosmBackend.cuserViews import (
-    UpdateAPIView,
-    RetrieveUpdateDestroyAPIView,
-    CreateAPIView,
-)
-from rest_framework.views import APIView
-from geosmBackend.type import httpResponse
-from cuser.middleware import CuserMiddleware
-from drf_yasg.utils import swagger_auto_schema
-from .serializers import osmQuerrySerializer, SimpleQuerrySerializer, SigFileSerializer
-from collections import defaultdict
-from drf_yasg import openapi
-
 
 # Create your views here.
 

@@ -1,54 +1,22 @@
-from ..models import (
-    Map,
-    Group,
-    Sub,
-    Layer,
-    Default_map,
-    Layer_provider_style,
-    Tags,
-    Metadata,
-    Base_map,
-)
-from genericIcon.models import Picto
-from genericIcon.managePicto import createPicto, updatePicto, ImageBox
-from ..subModels.icon import Icon, TagsIcon
-from rest_framework import viewsets
-from rest_framework import permissions
-from rest_framework.parsers import FileUploadParser
+from django.db import transaction
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions, status
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
+
+from genericIcon.managePicto import ImageBox, createPicto, updatePicto
 from geosmBackend.cuserViews import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
-    RetrieveAPIView,
-    CreateAPIView,
-    ListAPIView,
-    MultipleFieldLookupMixin,
-    MultipleFieldLookupListMixin,
 )
-from rest_framework import status
-from django.db import connection, transaction
-from rest_framework.decorators import api_view
-from uuid import uuid4
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+
+from ..models import (
+    Base_map,
+)
 from ..serializers import (
-    SubWithGroupSerializer,
     BaseMapSerializer,
-    TagsIconSerializer,
-    IconSerializer,
-    MapSerializer,
-    DefaultMapSerializer,
-    GroupSerializer,
-    SubSerializer,
-    SubWithLayersSerializer,
-    LayerSerializer,
-    LayerProviderStyleSerializer,
-    TagsSerializer,
-    MetadataSerializer,
 )
-from collections import defaultdict
 
 
 class RetrieveUpdateDestroyBaseMapView(RetrieveUpdateDestroyAPIView):
@@ -125,6 +93,8 @@ class BaseMapListCreateView(ListCreateAPIView):
     def get_permissions(self):
         if self.request.method != "GET":
             self.permission_classes = [permissions.IsAuthenticated]
+        else:
+            self.permission_classes = []
         return super(self.__class__, self).get_permissions()
 
     @swagger_auto_schema(
@@ -144,7 +114,6 @@ class BaseMapListCreateView(ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         """Create a new BaseMap"""
         if "picto" in request.data:
-
             transaction.set_autocommit(False)
 
             request.data["picto"] = {"raster_icon": request.data["picto"]}
@@ -187,7 +156,6 @@ class SetPrincipalBaseMap(APIView):
         tags=["Base map"],
     )
     def post(self, request, *args, **kwargs):
-
         if "id" in request.data:
             id = request.data["id"]
             for baseMap in Base_map.objects.all():

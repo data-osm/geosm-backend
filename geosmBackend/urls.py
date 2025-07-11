@@ -24,6 +24,8 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
+from account.views import CsrfTokenView, GetCurrentUserView, LoginView, LogoutView
+
 swagger_api_info = openapi.Info(
     title="OSMdata API",
     default_version="v1",
@@ -57,8 +59,10 @@ else:
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("auth/", include("djoser.urls")),
-    path("auth/", include("djoser.urls.jwt")),
+    path("auth/login/", LoginView.as_view(), name="login"),
+    path("auth/logout/", LogoutView.as_view(), name="logout"),
+    path("auth/me/", GetCurrentUserView.as_view(), name="me"),
+    path("api/csrf/", CsrfTokenView.as_view(), name="csrf-token"),
     path("api/account/", include("account.urls")),
     path("api/group/", include("group.urls")),
     path("api/provider/", include("provider.urls")),

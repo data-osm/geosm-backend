@@ -1,33 +1,28 @@
-from typing import List
+from django.db import connection
 from django.http.request import HttpRequest
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from geosmBackend.cuserViews import (
-    ListCreateAPIView,
-    RetrieveUpdateAPIView,
-    RetrieveUpdateDestroyAPIView,
     CreateAPIView,
     ListAPIView,
-    DestroyAPIView,
-    UpdateAPIView,
+    RetrieveUpdateAPIView,
+    RetrieveUpdateDestroyAPIView,
 )
-from rest_framework import permissions
-from .serializers import (
-    AdminBoundarySerializer,
-    ParameterSerializer,
-    AdminBoundaryCreateSerializer,
-    ParameterCreateSerializer,
-)
-from .models import AdminBoundary, Parameter
-from django.db import connection, Error
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from psycopg2.extras import NamedTupleCursor
-from .documents import BoundarysDocument
-from django.shortcuts import get_list_or_404, get_object_or_404
 from group.models import Vector
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+
+from .documents import BoundarysDocument
+from .models import AdminBoundary, Parameter
+from .serializers import (
+    AdminBoundaryCreateSerializer,
+    AdminBoundarySerializer,
+    ParameterCreateSerializer,
+    ParameterSerializer,
+)
 
 
 class ParameterDetailView(RetrieveUpdateAPIView):
@@ -82,6 +77,7 @@ class ParameterListView(ListAPIView):
     queryset = Parameter.objects.all()
     serializer_class = ParameterSerializer
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="List parameter of the app",
@@ -95,6 +91,7 @@ class ParameterListView(ListAPIView):
 
 class ExtentListView(APIView):
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="List all the regions of the app",
@@ -174,6 +171,7 @@ class ExtentListView(APIView):
 
 class GetExtentViewById(APIView):
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="Retrieve a  region of the app",
@@ -239,6 +237,7 @@ class GetExtentViewById(APIView):
 
 class ExtenView(APIView):
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="Get the principal region of the app",
@@ -323,6 +322,7 @@ class ExtenView(APIView):
 
 class SearchBoundary(APIView):
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="Search administrative boundary",
@@ -365,7 +365,6 @@ class SearchBoundary(APIView):
         tags=["Administrative boundary"],
     )
     def post(self, request, *args, **kwargs):
-
         def getAdminBoundaryFeature(table: str, shema: str, id: int):
             with connection.cursor() as cursor:
                 cursor.execute(
@@ -449,6 +448,7 @@ class SearchBoundary(APIView):
 
 class GetFeatureAdminBoundary(APIView):
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="Get a feature from an administrative boundary with his geometry",

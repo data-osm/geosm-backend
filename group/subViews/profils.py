@@ -1,17 +1,15 @@
-from ..models import (
-    Map,
-)
-from rest_framework import permissions, generics, filters
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import filters, generics, permissions, status
+
 from geosmBackend.cuserViews import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework import status
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from ..models import (
+    Map,
+)
 from ..serializers import (
     MapSerializer,
 )
@@ -71,6 +69,7 @@ class ListCreateMapView(ListCreateAPIView):
     queryset = Map.objects.all()
     serializer_class = MapSerializer
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="Returns all Maps",

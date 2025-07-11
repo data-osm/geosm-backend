@@ -77,6 +77,7 @@ class LogRenderTimePerFrame(generics.GenericAPIView):
     """
 
     authentication_classes = []
+    permission_classes = []
 
     def post(self, request, *args, **kwargs):
         deserializer = LogRenderTimePerFrameDeserializer(data=request.data)
@@ -110,6 +111,7 @@ class LogRenderTimePerFrame(generics.GenericAPIView):
 
 class CreateNPSFeedback(generics.GenericAPIView):
     authentication_classes = []
+    permission_classes = []
 
     def post(self, request, *args, **kwargs):
         deserializer = CreateNPSFeedbackDeserializer(data=request.data)
