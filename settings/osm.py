@@ -7,6 +7,7 @@ OSM_CLIENT_ID = env("OSM_CLIENT_ID")
 OSM_CLIENT_SECRET_ID = env("OSM_CLIENT_SECRET_ID")
 OSM_REDIRECT_URL = env("OSM_REDIRECT_URL")
 
-OSM_AUTHORIZATION_URL = "https://www.openstreetmap.org/oauth2/authorize"
-TOKEN_URL = "https://www.openstreetmap.org/oauth2/token"
-OSM_USER_DETAIL_URL = "https://api.openstreetmap.org/api/0.6/user/details"
+OSM_AUTHORIZATION_URL = env("OSM_AUTHORIZATION_URL")
+TOKEN_URL = env("TOKEN_URL")
+OSM_USER_DETAIL_URL = env("OSM_USER_DETAIL_URL")
+OSM_API_URL = env("OSM_API_URL")

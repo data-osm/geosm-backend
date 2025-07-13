@@ -87,6 +87,8 @@ class RetrieveUpdateDestroyLayerView(RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method != "GET":
             self.permission_classes = [permissions.IsAuthenticated]
+        else:
+            self.permission_classes = []
         return super(self.__class__, self).get_permissions()
 
     @swagger_auto_schema(
