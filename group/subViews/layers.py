@@ -8,10 +8,11 @@ from django.db import connection
 from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import filters, generics, permissions, status
+from rest_framework import filters, generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from account.permissions import CanAdministrate
 from geosmBackend.cuserViews import (
     ListCreateAPIView,
     MultipleFieldLookupListMixin,
@@ -86,7 +87,7 @@ class RetrieveUpdateDestroyLayerView(RetrieveUpdateDestroyAPIView):
 
     def get_permissions(self):
         if self.request.method != "GET":
-            self.permission_classes = [permissions.IsAuthenticated]
+            self.permission_classes = [CanAdministrate]
         else:
             self.permission_classes = []
         return super(self.__class__, self).get_permissions()
@@ -262,7 +263,7 @@ class ListCreateLayerView(ListCreateAPIView):
 class RetrieveUpdateDestroyLayerProviderStyleView(RetrieveUpdateDestroyAPIView):
     queryset = Layer_provider_style.objects.all()
     serializer_class = LayerProviderStyleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Retrieve a relation layerProviderStyle",
@@ -305,7 +306,7 @@ class RetrieveUpdateDestroyLayerProviderStyleView(RetrieveUpdateDestroyAPIView):
 class ListCreateLayerProviderStyleView(MultipleFieldLookupListMixin, ListCreateAPIView):
     queryset = Layer_provider_style.objects.all()
     serializer_class = LayerProviderStyleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     model = Layer_provider_style
     lookup_fields = ["layer_id"]
 
@@ -333,7 +334,7 @@ class ListCreateLayerProviderStyleView(MultipleFieldLookupListMixin, ListCreateA
 
 
 class LayerProviderReorderView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Set order of providers in a layer",
@@ -380,7 +381,7 @@ class SearchLayerTags(generics.ListAPIView):
     View to search tags
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     queryset = Tags.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ["name"]
@@ -475,7 +476,7 @@ class searchLayer(APIView):
 class SetPrincipalLayer(APIView):
     """Update the principal Layer"""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Define the principal Layer",

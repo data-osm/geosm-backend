@@ -1,26 +1,25 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions
-from rest_framework.response import Response
-from rest_framework import generics
-from rest_framework import status
-from rest_framework import filters
-from cuser.middleware import CuserMiddleware
-from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from geosmBackend.type import httpResponse
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import filters, generics, status
+from rest_framework.response import Response
+
+from account.permissions import CanAdministrate
 from geosmBackend.cuserViews import (
+    ListAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
-    ListAPIView,
 )
-from ..serializers import VectorProviderSerializer, VectorProviderWithStyleSerializer
+from geosmBackend.type import httpResponse
+
 from ..models import Vector
+from ..serializers import VectorProviderSerializer, VectorProviderWithStyleSerializer
 
 
 class ListCreateVectorProviderView(ListCreateAPIView):
     queryset = Vector.objects.all()
     serializer_class = VectorProviderSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     ordering_fields = "__all__"
     # ordering = ['name']
@@ -74,7 +73,7 @@ class ListCreateVectorProviderView(ListCreateAPIView):
 class RetrieveUpdateDestroyVectorProviderView(RetrieveUpdateDestroyAPIView):
     queryset = Vector.objects.all()
     serializer_class = VectorProviderSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Deletes a provider by id",
@@ -130,7 +129,7 @@ class SearchVectorProviderView(generics.ListAPIView):
     View to search a vector provider
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     queryset = Vector.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ["name"]
@@ -160,7 +159,7 @@ class ListVectorProviderWithStyleView(ListAPIView):
 
     queryset = Vector.objects.all()
     serializer_class = VectorProviderWithStyleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Gets all providers with style",

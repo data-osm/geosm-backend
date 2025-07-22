@@ -7,10 +7,11 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from account.permissions import CanAdministrate
 from geosmBackend.cuserViews import (
     ListAPIView,
     ListCreateAPIView,
@@ -36,7 +37,7 @@ from ..serializers import (
 
 
 class UpdateOrderGroup(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Update the order of groups",
@@ -77,7 +78,7 @@ class UpdateOrderGroup(APIView):
 class RetrieveUpdateDestroyGroupView(RetrieveUpdateDestroyAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Update a group",
@@ -204,7 +205,7 @@ class ListCreateGroupView(MultipleFieldLookupListMixin, ListCreateAPIView):
 class RetrieveUpdateDestroySubView(RetrieveUpdateDestroyAPIView):
     queryset = Sub.objects.all()
     serializer_class = SubSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Delete a SubGroup",
@@ -277,7 +278,7 @@ class ListSubWithLayersView(MultipleFieldLookupListMixin, ListAPIView):
 class SubViewListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
     queryset = Sub.objects.order_by("-updated_at")
     serializer_class = SubSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     lookup_fields = ["group_id"]
     model = Sub
 
@@ -303,7 +304,7 @@ class SubViewListCreate(MultipleFieldLookupListMixin, ListCreateAPIView):
 class SetPrincipalGroup(APIView):
     """Update the principal group"""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Define the principal group",

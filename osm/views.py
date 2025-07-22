@@ -3,10 +3,11 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from account.permissions import CanAdministrate
 from geosmBackend.cuserViews import (
     CreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -23,7 +24,7 @@ from .subModels.sigFile import sigFile
 class CreateOsmQuerryView(CreateAPIView):
     queryset = Querry.objects.all()
     serializer_class = osmQuerrySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Store a new osm query",
@@ -38,7 +39,7 @@ class CreateOsmQuerryView(CreateAPIView):
 class CreateSimpleQuerryView(CreateAPIView):
     queryset = SimpleQuerry.objects.all()
     serializer_class = SimpleQuerrySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Store a new simple query",
@@ -53,7 +54,7 @@ class CreateSimpleQuerryView(CreateAPIView):
 class SimpleQuerryViewDetail(RetrieveUpdateDestroyAPIView):
     queryset = SimpleQuerry.objects.all()
     serializer_class = SimpleQuerrySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Delete a Simple querry",
@@ -92,7 +93,7 @@ class osmQuerryView(APIView):
     View to add an osm query
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Finds a osm query by id",
@@ -143,7 +144,7 @@ class osmQuerryView(APIView):
 class CreateSigFileView(CreateAPIView):
     queryset = sigFile.objects.all()
     serializer_class = SigFileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     # authentication_classes = []
 
     @swagger_auto_schema(
@@ -159,7 +160,7 @@ class CreateSigFileView(CreateAPIView):
 class SigFileViewDetail(RetrieveUpdateDestroyAPIView):
     queryset = sigFile.objects.all()
     serializer_class = SigFileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Delete a SIG file",
@@ -194,7 +195,7 @@ class SigFileViewDetail(RetrieveUpdateDestroyAPIView):
 
 
 class ListConnection(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Get all connections of the app",

@@ -1,16 +1,18 @@
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+
+from account.permissions import CanAdministrate
+from geosmBackend.cuserViews import (
+    CreateAPIView,
+    MultipleFieldLookupMixin,
+    RetrieveAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
+
 from ..models import (
     Metadata,
 )
-from rest_framework import permissions
-from rest_framework import status
-from geosmBackend.cuserViews import (
-    RetrieveUpdateDestroyAPIView,
-    RetrieveAPIView,
-    CreateAPIView,
-    MultipleFieldLookupMixin,
-)
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 from ..serializers import (
     MetadataSerializer,
 )
@@ -21,7 +23,7 @@ class RetrieveCreateMetadataView(
 ):
     queryset = Metadata.objects.all()
     serializer_class = MetadataSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     lookup_fields = ["layer"]
 
     @swagger_auto_schema(
@@ -54,7 +56,7 @@ class RetrieveCreateMetadataView(
 class RetrieveUpdateDestroyMetadataView(RetrieveUpdateDestroyAPIView):
     queryset = Metadata.objects.all()
     serializer_class = MetadataSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Delete a layer metadata",

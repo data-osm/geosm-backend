@@ -1,10 +1,11 @@
 from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from account.permissions import CanAdministrate
 from genericIcon.managePicto import ImageBox, createPicto, updatePicto
 from geosmBackend.cuserViews import (
     ListCreateAPIView,
@@ -22,7 +23,7 @@ from ..serializers import (
 class RetrieveUpdateDestroyBaseMapView(RetrieveUpdateDestroyAPIView):
     queryset = Base_map.objects.all()
     serializer_class = BaseMapSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Delete a BaseMap",
@@ -92,7 +93,7 @@ class BaseMapListCreateView(ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method != "GET":
-            self.permission_classes = [permissions.IsAuthenticated]
+            self.permission_classes = [CanAdministrate]
         else:
             self.permission_classes = []
         return super(self.__class__, self).get_permissions()
@@ -145,7 +146,7 @@ class BaseMapListCreateView(ListCreateAPIView):
 class SetPrincipalBaseMap(APIView):
     """Update the principal map"""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Define the principal baseMap",

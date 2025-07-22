@@ -1,8 +1,19 @@
+from dj_rest_auth.serializers import LoginSerializer as BaseLoginSerializer
 from django.contrib.auth import password_validation
 from djoser.serializers import UserCreateSerializer as BaseUserRegistrationSerializer
 from rest_framework import serializers
 
+from account.osm import OSMFeatureType
+
 from .models import User
+
+
+class LoginSerializer(BaseLoginSerializer):
+    def get_auth_user(self, username, email, password):
+        user = super().get_auth_user(username, email, password)
+        if user and getattr(user, "is_administrator", None) is True:
+            return user
+        return None
 
 
 class UserNameSerializer(serializers.ModelSerializer):
@@ -73,3 +84,14 @@ class UserRegisterDeserializer(serializers.Serializer):
         obj = super().to_internal_value(data)
         del obj["password_2"]
         return obj
+
+
+class RetrieveOSMUserInfoSerializer(serializers.Serializer):
+    display_name = serializers.CharField()
+
+
+class UpdateOSMFeatureDeserializer(serializers.Serializer):
+    osm_id = serializers.IntegerField()
+    osm_type = serializers.ChoiceField(choices=OSMFeatureType.choices)
+    rnb = serializers.CharField()
+    diff_rnb = serializers.CharField(required=False, allow_null=True)

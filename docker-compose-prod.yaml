@@ -62,45 +62,10 @@ services:
     networks:
       - travellist
   
-  windows:
-    image: dockurr/windows
-    container_name: windows
-    volumes:
-      - ./windows:/storage
-      - ./logstash-sync:/data
-    # dns:
-    #  - 8.8.8.8
-    #  - 8.8.4.4
-    environment:
-      VERSION: "11"
-      DISK_SIZE: "104G"
-      RAM_SIZE: "6G"
-      CPU_CORES: "4"
-      LANGUAGE: "French"
-      REGION: "en-US"
-      KEYBOARD: "en-US"
-      USERNAME: "karltayou"
-      PASSWORD: "docker_revit"
-    devices:
-      - /dev/kvm
-      - /dev/net/tun
-    cap_add:
-      - NET_ADMIN
-    # ports:
-    #   - 8006:8006
-    #   - 3389:3389/tcp
-    #   - 3389:3389/udp
-    restart: always
-    stop_grace_period: 2m
-    networks:
-      vlan:
-        ipv4_address: 192.168.1.100
-      
 networks:
   travellist:
     driver: bridge
-  vlan:
-    external: true
+ 
 
 # docker network create -d macvlan \
 #   --subnet=192.168.1.0/24 \

@@ -3,10 +3,11 @@ from django.http.request import HttpRequest
 from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from account.permissions import CanAdministrate
 from geosmBackend.cuserViews import (
     CreateAPIView,
     ListAPIView,
@@ -26,7 +27,7 @@ from .serializers import (
 
 
 class ParameterDetailView(RetrieveUpdateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     queryset = Parameter.objects.all()
     serializer_class = ParameterCreateSerializer
 
@@ -59,7 +60,7 @@ class ParameterDetailView(RetrieveUpdateAPIView):
 
 
 class ParameterCreateView(CreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     queryset = Parameter.objects.all()
     serializer_class = ParameterCreateSerializer
 
@@ -519,7 +520,7 @@ class GetFeatureAdminBoundary(APIView):
 
 
 class AdminBoundaryDetailView(RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     queryset = AdminBoundary.objects.all()
     serializer_class = AdminBoundarySerializer
 
@@ -556,7 +557,7 @@ class AdminBoundaryDetailView(RetrieveUpdateDestroyAPIView):
 
 
 class AdminBoundaryCreateView(CreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     queryset = AdminBoundary.objects.all()
     serializer_class = AdminBoundaryCreateSerializer
 
