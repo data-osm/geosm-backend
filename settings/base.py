@@ -13,7 +13,10 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import os
 from pathlib import Path
 
-from qgis.core import QgsApplication
+from qgis.core import QgsApplication  # type: ignore
+
+from .osm import *  # noqa: F403
+from .rest import *  # noqa: F403
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -52,12 +55,6 @@ INSTALLED_APPS = [
     "tracking",
 ]
 
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ],
-    "EXCEPTION_HANDLER": "geosmBackend.custom_exception_handler.custom_exception_handler",
-}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -77,9 +74,6 @@ ELASTICSEARCH_DSL = {
 }
 ELASTICSEARCH_DSL_AUTOSYNC = False
 
-DJOSER = {
-    "SERIALIZERS": {"user_create": "account.serializers.UserRegistrationSerializer"}
-}
 
 CORS_ALLOWED_ORIGINS = ["http://localhost:4200", "http://127.0.0.1:9000"]
 
@@ -161,29 +155,7 @@ MEDIA_URL = "/icons/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "icons")
 TEMP_URL = os.path.join(MEDIA_ROOT, "temp")
 STATIC_ROOT = BASE_DIR / "staticfiles"
-# Swagger settings
-SWAGGER_SETTINGS = {
-    "DEFAULT_INFO": "geosmBackend.urls.swagger_api_info",
-    # Renseigner plus tard les bonnes urls
-    "LOGIN_URL": "/auth/jwt/create/",
-    "LOGOUT_URL": "/auth/users/logout/",
-    "USE_SESSION_AUTH": True,
-    "REFETCH_SCHEMA_WITH_AUTH": True,
-    "REFETCH_SCHEMA_ON_LOGOUT": True,
-    "enabled_methods": ["get", "post", "put", "delete"],
-    "SECURITY_DEFINITIONS": {
-        "Basic": {"type": "basic"},
-        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
-    },
-    #    'DEFAULT_API_URL': 'https://tiles.dataosm.info/',
-    "REFETCH_SCHEMA_WITH_AUTH": True,
-    # Document que le swagger doit charger
-    #'SPEC_URL': 'https://tiles.dataosm.info/',
-}
 
-REDOC_SETTINGS = {
-    "LAZY_RENDERING": False,
-}
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 QgsApplication.setPrefixPath("/usr/", True)

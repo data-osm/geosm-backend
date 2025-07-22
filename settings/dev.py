@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 
 import environ
@@ -14,6 +15,10 @@ SECRET_KEY = "vr)rd0$p7@*j4-o5rzr!=l&^bwe$g_f51*dmtj6+!g4hoc%!p%"
 FRONT_URL = "http://localhost:4200"
 CORS_ALLOWED_ORIGINS = [FRONT_URL, "http://192.168.1.188:4200"]
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.188"]
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+
+CORS_ALLOW_CREDENTIALS = True
+
 CONTACT_EMAIL = ""
 
 CORS_ALLOW_METHODS = [
@@ -24,6 +29,10 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
+SESSION_COOKIE_SAMESITE = None
+CSRF_COOKIE_SAMESITE = None
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 
 DATABASES = {
@@ -77,3 +86,5 @@ LOGGING = {
         },
     },
 }
+
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"

@@ -1,43 +1,41 @@
-from io import BytesIO
 import re
+import tempfile
+from io import BytesIO
+from os import walk
+from os.path import join, relpath
+from pathlib import Path
 from typing import List
+from wsgiref.util import FileWrapper
+from zipfile import ZipFile
 
+from django.conf import settings
 from django.db import connections
-from osm.subModels.sigFile import sigFile
+from django.http import StreamingHttpResponse
+from django.shortcuts import get_list_or_404, get_object_or_404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from osgeo import ogr
+from osgeo.ogr import DataSource
+from osgeo.ogr import Layer as OgrLayer
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from osm.models import Querry, SimpleQuerry
+from osm.subModels.sigFile import sigFile
+from provider.models import Style, Vector
 from provider.qgis.manageVectorLayer import save_qml_to_geo_package
+from provider.serializers import VectorProviderSerializer
 
 # Create your views here.
 from ..models import (
     Layer_provider_style,
 )
-from rest_framework.response import Response
-from rest_framework.views import APIView
-
-from rest_framework import status
-from django.shortcuts import get_list_or_404, get_object_or_404
-from django.http import StreamingHttpResponse
-
-
-from provider.models import Vector, Style
-from provider.serializers import VectorProviderSerializer
-
-import tempfile
-from django.conf import settings
-from os.path import join, relpath
-from wsgiref.util import FileWrapper
-from osgeo import ogr
-from osgeo.ogr import DataSource, Layer as OgrLayer
-from pathlib import Path
-from zipfile import ZipFile
-from os import walk
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from osm.models import Querry, SimpleQuerry
 
 
 class CountFeaturesInGeometry(APIView):
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="Count features of a provider ",
@@ -57,7 +55,6 @@ class CountFeaturesInGeometry(APIView):
         tags=["Download data"],
     )
     def post(self, request, *args, **kwargs):
-
         try:
             provider_vector_id = request.data["provider_vector_id"]
             table_id = request.data["table_id"]
@@ -154,6 +151,7 @@ class CountFeaturesInGeometry(APIView):
 
 class DownloadFeatureById(APIView):
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="Download a feature from a provider by id  ",
@@ -354,6 +352,7 @@ class DownloadFeatureById(APIView):
 
 class DownloadFeaturesInGeometry(APIView):
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="Download features of a provider",

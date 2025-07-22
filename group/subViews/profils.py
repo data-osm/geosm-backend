@@ -1,17 +1,16 @@
-from ..models import (
-    Map,
-)
-from rest_framework import permissions, generics, filters
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import filters, generics, status
+
+from account.permissions import CanAdministrate
 from geosmBackend.cuserViews import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework import status
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from ..models import (
+    Map,
+)
 from ..serializers import (
     MapSerializer,
 )
@@ -20,7 +19,7 @@ from ..serializers import (
 class RetrieveUpdateDestroyMapView(RetrieveUpdateDestroyAPIView):
     queryset = Map.objects.all()
     serializer_class = MapSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Retrieve a map",
@@ -71,6 +70,7 @@ class ListCreateMapView(ListCreateAPIView):
     queryset = Map.objects.all()
     serializer_class = MapSerializer
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="Returns all Maps",
@@ -100,7 +100,7 @@ class SearchMaps(generics.ListAPIView):
     filter_backends = [filters.SearchFilter]
     search_fields = ["name"]
     serializer_class = MapSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Search icons by name",

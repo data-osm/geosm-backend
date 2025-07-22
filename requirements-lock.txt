@@ -18,3 +18,7 @@ django-filter==21.1
 geoalchemy2<0.11
 sqlalchemy==1.4
 geopandas==0.10
+osmapi==4.3.0
+cli-oauth2==0.3.1 
+platformdirs==4.3.8
+dj-rest-auth==6.0.0

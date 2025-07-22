@@ -1,35 +1,37 @@
+import tempfile
+from typing import List
+
+from cairosvg import svg2png
+from django.conf import settings
+from django.core.files import File
+from django.db import connection
 from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import filters, generics, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from account.permissions import CanAdministrate
+from geosmBackend.cuserViews import (
+    ListCreateAPIView,
+    MultipleFieldLookupListMixin,
+    RetrieveUpdateDestroyAPIView,
+)
 from group.subModels.icon import Icon
+
+from ..documents import LayerDocument
 from ..models import (
     Group,
     Layer,
     Layer_provider_style,
     Tags,
 )
-from typing import List
-from rest_framework import permissions, generics, filters
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from geosmBackend.cuserViews import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
-    MultipleFieldLookupListMixin,
-)
-from rest_framework import status
-from django.conf import settings
-from django.db import connection
-from django.http.request import QueryDict
-from cairosvg import svg2png
-import tempfile
-from django.core.files import File
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from ..documents import LayerDocument
 from ..serializers import (
     GroupSerializer,
     LayerCreateDeserializer,
-    LayerSerializer,
     LayerProviderStyleSerializer,
+    LayerSerializer,
     LayerUpdateDeserializer,
     ListCreateLayerQueryParamsDeserializer,
     SetPrincipalLayerDeserializer,
@@ -40,6 +42,7 @@ from ..serializers import (
 class GetOldLayer(APIView):
     swagger_schema = None
     authentication_classes = []
+    permission_classes = []
 
     def post(self, request, *args, **kwargs):
         if "layer_id" in request.data:
@@ -77,13 +80,16 @@ class RetrieveUpdateDestroyLayerView(RetrieveUpdateDestroyAPIView):
     def get_authenticators(self):
         if self.request.method == "GET":
             authentication_classes = []
+
             return authentication_classes
         else:
             return super(self.__class__, self).get_authenticators()
 
     def get_permissions(self):
         if self.request.method != "GET":
-            self.permission_classes = [permissions.IsAuthenticated]
+            self.permission_classes = [CanAdministrate]
+        else:
+            self.permission_classes = []
         return super(self.__class__, self).get_permissions()
 
     @swagger_auto_schema(
@@ -171,6 +177,7 @@ class ListCreateLayerView(ListCreateAPIView):
     serializer_class = LayerSerializer
     permission_classes = []
     authentication_classes = []
+
     lookup_fields = ["sub", "sub__group", "principal"]
     model = Layer
 
@@ -256,7 +263,7 @@ class ListCreateLayerView(ListCreateAPIView):
 class RetrieveUpdateDestroyLayerProviderStyleView(RetrieveUpdateDestroyAPIView):
     queryset = Layer_provider_style.objects.all()
     serializer_class = LayerProviderStyleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Retrieve a relation layerProviderStyle",
@@ -299,7 +306,7 @@ class RetrieveUpdateDestroyLayerProviderStyleView(RetrieveUpdateDestroyAPIView):
 class ListCreateLayerProviderStyleView(MultipleFieldLookupListMixin, ListCreateAPIView):
     queryset = Layer_provider_style.objects.all()
     serializer_class = LayerProviderStyleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     model = Layer_provider_style
     lookup_fields = ["layer_id"]
 
@@ -327,7 +334,7 @@ class ListCreateLayerProviderStyleView(MultipleFieldLookupListMixin, ListCreateA
 
 
 class LayerProviderReorderView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Set order of providers in a layer",
@@ -354,7 +361,6 @@ class LayerProviderReorderView(APIView):
         tags=["Layer"],
     )
     def post(self, request, *args, **kwargs):
-
         if "reorderProviders" in request.data:
             reorderProviders = request.data["reorderProviders"]
             for provider in reorderProviders:
@@ -375,7 +381,7 @@ class SearchLayerTags(generics.ListAPIView):
     View to search tags
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     queryset = Tags.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ["name"]
@@ -399,8 +405,8 @@ class SearchLayerTags(generics.ListAPIView):
 
 
 class searchLayer(APIView):
-
     authentication_classes = []
+    permission_classes = []
 
     @swagger_auto_schema(
         operation_summary="Search layer with elasticsearch",
@@ -470,7 +476,7 @@ class searchLayer(APIView):
 class SetPrincipalLayer(APIView):
     """Update the principal Layer"""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Define the principal Layer",

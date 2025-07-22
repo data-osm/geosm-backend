@@ -1,33 +1,32 @@
-from django.http.request import QueryDict
+import json
 from typing import Callable
 
-# Create your views here.
-from ..models import Style, Custom_style
-from rest_framework import permissions
+from django.http.request import QueryDict
+from django.shortcuts import get_list_or_404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
+
+from account.permissions import CanAdministrate
 from geosmBackend.cuserViews import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
     ListAPIView,
+    ListCreateAPIView,
     MultipleFieldLookupListMixin,
+    RetrieveUpdateDestroyAPIView,
 )
-from rest_framework import status
-from geosmBackend.type import httpResponse
-from django.shortcuts import get_list_or_404
-import json
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
-from ..serializers import styleProviderSerializer, CustomStyleSerializer
-
 from provider.qgis.customStyleHandler import CustomStyleHandler, ResponseCustomStyle
+
+# Create your views here.
+from ..models import Custom_style, Style
+from ..serializers import CustomStyleSerializer, styleProviderSerializer
 
 
 class ListCustomStyle(MultipleFieldLookupListMixin, ListAPIView):
     queryset = Custom_style.objects.all()
     serializer_class = CustomStyleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     lookup_fields = ["geometry_type"]
     model = Custom_style
 
@@ -44,7 +43,7 @@ class ListCustomStyle(MultipleFieldLookupListMixin, ListAPIView):
 class RetrieveUpdateDestroyStyleView(RetrieveUpdateDestroyAPIView):
     queryset = Style.objects.all()
     serializer_class = styleProviderSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     parser_class = [MultiPartParser, FormParser]
 
     @swagger_auto_schema(
@@ -95,7 +94,7 @@ class RetrieveUpdateDestroyStyleView(RetrieveUpdateDestroyAPIView):
 class ListCreateStyleView(ListCreateAPIView):
     queryset = Style.objects.all()
     serializer_class = styleProviderSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     parser_class = [MultiPartParser, FormParser]
 
     @swagger_auto_schema(

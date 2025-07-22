@@ -38,7 +38,7 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
     container_name: elastic_data_osm
     ports:
-      - "9200:9200"
+      - 127.0.0.1:9200:9200
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -61,7 +61,55 @@ services:
       - "9600:9600"
     networks:
       - travellist
-      
+  
 networks:
   travellist:
     driver: bridge
+ 
+
+# docker network create -d macvlan \
+#   --subnet=192.168.1.0/24 \
+#   --gateway=192.168.1.1 \
+#   --ip-range=192.168.1.100/28 \
+#   -o parent=eno1 vlan
+
+
+# ip link add mac0 link eno1 type macvlan mode bridge
+# ip addr add 192.168.1.200/24 dev mac0
+# ip link set mac0 up
+
+
+
+# sudo nano /etc/apache2/sites-available/windows-proxy.conf
+
+# <VirtualHost *:8006>
+#     ServerName localhost
+
+#     ProxyPreserveHost On
+#     ProxyPass / http://192.168.1.100:8006/
+#     ProxyPassReverse / http://192.168.1.100:8006/
+
+#     # Optional: Allow CORS or headers if needed
+#     Header always set X-Forwarded-For %{REMOTE_ADDR}s
+#     Header always set Host %{HTTP_HOST}s
+
+#     ErrorLog ${APACHE_LOG_DIR}/windows-proxy_error.log
+#     CustomLog ${APACHE_LOG_DIR}/windows-proxy_access.log combined
+# </VirtualHost>
+
+# nano /var/www/data-osm/backend/forward_tcp_windows.sh
+
+# #!/bin/bash
+# echo "Forwarding TCP and UDP port 3389 from host to Windows container at 192.168.1.100"
+
+# sudo iptables -t nat -A PREROUTING -p tcp --dport 3389 -j DNAT --to-destination 192.168.1.100:3389
+# sudo iptables -t nat -A POSTROUTING -p tcp -d 192.168.1.100 --dport 3389 -j MASQUERADE
+
+# sudo iptables -t nat -A PREROUTING -p udp --dport 3389 -j DNAT --to-destination 192.168.1.100:3389
+# sudo iptables -t nat -A POSTROUTING -p udp -d 192.168.1.100 --dport 3389 -j MASQUERADE
+
+
+# chmod +x  /var/www/data-osm/backend/forward_tcp_windows.sh
+#  /var/www/data-osm/backend/forward_tcp_windows.sh
+
+# ufw allow 3389/tcp && ufw allow 3389/udp

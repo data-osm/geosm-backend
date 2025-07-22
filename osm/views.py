@@ -1,31 +1,22 @@
-from django.shortcuts import render
-from rest_framework import status
-from django.db.models import Count
-from django.shortcuts import get_list_or_404, get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist
+from cuser.middleware import CuserMiddleware
 from django.conf import settings
-import traceback
-from .validateOsmQuerry import validateOsmQuerry
+from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from account.permissions import CanAdministrate
+from geosmBackend.cuserViews import (
+    CreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
+from geosmBackend.type import httpResponse
+
+from .serializers import SigFileSerializer, SimpleQuerrySerializer, osmQuerrySerializer
 from .subModels.Querry import Querry, SimpleQuerry
 from .subModels.sigFile import sigFile
-from provider.models import Vector
-from rest_framework import viewsets
-from rest_framework import permissions
-from rest_framework.parsers import FileUploadParser
-from rest_framework.response import Response
-from geosmBackend.cuserViews import (
-    UpdateAPIView,
-    RetrieveUpdateDestroyAPIView,
-    CreateAPIView,
-)
-from rest_framework.views import APIView
-from geosmBackend.type import httpResponse
-from cuser.middleware import CuserMiddleware
-from drf_yasg.utils import swagger_auto_schema
-from .serializers import osmQuerrySerializer, SimpleQuerrySerializer, SigFileSerializer
-from collections import defaultdict
-from drf_yasg import openapi
-
 
 # Create your views here.
 
@@ -33,7 +24,7 @@ from drf_yasg import openapi
 class CreateOsmQuerryView(CreateAPIView):
     queryset = Querry.objects.all()
     serializer_class = osmQuerrySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Store a new osm query",
@@ -48,7 +39,7 @@ class CreateOsmQuerryView(CreateAPIView):
 class CreateSimpleQuerryView(CreateAPIView):
     queryset = SimpleQuerry.objects.all()
     serializer_class = SimpleQuerrySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Store a new simple query",
@@ -63,7 +54,7 @@ class CreateSimpleQuerryView(CreateAPIView):
 class SimpleQuerryViewDetail(RetrieveUpdateDestroyAPIView):
     queryset = SimpleQuerry.objects.all()
     serializer_class = SimpleQuerrySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Delete a Simple querry",
@@ -102,7 +93,7 @@ class osmQuerryView(APIView):
     View to add an osm query
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Finds a osm query by id",
@@ -153,7 +144,7 @@ class osmQuerryView(APIView):
 class CreateSigFileView(CreateAPIView):
     queryset = sigFile.objects.all()
     serializer_class = SigFileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     # authentication_classes = []
 
     @swagger_auto_schema(
@@ -169,7 +160,7 @@ class CreateSigFileView(CreateAPIView):
 class SigFileViewDetail(RetrieveUpdateDestroyAPIView):
     queryset = sigFile.objects.all()
     serializer_class = SigFileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Delete a SIG file",
@@ -204,7 +195,7 @@ class SigFileViewDetail(RetrieveUpdateDestroyAPIView):
 
 
 class ListConnection(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
 
     @swagger_auto_schema(
         operation_summary="Get all connections of the app",

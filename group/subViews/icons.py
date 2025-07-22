@@ -1,26 +1,27 @@
-from ..subModels.icon import Icon, TagsIcon
-from rest_framework import permissions, filters, generics
+from collections import defaultdict
+
+from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import filters, generics, status
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
-from rest_framework.views import APIView
+
+from account.permissions import CanAdministrate
 from geosmBackend.cuserViews import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework import status
-from django.shortcuts import get_object_or_404
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 from ..serializers import (
-    TagsIconSerializer,
     IconSerializer,
+    TagsIconSerializer,
 )
-from collections import defaultdict
+from ..subModels.icon import Icon, TagsIcon
 
 
 class RetrieveUpdateDestroyIconView(RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     queryset = Icon.objects.all()
     serializer_class = IconSerializer
 
@@ -72,7 +73,7 @@ class ListCreateIconView(ListCreateAPIView):
     View to list icons by group
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     parser_class = (FileUploadParser,)
     queryset = Icon.objects.all()
     serializer_class = IconSerializer
@@ -110,7 +111,7 @@ class searchIconsTags(generics.ListAPIView):
     View to search tags
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     queryset = TagsIcon.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ["name"]
@@ -138,7 +139,7 @@ class SearchIcon(generics.ListAPIView):
     View to search icon
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanAdministrate]
     queryset = Icon.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "tags__name"]
