@@ -21,10 +21,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://demo.openstreetmap.fr",
     "https://demo.openstreetmap.fr",
 ]
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "ws.dataosm.info"]
 
 CONTACT_EMAIL = "team.osmdata@gmail.com"
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 
 CORS_ALLOW_METHODS = [
     "DELETE",
@@ -39,6 +43,8 @@ SESSION_COOKIE_SAMESITE = "None"
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
+
+CORS_ALLOW_CREDENTIALS = True
 
 DATABASES = {
     "default": {

@@ -3,7 +3,8 @@ import uuid
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.core.exceptions import NON_FIELD_ERRORS
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.middleware.csrf import get_token
 from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -94,7 +95,7 @@ class CsrfTokenView(GenericAPIView):
 
     @method_decorator(ensure_csrf_cookie)
     def get(self, request):
-        return response.Response({"message": "CSRF cookie set"})
+        return JsonResponse({"csrfToken": get_token(request)})
 
 
 class OSMAuthenticationView(GenericAPIView):
