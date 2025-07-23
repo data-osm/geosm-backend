@@ -84,6 +84,7 @@ def make_osm_change(access_token, feature_to_update: dict):
                             "id": osm_id,
                             "version": way["version"],
                             "tag": existing_tags,
+                            "nd": way["nd"],
                         }
                     )
                 except errors.ChangesetAlreadyOpenError:
@@ -107,9 +108,10 @@ def make_osm_change(access_token, feature_to_update: dict):
                 try:
                     relation = api.RelationUpdate(
                         {
-                            "id": id,
+                            "id": osm_id,
                             "version": relation["version"],
                             "tag": existing_tags,
+                            "member": relation["member"],
                         }
                     )
                 except errors.ChangesetAlreadyOpenError:
@@ -126,13 +128,18 @@ def make_osm_change(access_token, feature_to_update: dict):
 
 def make_local_db_osm_change(feature_to_update: dict):
     try:
+        osm_type = feature_to_update["osm_type"]
+        if osm_type == OSMFeatureType.WAY.value:
+            osm_id = feature_to_update["osm_id"]
+        elif osm_type == OSMFeatureType.RELATION.value:
+            osm_id = feature_to_update["osm_id"] * -1
         with connection.cursor() as cursor:
             cursor.execute(
                 "UPDATE extracted_buildings SET rnb = %s, diff_rnb = %s WHERE osm_id = %s",
                 [
                     feature_to_update["rnb"],
                     feature_to_update.get("diff_rnb", ""),
-                    feature_to_update["osm_id"],
+                    osm_id,
                 ],
             )
     except Exception as e:
