@@ -22,3 +22,4 @@ osmapi==4.3.0
 cli-oauth2==0.3.1 
 platformdirs==4.3.8
 dj-rest-auth==6.0.0
+highlight-io==0.8.9

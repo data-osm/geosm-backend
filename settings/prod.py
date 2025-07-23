@@ -3,6 +3,7 @@ from datetime import timedelta
 import environ
 
 from .base import *
+from .highlight import *
 
 env = environ.Env()
 environ.Env.read_env()
