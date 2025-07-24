@@ -25,6 +25,7 @@ from account.osm import (
     make_local_db_osm_change,
     make_osm_change,
 )
+from tracking.models import OsmUpdateLog
 
 from .models import User
 from .permissions import CanAdministrate, CanUpdateOSM, IsOwnerProfileOrReadOnly
@@ -159,7 +160,6 @@ class OSMAuthenticationCallbackView(GenericAPIView):
             osm_user = get_osm_user_info(request)
         except OsmUserInfoException:
             return response.Response({}, status=status.HTTP_404_NOT_FOUND)
-        print(request.user, "++" * 99)
         if request.user and request.user.is_authenticated:
             request.user.update_osm_token(
                 osm_token=token["access_token"],
@@ -230,5 +230,13 @@ class UpdateOSMFeatureView(GenericAPIView):
         try:
             make_local_db_osm_change(deserializer.validated_data)  # type: ignore
         except OsmLocalFeatureUpdateException:
+            pass
+
+        try:
+            OsmUpdateLog.objects.create(
+                osm_id=deserializer.validated_data["osm_id"],  # type: ignore
+                osm_type=deserializer.validated_data["osm_type"],  # type: ignore
+            )
+        except Exception:
             pass
         return response.Response({}, status=status.HTTP_200_OK)
