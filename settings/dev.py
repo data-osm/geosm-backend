@@ -44,7 +44,7 @@ DATABASES = {
         "HOST": env(
             "DATABASE_HOST",
         ),
-        "PORT": "5432",
+        "PORT": env("DATABASE_PORT"),
     },
     "datasud": {
         "ENGINE": "django.contrib.gis.db.backends.postgis",
