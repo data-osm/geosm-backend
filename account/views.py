@@ -1,8 +1,8 @@
+import logging
 import uuid
 
 from django.conf import settings
 from django.contrib.auth import login, logout
-from django.core.exceptions import NON_FIELD_ERRORS
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
@@ -18,9 +18,11 @@ from rest_framework.generics import (
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from account.osm import (
+    GetOsmParentBuildingException,
     OsmFeatureUpdateException,
     OsmLocalFeatureUpdateException,
     OsmUserInfoException,
+    get_osm_parent_building,
     get_osm_user_info,
     make_local_db_osm_change,
     make_osm_change,
@@ -30,12 +32,16 @@ from tracking.models import OsmUpdateLog
 from .models import User
 from .permissions import CanAdministrate, CanUpdateOSM, IsOwnerProfileOrReadOnly
 from .serializers import (
+    GetParentOsmBuildingDeserializer,
+    GetParentOsmBuildingSerializer,
     LoginSerializer,
     RetrieveOSMUserInfoSerializer,
     UpdateOSMFeatureDeserializer,
     UserRegisterDeserializer,
     UserSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UserListCreateView(ListCreateAPIView):
@@ -223,10 +229,11 @@ class UpdateOSMFeatureView(GenericAPIView):
         deserializer.is_valid(raise_exception=True)
         try:
             make_osm_change(request.user.osm_token, deserializer.validated_data)  # type: ignore
-        except OsmFeatureUpdateException as error:
-            return response.Response(
-                {NON_FIELD_ERRORS: str(error)}, status=status.HTTP_400_BAD_REQUEST
-            )
+        except OsmFeatureUpdateException:
+            pass
+            # return response.Response(
+            #     {NON_FIELD_ERRORS: str(error)}, status=status.HTTP_400_BAD_REQUEST
+            # )
         try:
             make_local_db_osm_change(deserializer.validated_data)  # type: ignore
         except OsmLocalFeatureUpdateException:
@@ -240,3 +247,19 @@ class UpdateOSMFeatureView(GenericAPIView):
         except Exception:
             pass
         return response.Response({}, status=status.HTTP_200_OK)
+
+
+class GetParentOsmBuilding(GenericAPIView):
+    permission_classes = [IsAuthenticated & CanUpdateOSM]
+
+    def get(self, request):
+        deserializer = GetParentOsmBuildingDeserializer(data=request.GET)
+        deserializer.is_valid(raise_exception=True)
+        try:
+            data = get_osm_parent_building(deserializer.validated_data["parent_osm_id"])  # type: ignore
+        except GetOsmParentBuildingException as e:
+            logger.error(e)
+            return response.Response({}, status=status.HTTP_400_BAD_REQUEST)
+        return response.Response(
+            GetParentOsmBuildingSerializer(data).data, status=status.HTTP_200_OK
+        )

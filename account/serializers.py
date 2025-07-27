@@ -95,3 +95,23 @@ class UpdateOSMFeatureDeserializer(serializers.Serializer):
     osm_type = serializers.ChoiceField(choices=OSMFeatureType.choices)
     rnb = serializers.CharField()
     diff_rnb = serializers.CharField(required=False, allow_null=True)
+
+
+class GetParentOsmBuildingDeserializer(serializers.Serializer):
+    parent_osm_id = serializers.IntegerField()
+
+
+class GetParentOsmBuildingSerializer(serializers.Serializer):
+    class BuildingParentSerializer(serializers.Serializer):
+        osm_id = serializers.IntegerField()
+        match_rnb_ids = serializers.CharField()
+        match_rnb_score = serializers.FloatField()
+        match_rnb_diff = serializers.CharField()
+
+    class ParentOSMSerializer(serializers.Serializer):
+        geometry = serializers.JSONField()
+        rnb = serializers.CharField()
+        diff_rnb = serializers.CharField()
+
+    parent_osm = ParentOSMSerializer()
+    parent_matching_rnb = BuildingParentSerializer()

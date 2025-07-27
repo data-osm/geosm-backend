@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     GetAuthSateRelayView,
+    GetParentOsmBuilding,
     OSMAuthenticationCallbackView,
     OSMAuthenticationView,
     RetrieveOSMUserInfoView,
@@ -30,5 +31,10 @@ urlpatterns = [
 osmUrlPatterns = [
     path(
         "update-osm-feature", UpdateOSMFeatureView.as_view(), name="update-osm-feature"
+    ),
+    path(
+        "parent-osm-building",
+        GetParentOsmBuilding.as_view(),
+        name="get-parent-osm-building",
     ),
 ]
