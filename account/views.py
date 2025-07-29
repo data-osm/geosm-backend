@@ -3,6 +3,7 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth import login, logout
+from django.core.exceptions import NON_FIELD_ERRORS
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
@@ -225,15 +226,16 @@ class UpdateOSMFeatureView(GenericAPIView):
     permission_classes = [IsAuthenticated & CanUpdateOSM]
 
     def post(self, request):
-        deserializer = UpdateOSMFeatureDeserializer(data=request.data)
+        deserializer = UpdateOSMFeatureDeserializer(data=request.data, many=True)
         deserializer.is_valid(raise_exception=True)
+        if settings.ENVIRONMENT != "prod":
+            return response.Response({}, status=status.HTTP_200_OK)
         try:
             make_osm_change(request.user.osm_token, deserializer.validated_data)  # type: ignore
-        except OsmFeatureUpdateException:
-            pass
-            # return response.Response(
-            #     {NON_FIELD_ERRORS: str(error)}, status=status.HTTP_400_BAD_REQUEST
-            # )
+        except OsmFeatureUpdateException as error:
+            return response.Response(
+                {NON_FIELD_ERRORS: str(error)}, status=status.HTTP_400_BAD_REQUEST
+            )
         try:
             make_local_db_osm_change(deserializer.validated_data)  # type: ignore
         except OsmLocalFeatureUpdateException:
