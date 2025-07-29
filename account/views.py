@@ -242,12 +242,14 @@ class UpdateOSMFeatureView(GenericAPIView):
             pass
 
         try:
-            OsmUpdateLog.objects.create(
-                osm_id=deserializer.validated_data["osm_id"],  # type: ignore
-                osm_type=deserializer.validated_data["osm_type"],  # type: ignore
-            )
+            for feature in deserializer.validated_data:  # type: ignore
+                OsmUpdateLog.objects.create(
+                    osm_id=feature["osm_id"],  # type: ignore
+                    osm_type=feature["osm_type"],  # type: ignore
+                )
         except Exception:
             pass
+
         return response.Response({}, status=status.HTTP_200_OK)
 
 
