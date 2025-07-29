@@ -228,7 +228,7 @@ class UpdateOSMFeatureView(GenericAPIView):
     def post(self, request):
         deserializer = UpdateOSMFeatureDeserializer(data=request.data, many=True)
         deserializer.is_valid(raise_exception=True)
-        if settings.ENVIRONMENT != "prod":
+        if settings.ENVIRONMENT != "production":
             return response.Response({}, status=status.HTTP_200_OK)
         try:
             make_osm_change(request.user.osm_token, deserializer.validated_data)  # type: ignore
