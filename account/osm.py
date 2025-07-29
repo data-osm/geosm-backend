@@ -63,12 +63,12 @@ def get_osm_user_info(request: HttpRequest) -> dict:
     return parse_osm_user_info(response.text)
 
 
-def make_osm_change(access_token, feature_to_update: dict):
+def make_osm_change(access_token, features_to_update: list[dict]):
     oauth_session = OAuth2Session(
         settings.OSM_CLIENT_ID, token={"access_token": access_token}
     )
     api = osmapi.OsmApi(api=settings.OSM_API_URL, session=oauth_session)
-    features_to_update = [feature_to_update]
+    # features_to_update = [feature_to_update]
     with api.Changeset({"comment": "UPDATE RNB FROM OSM DATA"}) as changeset_id:
         for feature in features_to_update:
             osm_id = feature["osm_id"]
@@ -130,22 +130,23 @@ def make_osm_change(access_token, feature_to_update: dict):
                 )
 
 
-def make_local_db_osm_change(feature_to_update: dict):
+def make_local_db_osm_change(features_to_update: list[dict]):
     try:
-        osm_type = feature_to_update["osm_type"]
-        if osm_type == OSMFeatureType.WAY.value:
-            osm_id = feature_to_update["osm_id"]
-        elif osm_type == OSMFeatureType.RELATION.value:
-            osm_id = feature_to_update["osm_id"] * -1
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "UPDATE extracted_buildings SET rnb = %s, diff_rnb = %s WHERE osm_id = %s",
-                [
-                    feature_to_update["rnb"],
-                    feature_to_update.get("diff_rnb", ""),
-                    osm_id,
-                ],
-            )
+        for feature_to_update in features_to_update:
+            osm_type = feature_to_update["osm_type"]
+            if osm_type == OSMFeatureType.WAY.value:
+                osm_id = feature_to_update["osm_id"]
+            elif osm_type == OSMFeatureType.RELATION.value:
+                osm_id = feature_to_update["osm_id"] * -1
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE extracted_buildings SET rnb = %s, diff_rnb = %s WHERE osm_id = %s",
+                    [
+                        feature_to_update["rnb"],
+                        feature_to_update.get("diff_rnb", ""),
+                        osm_id,
+                    ],
+                )
     except Exception as e:
         logger.error(e)
         raise OsmLocalFeatureUpdateException("Error updating feature") from e
