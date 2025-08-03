@@ -94,7 +94,7 @@ class UpdateOSMFeatureDeserializer(serializers.Serializer):
     osm_id = serializers.IntegerField()
     osm_type = serializers.ChoiceField(choices=OSMFeatureType.choices)
     rnb = serializers.CharField()
-    diff_rnb = serializers.CharField(required=False, allow_null=True)
+    diff_rnb = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
 
 class GetParentOsmBuildingDeserializer(serializers.Serializer):
