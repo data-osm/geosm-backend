@@ -4,6 +4,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.core.exceptions import NON_FIELD_ERRORS
+from django.forms import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
@@ -227,7 +228,13 @@ class UpdateOSMFeatureView(GenericAPIView):
 
     def post(self, request):
         deserializer = UpdateOSMFeatureDeserializer(data=request.data, many=True)
-        deserializer.is_valid(raise_exception=True)
+        try:
+            deserializer.is_valid(raise_exception=True)
+        except ValidationError as error:
+            return response.Response(
+                {NON_FIELD_ERRORS: error.message_dict},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if settings.ENVIRONMENT != "production":
             return response.Response({}, status=status.HTTP_200_OK)
         try:

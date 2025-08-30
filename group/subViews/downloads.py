@@ -2,7 +2,7 @@ import re
 import tempfile
 from io import BytesIO
 from os import walk
-from os.path import join, relpath
+from os.path import exists, join, relpath
 from pathlib import Path
 from typing import List
 from wsgiref.util import FileWrapper
@@ -311,7 +311,9 @@ class DownloadFeatureById(APIView):
                             join(root, file),
                             relpath(join(root, file), join(directory_for_files)),
                         )
-                if style is not None:
+                if style is not None and exists(
+                    join(settings.MEDIA_ROOT, style.qml_file.path)
+                ):
                     zipObj.write(
                         join(settings.MEDIA_ROOT, style.qml_file.path),
                         nameShapefile + ".qml",
@@ -517,7 +519,9 @@ class DownloadFeaturesInGeometry(APIView):
                             join(root, file),
                             relpath(join(root, file), join(directory_for_files)),
                         )
-                if style is not None:
+                if style is not None and exists(
+                    join(settings.MEDIA_ROOT, style.qml_file.path)
+                ):
                     zipObj.write(
                         join(settings.MEDIA_ROOT, style.qml_file.path),
                         nameShapefile + ".qml",
