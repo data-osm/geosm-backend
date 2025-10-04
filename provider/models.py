@@ -198,6 +198,11 @@ class Style(models.Model):
             "provider_vector_id",
         )
 
+    def write_qml_if_not_exist(self):
+        if not os.path.exists(os.path.join(settings.MEDIA_ROOT, self.qml_file.path)):
+            with open(os.path.join(settings.MEDIA_ROOT, self.qml_file.path), "w") as f:
+                f.write(self.qml)
+
     def save(self, *args, **kwargs):
         """save or update a style"""
 
