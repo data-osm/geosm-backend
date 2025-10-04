@@ -57,6 +57,7 @@ services:
       - ./provider/qgis/plugin:/home/plugin
       - ./tracking:/home/tracking
       - ./logstash-sync:/usr/share/logstash/data/plugins/inputs/file
+      - /var/log/apache2:/home/apache
     ports:
       - "9600:9600"
     networks:

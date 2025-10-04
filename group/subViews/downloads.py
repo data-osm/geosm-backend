@@ -2,7 +2,7 @@ import re
 import tempfile
 from io import BytesIO
 from os import walk
-from os.path import exists, join, relpath
+from os.path import join, relpath
 from pathlib import Path
 from typing import List
 from wsgiref.util import FileWrapper
@@ -311,13 +311,17 @@ class DownloadFeatureById(APIView):
                             join(root, file),
                             relpath(join(root, file), join(directory_for_files)),
                         )
-                if style is not None and exists(
-                    join(settings.MEDIA_ROOT, style.qml_file.path)
-                ):
-                    zipObj.write(
-                        join(settings.MEDIA_ROOT, style.qml_file.path),
-                        nameShapefile + ".qml",
-                    )
+
+                if style is not None:
+                    try:
+                        style.write_qml_if_not_exist()
+                    except Exception:
+                        pass
+                    else:
+                        zipObj.write(
+                            join(settings.MEDIA_ROOT, style.qml_file.path),
+                            nameShapefile + ".qml",
+                        )
 
             response = StreamingHttpResponse(
                 FileWrapper(temp), content_type=content_type
@@ -332,10 +336,11 @@ class DownloadFeatureById(APIView):
         else:
             if format == "gpkg" and style is not None:
                 try:
+                    style.write_qml_if_not_exist()
                     save_qml_to_geo_package(
                         outShapefile, join(settings.MEDIA_ROOT, style.qml_file.path)
                     )
-                except:
+                except Exception:
                     pass
 
             response = StreamingHttpResponse(
@@ -519,13 +524,16 @@ class DownloadFeaturesInGeometry(APIView):
                             join(root, file),
                             relpath(join(root, file), join(directory_for_files)),
                         )
-                if style is not None and exists(
-                    join(settings.MEDIA_ROOT, style.qml_file.path)
-                ):
-                    zipObj.write(
-                        join(settings.MEDIA_ROOT, style.qml_file.path),
-                        nameShapefile + ".qml",
-                    )
+                if style is not None:
+                    try:
+                        style.write_qml_if_not_exist()
+                    except Exception:
+                        pass
+                    else:
+                        zipObj.write(
+                            join(settings.MEDIA_ROOT, style.qml_file.path),
+                            nameShapefile + ".qml",
+                        )
 
             response = StreamingHttpResponse(
                 FileWrapper(temp), content_type=content_type
@@ -539,6 +547,7 @@ class DownloadFeaturesInGeometry(APIView):
         else:
             if format == "gpkg" and style is not None:
                 try:
+                    style.write_qml_if_not_exist()
                     save_qml_to_geo_package(
                         outShapefile, join(settings.MEDIA_ROOT, style.qml_file.path)
                     )

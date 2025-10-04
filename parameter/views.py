@@ -569,3 +569,22 @@ class AdminBoundaryCreateView(CreateAPIView):
     def post(self, request, *args, **kwargs):
         """Add an administrative boundary"""
         return super(AdminBoundaryCreateView, self).post(request, *args, **kwargs)
+
+
+class ListLczView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        data = []
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT lcz, id, station_id from lcz_outline")
+            for x in cursor.fetchall():
+                temp2 = {}
+                c = 0
+                for col in cursor.description:  # type: ignore
+                    temp2.update({str(col[0]): x[c]})
+                    c = c + 1
+                data.append(temp2)
+
+        return Response(data, status=status.HTTP_200_OK)
