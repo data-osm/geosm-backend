@@ -93,7 +93,20 @@ class osmQuerryView(APIView):
     View to add an osm query
     """
 
-    permission_classes = [CanAdministrate]
+    def get_authenticators(self):
+        if self.request.method == "GET":
+            authentication_classes = []
+
+            return authentication_classes
+        else:
+            return super(self.__class__, self).get_authenticators()
+
+    def get_permissions(self):
+        if self.request.method != "GET":
+            self.permission_classes = [CanAdministrate]
+        else:
+            self.permission_classes = []
+        return super(self.__class__, self).get_permissions()
 
     @swagger_auto_schema(
         operation_summary="Finds a osm query by id",
@@ -160,7 +173,21 @@ class CreateSigFileView(CreateAPIView):
 class SigFileViewDetail(RetrieveUpdateDestroyAPIView):
     queryset = sigFile.objects.all()
     serializer_class = SigFileSerializer
-    permission_classes = [CanAdministrate]
+
+    def get_authenticators(self):
+        if self.request.method == "GET":
+            authentication_classes = []
+
+            return authentication_classes
+        else:
+            return super(self.__class__, self).get_authenticators()
+
+    def get_permissions(self):
+        if self.request.method != "GET":
+            self.permission_classes = [CanAdministrate]
+        else:
+            self.permission_classes = []
+        return super(self.__class__, self).get_permissions()
 
     @swagger_auto_schema(
         operation_summary="Delete a SIG file",

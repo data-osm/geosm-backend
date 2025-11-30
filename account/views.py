@@ -235,8 +235,8 @@ class UpdateOSMFeatureView(GenericAPIView):
                 {NON_FIELD_ERRORS: error.message_dict},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if settings.ENVIRONMENT != "production":
-            return response.Response({}, status=status.HTTP_200_OK)
+        # if settings.ENVIRONMENT != "production":
+        #     return response.Response({}, status=status.HTTP_200_OK)
         try:
             make_osm_change(request.user.osm_token, deserializer.validated_data)  # type: ignore
         except OsmFeatureUpdateException as error:

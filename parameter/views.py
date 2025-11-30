@@ -578,7 +578,9 @@ class ListLczView(APIView):
     def get(self, request, *args, **kwargs):
         data = []
         with connection.cursor() as cursor:
-            cursor.execute("SELECT lcz, id, station_id from lcz_outline")
+            cursor.execute(
+                "SELECT lcz, id, station_id from lcz_outline where station_id is not null"
+            )
             for x in cursor.fetchall():
                 temp2 = {}
                 c = 0
