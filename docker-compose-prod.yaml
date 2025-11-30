@@ -57,7 +57,8 @@ services:
       - ./provider/qgis/plugin:/home/plugin
       - ./tracking:/home/tracking
       - ./logstash-sync:/usr/share/logstash/data/plugins/inputs/file
-      - /var/log/apache2:/home/apache
+      - /var/log/apache2/ws.dataosm-customlog:/home/apache/ws.dataosm-customlog
+      - /var/log/apache2/dataosm-customlog:/home/apache/dataosm-customlog
     ports:
       - "9600:9600"
     networks:

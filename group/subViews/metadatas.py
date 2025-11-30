@@ -23,8 +23,22 @@ class RetrieveCreateMetadataView(
 ):
     queryset = Metadata.objects.all()
     serializer_class = MetadataSerializer
-    permission_classes = [CanAdministrate]
     lookup_fields = ["layer"]
+
+    def get_authenticators(self):
+        if self.request.method == "GET":
+            authentication_classes = []
+
+            return authentication_classes
+        else:
+            return super(self.__class__, self).get_authenticators()
+
+    def get_permissions(self):
+        if self.request.method != "GET":
+            self.permission_classes = [CanAdministrate]
+        else:
+            self.permission_classes = []
+        return super(self.__class__, self).get_permissions()
 
     @swagger_auto_schema(
         operation_summary="Create a new metadata on a layer",
